@@ -40,3 +40,24 @@ void Cpu::runInstruction(uint8_t instruction)
 {
 
 }
+
+void Cpu::loadRom(std::vector<uint8_t> romData)
+{
+	rom = romData;
+	setTitle();
+}
+
+void Cpu::setTitle()
+{
+	std::string title;
+	for (uint16_t addr = 0x0134; addr <= 0x0143; ++addr) {
+		title += static_cast<char>(rom[addr]);
+	}
+
+	romTitle = title;
+}
+
+std::string Cpu::getTitle()
+{
+	return romTitle;
+}
