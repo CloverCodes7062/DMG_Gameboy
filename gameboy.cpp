@@ -39,8 +39,7 @@ void gameboy::emulate()
 
     while (cpu.getHasNotBroken())
     {
-        std::cout << "TESTING" << std::endl;
-        cpu.setHasNotBroken(false);
+        cpu.runInstruction();
     }
 }
 
