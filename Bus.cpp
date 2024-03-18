@@ -14,6 +14,8 @@ Bus::~Bus()
 
 void Bus::write(uint16_t addr, uint8_t data)
 {
+	std::cout << "Writing to ram" << std::endl;
+
 	ram[addr] = data;
 }
 

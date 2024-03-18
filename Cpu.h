@@ -38,11 +38,17 @@ public:
 	// Set Title
 	void setTitle();
 
+    // Loads Nintendo Logo into VRAM
+    void loadNintendoLogo();
+
 	// Helper functions
 	bool getHasNotBroken();
 	uint16_t getPc();
 	void setHasNotBroken(bool value);
 	std::string getTitle();
+    std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb);
+    void debugPrintAllVramTiles(std::vector<std::vector<uint8_t>> tiles);
+    void printTile(uint16_t i);
 
     uint64_t cycles = 0;
 
@@ -59,11 +65,18 @@ private:
 	// Stores the rom title
 	std::string romTitle;
 
+    // stores whether or not the last instruction was 0xCB, used to index the CB Table instead
+    bool wasCB = false;
+
+    // Titles in Vram
+    std::vector<std::vector<uint8_t>> vramTiles;
+
 private:
 
-    // Program counter and Stack Pointer
+    // Program counter, Stack Pointer, and Interrupt
     uint16_t pc;
     uint16_t stkp;
+    uint8_t ie;
 
     // Struct to hold CPU registers
     struct Registers {
@@ -96,4 +109,11 @@ private:
             uint16_t hl;
         };
     } registers;
+
+private:
+    // PPU
+
+    uint8_t lcdc; // Address of LCDC FF40
+    uint8_t stat; // Address of LCD Status Register FF41
+    uint8_t ly; // Address of the LY register FF44
 };
