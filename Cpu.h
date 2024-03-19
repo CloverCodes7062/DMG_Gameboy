@@ -11,7 +11,7 @@ public:
 	Cpu(Bus& bus);
 	~Cpu();
 
-	// write and read to ram stored on bus
+	// Write and read to ram stored on bus
 	void write(uint16_t addr, uint8_t data);
 	uint8_t read(uint16_t addr);
 
@@ -26,7 +26,6 @@ public:
     // Set and Get Flag
     void setFlag(Cpu::Flags flag, bool value);
     bool isFlagSet(Cpu::Flags flag) const;
-
 
 	// Run an instruction
 	void runInstruction();
@@ -54,6 +53,9 @@ public:
     // Cycles Ran
     int cyclesRan = 0;
 
+    // SDL Engine
+    Engine engine = Engine(256, 256);
+
 private:
 	// Bus that has the ram on it
 	Bus& bus;
@@ -75,6 +77,9 @@ private:
 
     // Background Tiles
     std::vector<std::vector<std::vector<uint8_t>>> backgroundTiles;
+
+    // True if Nintendo Logo has been rendered else False
+    bool hasNintendoLogoLoaded = false;
 
 private:
 
@@ -114,6 +119,15 @@ private:
             uint16_t hl;
         };
     } registers;
+
+    // Tile Map Address
+    uint16_t tileMapAddress;
+
+    // Debug Helper Variable
+    int scanlinesGenerated = 0;
+
+    // Debug totalFramesGenerated
+    int totalFramesGenerated = 0;
 
 private:
     // PPU
