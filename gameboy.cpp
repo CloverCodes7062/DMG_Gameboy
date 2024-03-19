@@ -3,6 +3,7 @@
 #include <fstream>
 #include <array>
 #include <iomanip>
+#include <SDL.h>
 
 gameboy::gameboy(Cpu& cpu) : cpu(cpu)
 {

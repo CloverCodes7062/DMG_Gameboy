@@ -69,9 +69,25 @@ bool Cpu::isFlagSet(Cpu::Flags flag) const
 
 void Cpu::runInstruction()
 {
+
 	if (cycles == 0)
 	{
 		runOpcode();
+
+		std::cout << "CYCLES RAN: " << cyclesRan << std::endl;
+
+		if (cyclesRan >= 456)
+		{
+			std::cout << "INCREMENTING LY" << std::endl;
+
+			std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
+
+			write(ly, read(ly) + 1);
+
+			std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
+			cyclesRan = 0;
+			//setHasNotBroken(false);
+		}
 	}
 	cycles--;
 }
@@ -79,7 +95,7 @@ void Cpu::runInstruction()
 void Cpu::runOpcode()
 {
 	uint8_t instruction = rom[pc];
-
+	
 	std::cout << "Registers:" << std::endl;
 
 	std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
@@ -102,6 +118,7 @@ void Cpu::runOpcode()
 	{
 		std::cout << "NOP READ" << std::endl;
 		cycles += 4;
+		cyclesRan += 4;
 	}
 	else
 	{
@@ -119,6 +136,7 @@ void Cpu::runOpcode()
 
 				pc = address;
 				cycles += 16;
+				cyclesRan += 16;
 
 				break;
 			}
@@ -136,6 +154,7 @@ void Cpu::runOpcode()
 
 				pc++;
 				cycles += 8;
+				cyclesRan += 8;
 
 				break;
 			}
@@ -146,11 +165,13 @@ void Cpu::runOpcode()
 				{
 					pc += offset + 1;
 					cycles += 12;
+					cyclesRan += 12;
 				}
 				else
 				{
 					pc++;
 					cycles += 8;
+					cyclesRan += 8;
 				}
 
 				break;
@@ -165,6 +186,7 @@ void Cpu::runOpcode()
 				setFlag(Carry, false);
 
 				cycles += 4;
+				cyclesRan += 4;
 				break;
 			}
 			case 0x18:
@@ -172,6 +194,7 @@ void Cpu::runOpcode()
 				int8_t offset = static_cast<int8_t>(rom[pc]);
 				pc += offset + 1;
 				cycles += 12;
+				cyclesRan += 12;
 				break;
 			}
 			case 0xEA:
@@ -184,6 +207,7 @@ void Cpu::runOpcode()
 
 				pc += 2;
 				cycles += 16;
+				cyclesRan += 16;
 
 				break;
 			}
@@ -191,6 +215,7 @@ void Cpu::runOpcode()
 			{
 				ie = 0x00;
 				cycles += 4;
+				cyclesRan += 4;
 
 				break;
 			}
@@ -200,6 +225,7 @@ void Cpu::runOpcode()
 				write(address, registers.a);
 				pc++;
 				cycles += 12;
+				cyclesRan += 12;
 
 				break;
 			}
@@ -208,6 +234,7 @@ void Cpu::runOpcode()
 				registers.a = rom[pc];
 				pc++;
 				cycles += 8;
+				cyclesRan += 8;
 
 				break;
 			}
@@ -226,6 +253,7 @@ void Cpu::runOpcode()
 
 				pc = address;
 				cycles += 24;
+				cyclesRan += 24;
 
 				std::cout << pc << std::endl;
 				break;
@@ -237,11 +265,9 @@ void Cpu::runOpcode()
 
 				uint8_t n = read(address);
 
-				std::cout << "address: 0x" << std::hex << static_cast<int>(address) << std::endl;
-				std::cout << "n: 0x" << std::hex << static_cast<int>(n) << std::endl;
-
 				registers.a = n;
 				cycles += 12;
+				cyclesRan += 12;
 
 				break;
 			}
@@ -250,12 +276,13 @@ void Cpu::runOpcode()
 				registers.b = registers.a;
 
 				cycles += 4;
-
+				cyclesRan += 4;
 				break;
 			}
 			case 0xCB:
 			{
 				cycles += 4;
+				cyclesRan += 4;
 				wasCB = true;
 				break;
 			}
@@ -266,16 +293,16 @@ void Cpu::runOpcode()
 
 				if (!isFlagSet(Zero))
 				{
-					std::cout << "offset: 0x" << std::hex << static_cast<int>(rom[pc]) << std::endl;
 					pc += offset;
 					cycles += 12;
+					cyclesRan += 12;
 				}
 				else
 				{
 					cycles += 8;
+					cyclesRan += 8;
 				}
 
-				setHasNotBroken(false);
 				break;
 			}
 			case 0x21:
@@ -287,6 +314,7 @@ void Cpu::runOpcode()
 
 				pc += 2;
 				cycles += 12;
+				cyclesRan += 12;
 				break;
 			}
 			case 0x0E:
@@ -295,6 +323,7 @@ void Cpu::runOpcode()
 
 				pc++;
 				cycles += 8;
+				cyclesRan += 12;
 
 				break;
 			}
@@ -304,6 +333,7 @@ void Cpu::runOpcode()
 
 				pc++;
 				cycles += 8;
+				cyclesRan += 8;
 
 				break;
 			}
@@ -313,6 +343,7 @@ void Cpu::runOpcode()
 
 				registers.hl -= 1;
 				cycles += 8;
+				cyclesRan += 8;
 				break;
 			}
 			case 0x05:
@@ -324,6 +355,7 @@ void Cpu::runOpcode()
 				setFlag(HalfCarry, (registers.b & 0x0F) == 0x0F);
 
 				cycles += 4;
+				cyclesRan += 4;
 
 				break;
 			}
@@ -336,6 +368,53 @@ void Cpu::runOpcode()
 				setFlag(HalfCarry, (registers.c & 0x0F) == 0x0F);
 
 				cycles += 4;
+				cyclesRan += 4;
+				break;
+			}
+			case 0x31:
+			{
+				uint8_t lo = rom[pc];
+				uint8_t hi = rom[pc + 1];
+				pc += 2;
+
+				stkp = (hi << 8) | lo;
+
+				cycles += 12;
+				cyclesRan += 12;
+
+				break;
+			}
+			case 0x36:
+			{
+				write(registers.hl, read(rom[pc]));
+				pc++;
+
+				cycles += 12;
+				cyclesRan += 12;
+				break;
+			}
+			case 0x2A:
+			{
+				registers.a = read(registers.hl);
+				registers.hl++;
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0xE2:
+			{
+				uint8_t lo = registers.c;
+				uint8_t hi = 0xFF;
+				
+				uint16_t addr = (hi << 8) | lo;
+
+				write(addr, registers.a);
+
+				cycles += 8;
+				pc++;
+
 				break;
 			}
 			default:
@@ -354,6 +433,7 @@ void Cpu::runOpcode()
 			{
 				registers.a &= ~(1 << 0);
 				cycles += 8;
+				cyclesRan += 8;
 
 				break;
 			}
@@ -400,32 +480,16 @@ void Cpu::loadNintendoLogo()
 	const std::string nintendoTileMap = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000102030405060708090A0B0C19000000000000000000000000000000000000000D0E0F101112131415161718000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
 	// Loads into RAM
-
-	// DEBUG - Prints logo in bytes from ram
-	/*
-	for (size_t i = 0; i <= 0x200; i++)
-	{
-		std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(0x8000 + i)) << " ";
-		if ((i + 1) % 16 == 0)
-		{
-			std::cout << std::endl;
-		}
-	}
-	*/
-
-	std::vector<std::vector<uint8_t>> tiles;
-	std::vector<uint8_t> tile;
+	std::vector<std::vector<std::vector<uint8_t>>> tiles;
+	std::vector<std::vector<uint8_t>> tile;
 
 	for (size_t i = 0x8000; i <= 0x8FFF; i += 2)
 	{
 		std::vector<uint8_t> tileRow = createTileRow(read(i), read(i + 1));
 
-		for (int k = 0; k < 8; k++)
-		{
-			tile.push_back(tileRow[k]);
-		}
+		tile.push_back(tileRow);
 
-		if (tile.size() == 64)
+		if (tile.size() == 8)
 		{
 			tiles.push_back(tile);
 			tile.clear();
@@ -448,32 +512,37 @@ void Cpu::loadNintendoLogo()
 		write(tileMapAddress++, nintendoLogoTileMap[i]);
 	}
 
+	std::vector<std::vector<std::vector<uint8_t>>> BgTiles;
+
 	for (size_t addr = 0x9800; addr <= 0x9BFF; addr++)
 	{
-		printTile(read(addr));
-		std::cout << std::endl;
+		BgTiles.push_back(vramTiles[read(addr)]);
 	}
 
-	/*
-	for (size_t i = 0x9800; i <= 0x9BFF; i++)
-	{
-		std::cout << "0x" << static_cast<int>(read(i)) << std::endl;
-	}
-	*/
+	backgroundTiles = BgTiles;
 
-	//debugPrintAllVramTiles(tiles);
-}
+	std::cout << "TILES GENERATED" << std::endl;
 
-void Cpu::printTile(uint16_t i)
-{
-	for (size_t j = 0; j < vramTiles[i].size(); j++)
-	{
-		std::cout << static_cast<int>(vramTiles[i][j]) << " ";
+	Engine engine(256, 256);
 
-		if ((j + 1) % 8 == 0) {
-			std::cout << std::endl;
+	engine.setBuffer(backgroundTiles);
+	
+	bool running = false;
+
+	while (running) {
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event)) 
+		{
+			if (event.type == SDL_QUIT) 
+			{
+				running = false;
+			}
 		}
+
+		engine.render();
 	}
+
 }
 
 std::vector<uint8_t> Cpu::createTileRow(uint8_t lsb, uint8_t msb)
@@ -492,23 +561,6 @@ std::vector<uint8_t> Cpu::createTileRow(uint8_t lsb, uint8_t msb)
 
 	return tileRow;
 
-}
-
-void Cpu::debugPrintAllVramTiles(std::vector<std::vector<uint8_t>> tiles)
-{
-	for (size_t i = 0; i < tiles.size(); i++)
-	{
-		for (size_t j = 0; j < tiles[i].size(); j++)
-		{
-			std::cout << static_cast<int>(tiles[i][j]) << " ";
-
-			if ((j + 1) % 8 == 0) {
-				std::cout << std::endl;
-			}
-		}
-
-		std::cout << std::endl;
-	}
 }
 
 void Cpu::setTitle()
