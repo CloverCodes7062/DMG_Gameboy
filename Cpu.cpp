@@ -16,6 +16,8 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	stat = 0xFF41;
 	ly = 0xFF44;
 
+	ie = 0xFFFF;
+
 	write(lcdc, 0x91);
 	write(stat, 0x85);
 
@@ -53,23 +55,7 @@ void Cpu::loadNintendoLogo()
 	const std::string nintendoTileMap = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000102030405060708090A0B0C19000000000000000000000000000000000000000D0E0F101112131415161718000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 
 	// Creates and Loads Tiles into RAM
-	std::vector<std::vector<std::vector<uint8_t>>> tiles;
-	std::vector<std::vector<uint8_t>> tile;
-
-	for (size_t i = 0x8000; i <= 0x8FFF; i += 2)
-	{
-		std::vector<uint8_t> tileRow = createTileRow(read(i), read(i + 1));
-
-		tile.push_back(tileRow);
-
-		if (tile.size() == 8)
-		{
-			tiles.push_back(tile);
-			tile.clear();
-		}
-	}
-
-	vramTiles = tiles;
+	setVramTiles();
 
 	std::vector<uint8_t> nintendoLogoTileMap;
 	for (size_t i = 0; i < nintendoTileMap.length(); i += 2)
@@ -117,6 +103,27 @@ void Cpu::loadNintendoLogo()
 		engine.render();
 	}
 	*/
+}
+
+void Cpu::setVramTiles()
+{
+	std::vector<std::vector<std::vector<uint8_t>>> tiles;
+	std::vector<std::vector<uint8_t>> tile;
+
+	for (size_t i = 0x8000; i <= 0x8FFF; i += 2)
+	{
+		std::vector<uint8_t> tileRow = createTileRow(read(i), read(i + 1));
+
+		tile.push_back(tileRow);
+
+		if (tile.size() == 8)
+		{
+			tiles.push_back(tile);
+			tile.clear();
+		}
+	}
+
+	vramTiles = tiles;
 }
 
 void Cpu::write(uint16_t addr, uint8_t data)
@@ -185,6 +192,8 @@ void Cpu::runInstruction()
 
 			if (read(ly) % 8 == 0)
 			{
+				setVramTiles();
+
 				for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
 				{
 					std::cout << "VRAM TILES SIZE: " << vramTiles.size() << std::endl;
@@ -237,7 +246,6 @@ void Cpu::runInstruction()
 
 				// HANDLE VBLANK
 				write(ly, 0x00);
-				setFlag(Zero, true);
 				backgroundTiles.clear();
 				tileMapAddress = 0x9800;
 			}
@@ -296,7 +304,7 @@ void Cpu::runOpcode()
 			}
 			case 0xFE:
 			{
-				uint8_t compare_value = rom[pc];
+				uint8_t compare_value = read(pc);
 				uint8_t reg_a_value = registers.a;
 
 				uint8_t result = reg_a_value - compare_value;
@@ -330,11 +338,52 @@ void Cpu::runOpcode()
 
 				break;
 			}
+			case 0x2F:
+			{
+				registers.a = ~registers.a;
+
+				setFlag(Subtraction, true);
+				setFlag(HalfCarry, true);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
 			case 0xAF:
 			{
-				registers.a ^= registers.a;
+				uint8_t result = registers.a ^ registers.a;
+				registers.a = result;
 
-				setFlag(Zero, registers.a == 0x00);
+				setFlag(Zero, result == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, false);
+
+				cycles += 4;
+				cyclesRan += 4;
+				break;
+			}
+			case 0xA1:
+			{
+				uint8_t result = registers.a & registers.c;
+				registers.a = result;
+
+				setFlag(Zero, result == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, true);
+				setFlag(Carry, false);
+
+				cycles += 4;
+				cyclesRan += 4;
+				break;
+			}
+			case 0xA9:
+			{
+				uint8_t result = registers.a ^ registers.c;
+				registers.a = result;
+
+				setFlag(Zero, result == 0x00);
 				setFlag(Subtraction, false);
 				setFlag(HalfCarry, false);
 				setFlag(Carry, false);
@@ -367,7 +416,15 @@ void Cpu::runOpcode()
 			}
 			case 0xF3:
 			{
-				ie = 0x00;
+				write(ie, 0); // TODO: HANDLE INTERRUPTS
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0xFB:
+			{
+				write(ie, 1); // TODO: HANDLE INTERRUPTS
 				cycles += 4;
 				cyclesRan += 4;
 
@@ -412,6 +469,23 @@ void Cpu::runOpcode()
 				std::cout << pc << std::endl;
 				break;
 			}
+			case 0xE6:
+			{
+				uint8_t n = read(pc);
+				uint8_t result = registers.a & n;
+				registers.a = result;
+
+				setFlag(Zero, result == 0);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, true);
+				setFlag(Carry, false);
+
+				pc++;
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
 			case 0xF0:
 			{
 				uint16_t address = 0xFF00 + rom[pc];
@@ -433,6 +507,14 @@ void Cpu::runOpcode()
 				cyclesRan += 4;
 				break;
 			}
+			case 0x4F:
+			{
+				registers.c = registers.a;
+
+				cycles += 4;
+				cyclesRan += 4;
+				break;
+			}
 			case 0xCB:
 			{
 				cycles += 4;
@@ -440,25 +522,30 @@ void Cpu::runOpcode()
 				wasCB = true;
 				break;
 			}
-			case 0x20:
+			case 0x01:
 			{
-				int8_t offset = static_cast<int8_t>(rom[pc]);
+				uint8_t lo = rom[pc];
 				pc++;
+				uint8_t hi = rom[pc];
+				pc++;
+				uint16_t value = (hi << 8) | lo;
+				registers.bc = value;
 
-				if (!isFlagSet(Zero))
-				{
-					pc += offset;
-					cycles += 12;
-					cyclesRan += 12;
-				}
-				else
-				{
-					cycles += 8;
-					cyclesRan += 8;
-				}
+				cycles += 12;
+				cyclesRan += 12;
 
 				break;
 			}
+			case 0x0B:
+			{
+				registers.bc--;
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+
 			case 0x21:
 			{
 				uint8_t lo = rom[pc];
@@ -510,6 +597,25 @@ void Cpu::runOpcode()
 
 				cycles += 4;
 				cyclesRan += 4;
+
+				break;
+			}
+			case 0x20:
+			{
+				int8_t offset = static_cast<int8_t>(rom[pc]);
+				pc++;
+
+				if (!isFlagSet(Zero))
+				{
+					pc += offset;
+					cycles += 12;
+					cyclesRan += 12;
+				}
+				else
+				{
+					cycles += 8;
+					cyclesRan += 8;
+				}
 
 				break;
 			}
@@ -571,6 +677,306 @@ void Cpu::runOpcode()
 
 				break;
 			}
+			case 0x78:
+			{
+				registers.a = registers.b;
+
+				cycles += 4;
+				cyclesRan += 4;
+				break;
+			}
+			case 0x79:
+			{
+				registers.a = registers.c;
+
+				cycles += 4;
+				cyclesRan += 4;
+				break;
+			}
+			case 0x5F:
+			{
+				registers.e = registers.a;
+
+				cycles += 4;
+				cyclesRan += 4;
+				break;
+			}
+			case 0xB0:
+			{
+				uint8_t result = registers.a | registers.b;
+				registers.a = result;
+
+				setFlag(Zero, result == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, false);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0xB1:
+			{
+				uint8_t result = registers.a | registers.c;
+				registers.a = result;
+
+				setFlag(Zero, result == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, false);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0xB7:
+			{
+				uint8_t result = registers.a | registers.a;
+				registers.a = result;
+
+				setFlag(Zero, result == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, false);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0xC9:
+			{
+				uint8_t lsb = read(stkp);
+				stkp++;
+				uint8_t msb = read(stkp);
+				stkp++;
+
+				uint16_t result = (msb << 8) | lsb;
+
+				pc = result;
+
+				cycles += 16;
+				cyclesRan += 16;
+
+				break;
+			}
+			case 0xEF:
+			{
+				stkp--;
+				write(stkp, (pc >> 8) & 0xFF);
+				stkp--;
+				write(stkp, pc & 0xFF);
+
+				pc = 0x28;
+
+				cycles += 16;
+				cyclesRan += 16;
+
+				break;
+			}
+			case 0x87:
+			{
+				uint8_t result = registers.a + registers.a;
+				registers.a = result;
+
+				setFlag(Zero, result == 0);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, (registers.a & 0x0F) + (registers.a & 0x0F) > 0x0F);
+				setFlag(Carry, result < registers.a);
+
+				cycles += 4;
+				cyclesRan += 4;
+				
+				break;
+			}
+			case 0xE1:
+			{
+				uint8_t lsb = read(stkp);
+				stkp++;
+
+				uint8_t msb = read(stkp);
+				stkp++;
+
+				registers.hl = (msb << 8) | lsb;
+
+				cycles += 12;
+				cyclesRan += 12;
+
+				break;
+			}
+			case 0x16:
+			{
+				registers.d = rom[pc];
+
+				pc++;
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x19:
+			{
+				uint32_t result = registers.hl + registers.de;
+				registers.hl = result & 0xFFFF;
+
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, (((registers.hl & 0xFFF) + (registers.de & 0xFFF)) & 0x1000) == 0x1000);
+				setFlag(Carry, (result & 0x10000) == 0x10000);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x56:
+			{
+				registers.d = read(registers.hl);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x5E:
+			{
+				registers.e = read(registers.hl);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x23:
+			{
+				registers.hl++;
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0xD5:
+			{
+				stkp--;
+				write(stkp, (registers.de >> 8) & 0xFF);
+				stkp--;
+				write(stkp, registers.de & 0xFF);
+
+				cycles += 16;
+				cyclesRan += 16;
+
+				break;
+			}
+			case 0xE9:
+			{
+				pc = registers.hl;
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x7C:
+			{
+				registers.a = registers.h;
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x7D:
+			{
+				registers.a = registers.l;
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0xC5:
+			{
+				stkp--;
+				write(stkp, (registers.bc >> 8) & 0xFF);
+				stkp--;
+				write(stkp, registers.bc & 0xFF);
+
+				cycles += 16;
+				cyclesRan += 16;
+
+				break;
+			}
+			case 0xE5:
+			{
+				stkp--;
+				write(stkp, (registers.hl >> 8) & 0xFF);
+				stkp--;
+				write(stkp, registers.hl & 0xFF);
+
+				cycles += 16;
+				cyclesRan += 16;
+
+				break;
+			}
+			case 0xF5:
+			{
+				stkp--;
+				write(stkp, (registers.af >> 8) & 0xFF);
+				stkp--;
+				write(stkp, registers.af & 0xFF);
+
+				cycles += 16;
+				cyclesRan += 16;
+
+				break;
+			}
+			case 0xF1:
+			{
+				uint8_t lo = read(stkp++);
+				uint8_t hi = read(stkp++);
+				registers.af = (hi << 8) | lo;
+
+				cycles += 12;
+				cyclesRan += 12;
+
+				break;
+			}
+			case 0xC1:
+			{
+				uint8_t lo = read(stkp++);
+				uint8_t hi = read(stkp++);
+				registers.bc = (hi << 8) | lo;
+
+				cycles += 12;
+				cyclesRan += 12;
+
+				break;
+			}
+			case 0x03:
+			{
+				registers.bc++;
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0xFA:
+			{
+				uint8_t lo = read(pc);
+				pc++;
+				uint8_t hi = read(pc);
+				pc++;
+
+				uint16_t address = (hi << 8) | lo;
+
+				registers.a = read(address);
+
+				cycles += 16;
+				cyclesRan += 16;
+
+				break;
+			}
 			default:
 				std::cout << "Unknown instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << " found" << std::endl;
 				setHasNotBroken(false);
@@ -591,8 +997,27 @@ void Cpu::runOpcode()
 
 				break;
 			}
+			case 0x37:
+			{
+				uint8_t lowerNibble = registers.a & 0x0F;
+				uint8_t upperNibble = (registers.a & 0xF0) >> 4;
+
+				uint8_t result = (lowerNibble << 4) | upperNibble;
+
+				registers.a = result;
+
+				setFlag(Zero, result == 0);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, false);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
 			default:
-				std::cout << "Unknown instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << " found" << std::endl;
+				std::cout << "Unknown CB instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << " found" << std::endl;
 				setHasNotBroken(false);
 				break;
 			}

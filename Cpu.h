@@ -41,6 +41,9 @@ public:
     // Loads Nintendo Logo into VRAM
     void loadNintendoLogo();
 
+    // Sets Vram Tiles
+    void setVramTiles();
+
 	// Helper functions
 	bool getHasNotBroken();
 	uint16_t getPc();
