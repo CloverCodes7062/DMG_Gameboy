@@ -128,10 +128,36 @@ void Cpu::setVramTiles()
 
 void Cpu::write(uint16_t addr, uint8_t data)
 {
+	if (addr >= 0x0000 && addr <= 0x3FFF)
+	{
+		std::cout << "WROTE TO ROM BANK 00" << std::endl;
+	}
+
+	if (addr >= 0x4000 && addr <= 0x7FFF)
+	{
+		std::cout << "WROTE TO ROM BANK 01-NN" << std::endl;
+	}
+
 	if (addr >= 0x8000 && addr <= 0x97FF)
 	{
 		std::cout << "WROTE TO TILE RAME" << std::endl;
 	}
+
+	if (addr >= 0xC000 && addr <= 0xCFFF)
+	{
+		std::cout << "WROTE TO WORK RAM 0" << std::endl;
+	}
+
+	if (addr >= 0xD000 && addr <= 0xDFFF)
+	{
+		std::cout << "WROTE TO WORK RAM 1" << std::endl;
+	}
+
+	if (addr >= 0xFF80 && addr <= 0xFFFE)
+	{
+		std::cout << "WROTE TO HIGH RAM" << std::endl;
+	}
+
 	bus.write(addr, data);
 }
 
@@ -172,13 +198,16 @@ bool Cpu::isFlagSet(Cpu::Flags flag) const
 
 void Cpu::runInstruction()
 {
+	//printVram();
 
 	if (cycles == 0)
 	{
 		runOpcode();
 
-		std::cout << "CYCLES RAN: " << cyclesRan << std::endl;
+		//std::cout << "CYCLES RAN: " << cyclesRan << std::endl;
 
+		// LY REG CURRENT IMPL
+		/*
 		if (cyclesRan >= 456)
 		{
 			std::cout << "INCREMENTING LY" << std::endl;
@@ -246,17 +275,43 @@ void Cpu::runInstruction()
 
 				// HANDLE VBLANK
 				write(ly, 0x00);
+				setFlag(Zero, true);
 				backgroundTiles.clear();
 				tileMapAddress = 0x9800;
 			}
 		}
+		*/
+		
 	}
 	cycles--;
 }
 
+void Cpu::printVram()
+{
+
+	for (uint16_t addr = 0x0000; addr <= 0x7FFF; addr++)
+	{
+		std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(addr)) << std::endl;
+	}
+	std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(bus.getRamSize()) << std::endl;
+}
+
+
 void Cpu::runOpcode()
 {
-	uint8_t instruction = rom[pc];
+	if (read(0xFF01) != 0x00)
+	{
+		std::cout << "RESULT FROM BLARGG TEST: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(0xFF01)) << std::endl;
+		setHasNotBroken(false);
+	}
+
+	if (read(0xFF02) != 0x00)
+	{
+		std::cout << "RESULT FROM BLARGG TEST: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(0xFF01)) << std::endl;
+		setHasNotBroken(false);
+	}
+
+	uint8_t instruction = read(pc);
 	
 	std::cout << "Registers:" << std::endl;
 
@@ -292,8 +347,12 @@ void Cpu::runOpcode()
 			{
 			case 0xC3: // Jump to address hi | lo
 			{
-				uint8_t lo = rom[pc];
-				uint8_t hi = rom[pc + 1];
+				uint8_t lo = read(pc);
+				std::cout << "read(pc): 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl << std::endl;
+				pc++;
+				uint8_t hi = read(pc);
+				std::cout << "read(pc): 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl << std::endl;
+				pc++;
 				uint16_t address = (hi << 8) | lo;
 
 				pc = address;
@@ -322,7 +381,7 @@ void Cpu::runOpcode()
 			}
 			case 0x28:
 			{
-				int8_t offset = static_cast<int8_t>(rom[pc]);
+				int8_t offset = static_cast<int8_t>(read(pc));
 				if (isFlagSet(Zero))
 				{
 					pc += offset + 1;
@@ -394,7 +453,7 @@ void Cpu::runOpcode()
 			}
 			case 0x18:
 			{
-				int8_t offset = static_cast<int8_t>(rom[pc]);
+				int8_t offset = static_cast<int8_t>(read(pc));
 				pc += offset + 1;
 				cycles += 12;
 				cyclesRan += 12;
@@ -402,8 +461,8 @@ void Cpu::runOpcode()
 			}
 			case 0xEA:
 			{
-				uint8_t lo = rom[pc];
-				uint8_t hi = rom[pc + 1];
+				uint8_t lo = read(pc);
+				uint8_t hi = read(pc + 1);
 				uint16_t address = (hi << 8) | lo;
 
 				write(address, registers.a);
@@ -432,7 +491,7 @@ void Cpu::runOpcode()
 			}
 			case 0xE0:
 			{
-				uint16_t address = (0xFF << 8) | rom[pc];
+				uint16_t address = (0xFF << 8) | read(pc);
 				write(address, registers.a);
 				pc++;
 				cycles += 12;
@@ -442,7 +501,7 @@ void Cpu::runOpcode()
 			}
 			case 0x3E:
 			{
-				registers.a = rom[pc];
+				registers.a = read(pc);
 				pc++;
 				cycles += 8;
 				cyclesRan += 8;
@@ -451,9 +510,9 @@ void Cpu::runOpcode()
 			}
 			case 0xCD:
 			{
-				uint8_t lo = rom[pc];
+				uint8_t lo = read(pc);
 				pc++;
-				uint8_t hi = rom[pc];
+				uint8_t hi = read(pc);
 				pc++;
 				uint16_t address = (hi << 8) | lo;
 
@@ -488,7 +547,7 @@ void Cpu::runOpcode()
 			}
 			case 0xF0:
 			{
-				uint16_t address = 0xFF00 + rom[pc];
+				uint16_t address = 0xFF00 + read(pc);
 				pc++;
 
 				uint8_t n = read(address);
@@ -524,9 +583,9 @@ void Cpu::runOpcode()
 			}
 			case 0x01:
 			{
-				uint8_t lo = rom[pc];
+				uint8_t lo = read(pc);
 				pc++;
-				uint8_t hi = rom[pc];
+				uint8_t hi = read(pc);
 				pc++;
 				uint16_t value = (hi << 8) | lo;
 				registers.bc = value;
@@ -548,8 +607,8 @@ void Cpu::runOpcode()
 
 			case 0x21:
 			{
-				uint8_t lo = rom[pc];
-				uint8_t hi = rom[pc + 1];
+				uint8_t lo = read(pc);
+				uint8_t hi = read(pc + 1);
 				
 				registers.hl = (hi << 8) | lo;
 
@@ -560,7 +619,7 @@ void Cpu::runOpcode()
 			}
 			case 0x0E:
 			{
-				registers.c = rom[pc];
+				registers.c = read(pc);
 
 				pc++;
 				cycles += 8;
@@ -570,7 +629,7 @@ void Cpu::runOpcode()
 			}
 			case 0x06:
 			{
-				registers.b = rom[pc];
+				registers.b = read(pc);
 
 				pc++;
 				cycles += 8;
@@ -602,7 +661,7 @@ void Cpu::runOpcode()
 			}
 			case 0x20:
 			{
-				int8_t offset = static_cast<int8_t>(rom[pc]);
+				int8_t offset = static_cast<int8_t>(read(pc));
 				pc++;
 
 				if (!isFlagSet(Zero))
@@ -633,8 +692,8 @@ void Cpu::runOpcode()
 			}
 			case 0x31:
 			{
-				uint8_t lo = rom[pc];
-				uint8_t hi = rom[pc + 1];
+				uint8_t lo = read(pc);
+				uint8_t hi = read(pc + 1);
 				pc += 2;
 
 				stkp = (hi << 8) | lo;
@@ -646,7 +705,7 @@ void Cpu::runOpcode()
 			}
 			case 0x36:
 			{
-				write(registers.hl, read(rom[pc]));
+				write(registers.hl, read(pc));
 				pc++;
 
 				cycles += 12;
@@ -808,7 +867,7 @@ void Cpu::runOpcode()
 			}
 			case 0x16:
 			{
-				registers.d = rom[pc];
+				registers.d = read(pc);
 
 				pc++;
 				cycles += 8;
@@ -977,6 +1036,346 @@ void Cpu::runOpcode()
 
 				break;
 			}
+			case 0x11:
+			{
+				uint8_t lo = read(pc);
+				pc++;
+				uint8_t hi = read(pc);
+				pc++;
+
+				uint16_t value = (hi << 8) | lo;
+
+				registers.de = value;
+
+				cycles += 12;
+				cyclesRan += 12;
+
+				break;
+			}
+			case 0x12:
+			{
+				write(registers.de, registers.a);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x14:
+			{
+				uint8_t originalValue = registers.d;
+
+				registers.d++;
+
+				setFlag(Zero, registers.d == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, ((originalValue & 0x0F) + 1) > 0x0F);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x1C:
+			{
+				uint8_t originalValue = registers.e;
+
+				registers.e++;
+
+				setFlag(Zero, registers.e == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, ((originalValue & 0x0F) + 1) > 0x0F);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0xC4:
+			{
+				uint8_t lo = read(pc);
+				pc++;
+				uint8_t hi = read(pc);
+				pc++;
+
+				uint16_t address = (hi << 8) | lo;
+
+				if (!isFlagSet(Zero))
+				{
+					pc = address;
+					cycles += 24;
+					cyclesRan += 24;
+
+					break;
+				}
+				else
+				{
+					cycles += 12;
+					cyclesRan += 24;
+
+					break;
+				}
+			}
+			case 0x77:
+			{
+				write(registers.hl, registers.a);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x24:
+			{
+				registers.h++;
+
+				setFlag(Zero, registers.h == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, (registers.h & 0x0F) == 0x00);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x2C:
+			{
+				registers.l++;
+
+				setFlag(Zero, registers.l == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, (registers.l & 0x0F) == 0x00);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x13:
+			{
+				registers.de++;
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x22:
+			{
+				write(registers.hl++, registers.a);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x1A:
+			{
+				registers.a = read(registers.de);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x46:
+			{
+				registers.b = read(registers.hl);
+				
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0xC6:
+			{
+				uint8_t immediateValue = read(pc);
+				pc++;
+
+				uint16_t result = registers.a + immediateValue;
+
+				setFlag(Zero, (result & 0xFF) == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, (registers.a & 0x0F) + (immediateValue & 0x0F) > 0x0F);
+				setFlag(Carry, result > 0xFF);
+
+				registers.a = result & 0xFF;
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0xD6:
+			{
+				uint8_t immediateValue = read(pc);
+				pc++;
+
+				uint16_t result = registers.a - immediateValue;
+
+				setFlag(Zero, (result & 0xFF) == 0x00);
+				setFlag(Subtraction, true);
+				setFlag(HalfCarry, (registers.a & 0x0F) < (immediateValue & 0x0F));
+				setFlag(Carry, result > 0xFF);
+
+				registers.a = result & 0xFF;
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x2D:
+			{
+				registers.l--;
+
+				setFlag(Zero, registers.l == 0x00);
+				setFlag(Subtraction, true);
+				setFlag(HalfCarry, (registers.l & 0x0F) == 0x0F);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x4E:
+			{
+				registers.c = read(registers.hl);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0xAE:
+			{
+				uint8_t value = read(registers.hl);
+
+				registers.a ^= value;
+
+				setFlag(Zero, registers.a == 0x00);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, false);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x26:
+			{
+				registers.h = read(pc);
+				pc++;
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x1F:
+			{
+				uint8_t originalValue = registers.a;
+
+				registers.a = (registers.a >> 1) | (isFlagSet(Carry) << 7);
+
+				setFlag(Zero, false);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, originalValue & 0x01);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x30:
+			{
+				int8_t offset = static_cast<int8_t>(read(pc));
+				pc++;
+
+				if (!isFlagSet(Carry))
+				{
+
+					pc += offset;
+
+					cycles += 12;
+					cyclesRan += 12;
+				}
+				else
+				{
+					cycles += 8;
+					cyclesRan += 8;
+				}
+
+				break;
+			}
+			case 0xEE:
+			{
+				uint8_t value = read(pc);
+				pc++;
+
+				registers.a ^= value;
+
+				setFlag(Zero, registers.a == 0);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, false);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x70:
+			{
+				write(registers.hl, registers.b);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x7A:
+			{
+				registers.a = registers.d;
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x7B:
+			{
+				registers.a = registers.e;
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x57:
+			{
+				registers.d = registers.a;
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
+			case 0x25:
+			{
+				registers.h--;
+
+				setFlag(Zero, (registers.hl & 0xFF) == 0);
+				setFlag(Subtraction, true);
+				setFlag(HalfCarry, (registers.hl & 0x0F) == 0x0F);
+
+				cycles += 4;
+				cyclesRan += 4;
+
+				break;
+			}
 			default:
 				std::cout << "Unknown instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << " found" << std::endl;
 				setHasNotBroken(false);
@@ -1016,6 +1415,53 @@ void Cpu::runOpcode()
 
 				break;
 			}
+			case 0x38:
+			{
+				uint8_t originalValue = registers.b;
+				registers.b >>= 1;
+
+				setFlag(Zero, registers.b == 0);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, originalValue & 0x01);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x1A:
+			{
+				uint8_t originalValue = registers.d;
+
+				registers.d = (registers.d >> 1) | (isFlagSet(Carry) << 7);
+
+				setFlag(Zero, registers.d == 0);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, originalValue & 0x01);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
+			case 0x19:
+			{
+				uint8_t originalValue = registers.c;
+
+				registers.c = (registers.c >> 1) | (isFlagSet(Carry) << 7);
+
+				setFlag(Zero, registers.c == 0);
+				setFlag(Subtraction, false);
+				setFlag(HalfCarry, false);
+				setFlag(Carry, originalValue & 0x01);
+
+				cycles += 8;
+				cyclesRan += 8;
+
+				break;
+			}
 			default:
 				std::cout << "Unknown CB instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << " found" << std::endl;
 				setHasNotBroken(false);
@@ -1030,7 +1476,10 @@ void Cpu::runOpcode()
 
 void Cpu::loadRom(std::vector<uint8_t> romData)
 {
-	rom = romData;
+	for (uint16_t addr = 0x0000; addr < romData.size(); addr++)
+	{
+		write(addr, romData[addr]);
+	}
 	setTitle();
 }
 
@@ -1056,7 +1505,7 @@ void Cpu::setTitle()
 {
 	std::string title;
 	for (uint16_t addr = 0x0134; addr <= 0x0143; ++addr) {
-		title += static_cast<char>(rom[addr]);
+		title += static_cast<char>(read(addr));
 	}
 
 	romTitle = title;

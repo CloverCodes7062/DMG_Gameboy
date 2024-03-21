@@ -28,3 +28,8 @@ uint8_t Bus::read(uint16_t addr)
 {
 	return ram[addr];
 }
+
+uint32_t Bus::getRamSize()
+{
+	return ram.size();
+}

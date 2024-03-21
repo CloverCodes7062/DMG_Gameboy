@@ -47,6 +47,7 @@ public:
 	// Helper functions
 	bool getHasNotBroken();
 	uint16_t getPc();
+    void printVram();
 	void setHasNotBroken(bool value);
 	std::string getTitle();
     std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb);

@@ -28,7 +28,7 @@ void gameboy::loadRom(const std::string& filepath)
     file.close();
 
     cpu.loadRom(rom_data);
-    std::cout << cpu.getTitle() << std::endl;
+    std::cout << "ROM TITLE" << cpu.getTitle() << std::endl;
 
     emulate();
 }
