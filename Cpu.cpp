@@ -24,6 +24,12 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	tileMapAddress = 0x9800;
 
 	loadNintendoLogo();
+
+	using a = Cpu;
+	lookup = 
+	{
+
+	}
 }
 
 Cpu::~Cpu()
@@ -1514,4 +1520,95 @@ void Cpu::setTitle()
 std::string Cpu::getTitle()
 {
 	return romTitle;
+}
+
+void Cpu::NOP()
+{
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::LDrrd16()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+	uint8_t lo = read(pc);
+	pc++;
+	uint8_t hi = read(pc);
+	pc++;
+
+	uint16_t value = (hi << 8) | lo;
+
+	switch (opcode)
+	{
+		case 0x01: // LD BC, d16
+			registers.bc = value;
+			break;
+		case 0x11: // LD DE, d16
+			registers.de = value;
+			break;
+		case 0x21: // LD HL, d16
+			registers.hl = value;
+			break;
+		case 0x31: // LD SP, d16
+			stkp = value;
+			break;
+		default:
+			std::cout << "Unknown LDrrd16 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::LDarrR()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0x02: // LD (BC), A
+			write(registers.bc, registers.a);
+			break;
+		case 0x12: // LD (DE), A
+			write(registers.de, registers.a);
+			break;
+		case 0x22: // LD (HL+), A
+			write(registers.hl++, registers.a);
+			break;
+		case 0x32: // LD (HL-), A
+			write(registers.hl--, registers.a);
+			break;
+		case 0x70: // LD (HL), B
+			write(registers.hl, registers.b);
+			break;
+		case 0x71: // LD (HL), C
+			write(registers.hl, registers.c);
+			break;
+		case 0x72: // LD (HL), D
+			write(registers.hl, registers.d);
+			break;
+		case 0x73: // LD (HL), E
+			write(registers.hl, registers.e);
+			break;
+		case 0x74: // LD (HL), H
+			write(registers.hl, registers.h);
+			break;
+		case 0x75: // LD (HL), L
+			write(registers.hl, registers.l);
+			break;
+		case 0x77: // LD (HL), A
+			write(registers.hl, registers.a);
+			break;
+		default:
+			std::cout << "Unknown LDarrR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 8;
+	cyclesRan += 8;
 }

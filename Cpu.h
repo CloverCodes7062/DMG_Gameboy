@@ -134,9 +134,40 @@ private:
     int totalFramesGenerated = 0;
 
 private:
+
+    void NOP(); void LDrrd16(); void LDarrR(); void INCrr(); void INCr(); void DECr(); void LDrd8(); void RLCA(); void LDa16SP(); void ADDrrRR(); void LDrARR(); void DECrr(); void RRCA();
+    void STOP0(); void RLA(); void JRr8(); void RRA();
+    void JRNZr8(); void LDarrINCR(); void DAA(); void JRZr8(); void LDaRRINC(); void CPL();
+    void JRNCr8(); void LDarrDECR(); void INCaRR(); void DECaRR(); void LDarrD8(); void SCF(); void JRCr8(); void LDaRRDEC(); void CCF();
+    void LDrR(); void LDrARR();
+    //
+    //
+    void LDarrR(); void HALT();
+    void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
+    void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
+    void ANDr(); void ANDarr(); void XORr(); void XORarr();
+    void RETNZ(); void POPrr(); void JPNZa16(); void JPa16(); void CALLNZa16(); void PUSHrr(); void ADDrd8(); void RST00(); void RETZ(); void RET(); void JPZa16(); void PREFIXCB(); void CALLZa16(); void CALLa16(); void ACArd8(); void RST08();
+    void RETNC(); void JPNCa16(); void CALLNCa16(); void SUBd8(); void RST10(); void RETC(); void RETI(); void JPCa16(); void CALLCa16(); void SBCrd8(); void RST18();
+    void LDHa8r(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
+    void LDHra8(); void LDraC(); void DI(); void ORd8(); void RST30(); void LDHLSPr8(); void LDSPHL(); void LDAa16(); void EI(); void CPd8(); void RST38();
+
+    void XXX();
+
+    struct INSTRUCTION
+    {
+        std::string name;
+        uint8_t(Cpu::* operate)(void) = nullptr;
+        uint8_t cycles = 0;
+    };
+
+    std::vector<INSTRUCTION> lookup;
+    std::vector<INSTRUCTION> lookupCB;
+
+private:
     // PPU
 
     uint16_t lcdc; // Address of LCDC FF40
     uint16_t stat; // Address of LCD Status Register FF41
     uint16_t ly; // Address of the LY register FF44
+
 };
