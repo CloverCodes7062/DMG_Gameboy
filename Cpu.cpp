@@ -317,8 +317,6 @@ void Cpu::runOpcode()
 		setHasNotBroken(false);
 	}
 
-	uint8_t instruction = read(pc);
-	
 	std::cout << "Registers:" << std::endl;
 
 	std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
@@ -334,1150 +332,6 @@ void Cpu::runOpcode()
 	std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
 
 	std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << std::endl << std::endl;
-
-	pc++;
-	
-	if (!instruction)
-	{
-		std::cout << "NOP READ" << std::endl;
-		cycles += 4;
-		cyclesRan += 4;
-	}
-	else
-	{
-		if (!wasCB)
-		{
-			std::cout << "Reading From Regular Table" << std::endl;
-
-			switch (instruction)
-			{
-			case 0xC3: // Jump to address hi | lo
-			{
-				uint8_t lo = read(pc);
-				std::cout << "read(pc): 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl << std::endl;
-				pc++;
-				uint8_t hi = read(pc);
-				std::cout << "read(pc): 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl << std::endl;
-				pc++;
-				uint16_t address = (hi << 8) | lo;
-
-				pc = address;
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0xFE:
-			{
-				uint8_t compare_value = read(pc);
-				uint8_t reg_a_value = registers.a;
-
-				uint8_t result = reg_a_value - compare_value;
-
-				setFlag(Zero, result == 0x00);
-				setFlag(Subtraction, true);
-				setFlag(HalfCarry, (reg_a_value & 0x0F) < (compare_value & 0x0F));
-				setFlag(Carry, reg_a_value < compare_value);
-
-				pc++;
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x28:
-			{
-				int8_t offset = static_cast<int8_t>(read(pc));
-				if (isFlagSet(Zero))
-				{
-					pc += offset + 1;
-					cycles += 12;
-					cyclesRan += 12;
-				}
-				else
-				{
-					pc++;
-					cycles += 8;
-					cyclesRan += 8;
-				}
-
-				break;
-			}
-			case 0x2F:
-			{
-				registers.a = ~registers.a;
-
-				setFlag(Subtraction, true);
-				setFlag(HalfCarry, true);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xAF:
-			{
-				uint8_t result = registers.a ^ registers.a;
-				registers.a = result;
-
-				setFlag(Zero, result == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0xA1:
-			{
-				uint8_t result = registers.a & registers.c;
-				registers.a = result;
-
-				setFlag(Zero, result == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, true);
-				setFlag(Carry, false);
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0xA9:
-			{
-				uint8_t result = registers.a ^ registers.c;
-				registers.a = result;
-
-				setFlag(Zero, result == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0x18:
-			{
-				int8_t offset = static_cast<int8_t>(read(pc));
-				pc += offset + 1;
-				cycles += 12;
-				cyclesRan += 12;
-				break;
-			}
-			case 0xEA:
-			{
-				uint8_t lo = read(pc);
-				uint8_t hi = read(pc + 1);
-				uint16_t address = (hi << 8) | lo;
-
-				write(address, registers.a);
-
-				pc += 2;
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0xF3:
-			{
-				write(ie, 0); // TODO: HANDLE INTERRUPTS
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xFB:
-			{
-				write(ie, 1); // TODO: HANDLE INTERRUPTS
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xE0:
-			{
-				uint16_t address = (0xFF << 8) | read(pc);
-				write(address, registers.a);
-				pc++;
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x3E:
-			{
-				registers.a = read(pc);
-				pc++;
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xCD:
-			{
-				uint8_t lo = read(pc);
-				pc++;
-				uint8_t hi = read(pc);
-				pc++;
-				uint16_t address = (hi << 8) | lo;
-
-				stkp--;
-				write(stkp, (pc >> 8) & 0xFF);
-				stkp--;
-				write(stkp, pc & 0xFF);
-
-				pc = address;
-				cycles += 24;
-				cyclesRan += 24;
-
-				std::cout << pc << std::endl;
-				break;
-			}
-			case 0xE6:
-			{
-				uint8_t n = read(pc);
-				uint8_t result = registers.a & n;
-				registers.a = result;
-
-				setFlag(Zero, result == 0);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, true);
-				setFlag(Carry, false);
-
-				pc++;
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xF0:
-			{
-				uint16_t address = 0xFF00 + read(pc);
-				pc++;
-
-				uint8_t n = read(address);
-
-				registers.a = n;
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x47:
-			{
-				registers.b = registers.a;
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0x4F:
-			{
-				registers.c = registers.a;
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0xCB:
-			{
-				cycles += 4;
-				cyclesRan += 4;
-				wasCB = true;
-				break;
-			}
-			case 0x01:
-			{
-				uint8_t lo = read(pc);
-				pc++;
-				uint8_t hi = read(pc);
-				pc++;
-				uint16_t value = (hi << 8) | lo;
-				registers.bc = value;
-
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x0B:
-			{
-				registers.bc--;
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-
-			case 0x21:
-			{
-				uint8_t lo = read(pc);
-				uint8_t hi = read(pc + 1);
-				
-				registers.hl = (hi << 8) | lo;
-
-				pc += 2;
-				cycles += 12;
-				cyclesRan += 12;
-				break;
-			}
-			case 0x0E:
-			{
-				registers.c = read(pc);
-
-				pc++;
-				cycles += 8;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x06:
-			{
-				registers.b = read(pc);
-
-				pc++;
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x32:
-			{
-				write(registers.hl, registers.a);
-
-				registers.hl -= 1;
-				cycles += 8;
-				cyclesRan += 8;
-				break;
-			}
-			case 0x05:
-			{
-				registers.b--;
-
-				setFlag(Zero, registers.b == 0x00);
-				setFlag(Subtraction, true);
-				setFlag(HalfCarry, (registers.b & 0x0F) == 0x0F);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x20:
-			{
-				int8_t offset = static_cast<int8_t>(read(pc));
-				pc++;
-
-				if (!isFlagSet(Zero))
-				{
-					pc += offset;
-					cycles += 12;
-					cyclesRan += 12;
-				}
-				else
-				{
-					cycles += 8;
-					cyclesRan += 8;
-				}
-
-				break;
-			}
-			case 0x0D:
-			{
-				registers.c--;
-
-				setFlag(Zero, registers.c == 0x00);
-				setFlag(Subtraction, true);
-				setFlag(HalfCarry, (registers.c & 0x0F) == 0x0F);
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0x31:
-			{
-				uint8_t lo = read(pc);
-				uint8_t hi = read(pc + 1);
-				pc += 2;
-
-				stkp = (hi << 8) | lo;
-
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x36:
-			{
-				write(registers.hl, read(pc));
-				pc++;
-
-				cycles += 12;
-				cyclesRan += 12;
-				break;
-			}
-			case 0x2A:
-			{
-				registers.a = read(registers.hl);
-				registers.hl++;
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xE2:
-			{
-				uint8_t lo = registers.c;
-				uint8_t hi = 0xFF;
-				
-				uint16_t addr = (hi << 8) | lo;
-
-				write(addr, registers.a);
-
-				cycles += 8;
-				pc++;
-
-				break;
-			}
-			case 0x78:
-			{
-				registers.a = registers.b;
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0x79:
-			{
-				registers.a = registers.c;
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0x5F:
-			{
-				registers.e = registers.a;
-
-				cycles += 4;
-				cyclesRan += 4;
-				break;
-			}
-			case 0xB0:
-			{
-				uint8_t result = registers.a | registers.b;
-				registers.a = result;
-
-				setFlag(Zero, result == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xB1:
-			{
-				uint8_t result = registers.a | registers.c;
-				registers.a = result;
-
-				setFlag(Zero, result == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xB7:
-			{
-				uint8_t result = registers.a | registers.a;
-				registers.a = result;
-
-				setFlag(Zero, result == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xC9:
-			{
-				uint8_t lsb = read(stkp);
-				stkp++;
-				uint8_t msb = read(stkp);
-				stkp++;
-
-				uint16_t result = (msb << 8) | lsb;
-
-				pc = result;
-
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0xEF:
-			{
-				stkp--;
-				write(stkp, (pc >> 8) & 0xFF);
-				stkp--;
-				write(stkp, pc & 0xFF);
-
-				pc = 0x28;
-
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0x87:
-			{
-				uint8_t result = registers.a + registers.a;
-				registers.a = result;
-
-				setFlag(Zero, result == 0);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, (registers.a & 0x0F) + (registers.a & 0x0F) > 0x0F);
-				setFlag(Carry, result < registers.a);
-
-				cycles += 4;
-				cyclesRan += 4;
-				
-				break;
-			}
-			case 0xE1:
-			{
-				uint8_t lsb = read(stkp);
-				stkp++;
-
-				uint8_t msb = read(stkp);
-				stkp++;
-
-				registers.hl = (msb << 8) | lsb;
-
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x16:
-			{
-				registers.d = read(pc);
-
-				pc++;
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x19:
-			{
-				uint32_t result = registers.hl + registers.de;
-				registers.hl = result & 0xFFFF;
-
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, (((registers.hl & 0xFFF) + (registers.de & 0xFFF)) & 0x1000) == 0x1000);
-				setFlag(Carry, (result & 0x10000) == 0x10000);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x56:
-			{
-				registers.d = read(registers.hl);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x5E:
-			{
-				registers.e = read(registers.hl);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x23:
-			{
-				registers.hl++;
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xD5:
-			{
-				stkp--;
-				write(stkp, (registers.de >> 8) & 0xFF);
-				stkp--;
-				write(stkp, registers.de & 0xFF);
-
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0xE9:
-			{
-				pc = registers.hl;
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x7C:
-			{
-				registers.a = registers.h;
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x7D:
-			{
-				registers.a = registers.l;
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xC5:
-			{
-				stkp--;
-				write(stkp, (registers.bc >> 8) & 0xFF);
-				stkp--;
-				write(stkp, registers.bc & 0xFF);
-
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0xE5:
-			{
-				stkp--;
-				write(stkp, (registers.hl >> 8) & 0xFF);
-				stkp--;
-				write(stkp, registers.hl & 0xFF);
-
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0xF5:
-			{
-				stkp--;
-				write(stkp, (registers.af >> 8) & 0xFF);
-				stkp--;
-				write(stkp, registers.af & 0xFF);
-
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0xF1:
-			{
-				uint8_t lo = read(stkp++);
-				uint8_t hi = read(stkp++);
-				registers.af = (hi << 8) | lo;
-
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0xC1:
-			{
-				uint8_t lo = read(stkp++);
-				uint8_t hi = read(stkp++);
-				registers.bc = (hi << 8) | lo;
-
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x03:
-			{
-				registers.bc++;
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xFA:
-			{
-				uint8_t lo = read(pc);
-				pc++;
-				uint8_t hi = read(pc);
-				pc++;
-
-				uint16_t address = (hi << 8) | lo;
-
-				registers.a = read(address);
-
-				cycles += 16;
-				cyclesRan += 16;
-
-				break;
-			}
-			case 0x11:
-			{
-				uint8_t lo = read(pc);
-				pc++;
-				uint8_t hi = read(pc);
-				pc++;
-
-				uint16_t value = (hi << 8) | lo;
-
-				registers.de = value;
-
-				cycles += 12;
-				cyclesRan += 12;
-
-				break;
-			}
-			case 0x12:
-			{
-				write(registers.de, registers.a);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x14:
-			{
-				uint8_t originalValue = registers.d;
-
-				registers.d++;
-
-				setFlag(Zero, registers.d == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, ((originalValue & 0x0F) + 1) > 0x0F);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x1C:
-			{
-				uint8_t originalValue = registers.e;
-
-				registers.e++;
-
-				setFlag(Zero, registers.e == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, ((originalValue & 0x0F) + 1) > 0x0F);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0xC4:
-			{
-				uint8_t lo = read(pc);
-				pc++;
-				uint8_t hi = read(pc);
-				pc++;
-
-				uint16_t address = (hi << 8) | lo;
-
-				if (!isFlagSet(Zero))
-				{
-					pc = address;
-					cycles += 24;
-					cyclesRan += 24;
-
-					break;
-				}
-				else
-				{
-					cycles += 12;
-					cyclesRan += 24;
-
-					break;
-				}
-			}
-			case 0x77:
-			{
-				write(registers.hl, registers.a);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x24:
-			{
-				registers.h++;
-
-				setFlag(Zero, registers.h == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, (registers.h & 0x0F) == 0x00);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x2C:
-			{
-				registers.l++;
-
-				setFlag(Zero, registers.l == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, (registers.l & 0x0F) == 0x00);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x13:
-			{
-				registers.de++;
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x22:
-			{
-				write(registers.hl++, registers.a);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x1A:
-			{
-				registers.a = read(registers.de);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x46:
-			{
-				registers.b = read(registers.hl);
-				
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xC6:
-			{
-				uint8_t immediateValue = read(pc);
-				pc++;
-
-				uint16_t result = registers.a + immediateValue;
-
-				setFlag(Zero, (result & 0xFF) == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, (registers.a & 0x0F) + (immediateValue & 0x0F) > 0x0F);
-				setFlag(Carry, result > 0xFF);
-
-				registers.a = result & 0xFF;
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xD6:
-			{
-				uint8_t immediateValue = read(pc);
-				pc++;
-
-				uint16_t result = registers.a - immediateValue;
-
-				setFlag(Zero, (result & 0xFF) == 0x00);
-				setFlag(Subtraction, true);
-				setFlag(HalfCarry, (registers.a & 0x0F) < (immediateValue & 0x0F));
-				setFlag(Carry, result > 0xFF);
-
-				registers.a = result & 0xFF;
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x2D:
-			{
-				registers.l--;
-
-				setFlag(Zero, registers.l == 0x00);
-				setFlag(Subtraction, true);
-				setFlag(HalfCarry, (registers.l & 0x0F) == 0x0F);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x4E:
-			{
-				registers.c = read(registers.hl);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0xAE:
-			{
-				uint8_t value = read(registers.hl);
-
-				registers.a ^= value;
-
-				setFlag(Zero, registers.a == 0x00);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x26:
-			{
-				registers.h = read(pc);
-				pc++;
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x1F:
-			{
-				uint8_t originalValue = registers.a;
-
-				registers.a = (registers.a >> 1) | (isFlagSet(Carry) << 7);
-
-				setFlag(Zero, false);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, originalValue & 0x01);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x30:
-			{
-				int8_t offset = static_cast<int8_t>(read(pc));
-				pc++;
-
-				if (!isFlagSet(Carry))
-				{
-
-					pc += offset;
-
-					cycles += 12;
-					cyclesRan += 12;
-				}
-				else
-				{
-					cycles += 8;
-					cyclesRan += 8;
-				}
-
-				break;
-			}
-			case 0xEE:
-			{
-				uint8_t value = read(pc);
-				pc++;
-
-				registers.a ^= value;
-
-				setFlag(Zero, registers.a == 0);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x70:
-			{
-				write(registers.hl, registers.b);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x7A:
-			{
-				registers.a = registers.d;
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x7B:
-			{
-				registers.a = registers.e;
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x57:
-			{
-				registers.d = registers.a;
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			case 0x25:
-			{
-				registers.h--;
-
-				setFlag(Zero, (registers.hl & 0xFF) == 0);
-				setFlag(Subtraction, true);
-				setFlag(HalfCarry, (registers.hl & 0x0F) == 0x0F);
-
-				cycles += 4;
-				cyclesRan += 4;
-
-				break;
-			}
-			default:
-				std::cout << "Unknown instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << " found" << std::endl;
-				setHasNotBroken(false);
-				break;
-			}
-		}
-		else
-		{
-			std::cout << "Reading From CB Table" << std::endl;
-
-			switch (instruction)
-			{
-			case 0x87:
-			{
-				registers.a &= ~(1 << 0);
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x37:
-			{
-				uint8_t lowerNibble = registers.a & 0x0F;
-				uint8_t upperNibble = (registers.a & 0xF0) >> 4;
-
-				uint8_t result = (lowerNibble << 4) | upperNibble;
-
-				registers.a = result;
-
-				setFlag(Zero, result == 0);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, false);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x38:
-			{
-				uint8_t originalValue = registers.b;
-				registers.b >>= 1;
-
-				setFlag(Zero, registers.b == 0);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, originalValue & 0x01);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x1A:
-			{
-				uint8_t originalValue = registers.d;
-
-				registers.d = (registers.d >> 1) | (isFlagSet(Carry) << 7);
-
-				setFlag(Zero, registers.d == 0);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, originalValue & 0x01);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			case 0x19:
-			{
-				uint8_t originalValue = registers.c;
-
-				registers.c = (registers.c >> 1) | (isFlagSet(Carry) << 7);
-
-				setFlag(Zero, registers.c == 0);
-				setFlag(Subtraction, false);
-				setFlag(HalfCarry, false);
-				setFlag(Carry, originalValue & 0x01);
-
-				cycles += 8;
-				cyclesRan += 8;
-
-				break;
-			}
-			default:
-				std::cout << "Unknown CB instruction 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << " found" << std::endl;
-				setHasNotBroken(false);
-				break;
-			}
-
-			wasCB = false;
-		}
-		
-	}
 }
 
 void Cpu::loadRom(std::vector<uint8_t> romData)
@@ -1542,17 +396,25 @@ void Cpu::LDrrd16()
 	switch (opcode)
 	{
 		case 0x01: // LD BC, d16
+		{
 			registers.bc = value;
 			break;
+		}
 		case 0x11: // LD DE, d16
+		{
 			registers.de = value;
 			break;
+		}
 		case 0x21: // LD HL, d16
+		{
 			registers.hl = value;
 			break;
+		}
 		case 0x31: // LD SP, d16
+		{
 			stkp = value;
 			break;
+		}
 		default:
 			std::cout << "Unknown LDrrd16 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 			setHasNotBroken(false);
@@ -1571,38 +433,60 @@ void Cpu::LDarrR()
 	switch (opcode)
 	{
 		case 0x02: // LD (BC), A
+		{
 			write(registers.bc, registers.a);
 			break;
+		}
 		case 0x12: // LD (DE), A
+		{
 			write(registers.de, registers.a);
 			break;
+		}
 		case 0x22: // LD (HL+), A
+		{
 			write(registers.hl++, registers.a);
 			break;
+		}
 		case 0x32: // LD (HL-), A
+		{
 			write(registers.hl--, registers.a);
 			break;
+		}
 		case 0x70: // LD (HL), B
+		{
 			write(registers.hl, registers.b);
 			break;
+		}
 		case 0x71: // LD (HL), C
+		{
 			write(registers.hl, registers.c);
 			break;
+		}
 		case 0x72: // LD (HL), D
+		{
 			write(registers.hl, registers.d);
 			break;
+		}
 		case 0x73: // LD (HL), E
+		{
 			write(registers.hl, registers.e);
 			break;
+		}
 		case 0x74: // LD (HL), H
+		{
 			write(registers.hl, registers.h);
 			break;
+		}
 		case 0x75: // LD (HL), L
+		{
 			write(registers.hl, registers.l);
 			break;
+		}
 		case 0x77: // LD (HL), A
+		{
 			write(registers.hl, registers.a);
 			break;
+		}
 		default:
 			std::cout << "Unknown LDarrR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 			setHasNotBroken(false);
@@ -1611,4 +495,1022 @@ void Cpu::LDarrR()
 
 	cycles += 8;
 	cyclesRan += 8;
+}
+
+void Cpu::INCrr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0x03: // INC BC
+		{
+			registers.bc++;
+			break;
+		}
+		case 0x13: // INC DE
+		{
+			registers.de++;
+			break;
+		}
+		case 0x23: // INC HL
+		{
+			registers.hl++;
+			break;
+		}
+		case 0x33: // INC SP (Stack Pointer)
+		{
+			stkp++;
+			break;
+		}
+		default:
+			std::cout << "Unknown INCrr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 8;
+	cyclesRan += 8;
+}
+
+void Cpu::INCr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t* regPtr = nullptr;
+
+	switch (opcode)
+	{
+		case 0x04: // INC B
+		{
+			regPtr = &registers.b;
+			break;
+		}
+		case 0x14: // INC D
+		{
+			regPtr = &registers.d;
+			break;
+		}
+		case 0x24: // INC H
+		{
+			regPtr = &registers.h;
+			break;
+		}
+		case 0x0C: // INC C
+		{
+			regPtr = &registers.c;
+			break;
+		}
+		case 0x1C: // INC E
+		{
+			regPtr = &registers.e;
+			break;
+		}
+		case 0x2C: // INC L
+		{
+			regPtr = &registers.l;
+			break;
+		}
+		case 0x3C: // INC A
+		{
+			regPtr = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown INCr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	if (regPtr != nullptr)
+	{
+		(*regPtr)++;
+
+		setFlag(Zero, (*regPtr) == 0);
+		setFlag(Subtraction, false);
+		setFlag(HalfCarry, ((*regPtr) & 0x0F) == 0);
+	}
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::DECr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t* regPtr = nullptr;
+
+	switch (opcode)
+	{
+		case 0x04: // DEC B
+		{
+			regPtr = &registers.b;
+			break;
+		}
+		case 0x14: // DEC D
+		{
+			regPtr = &registers.d;
+			break;
+		}
+		case 0x24: // DEC H
+		{
+			regPtr = &registers.h;
+			break;
+		}
+		case 0x0C: // DEC C
+		{
+			regPtr = &registers.c;
+			break;
+		}
+		case 0x1C: // DEC E
+		{
+			regPtr = &registers.e;
+			break;
+		}
+		case 0x2C: // DEC L
+		{
+			regPtr = &registers.l;
+			break;
+		}
+		case 0x3C: // DEC A
+		{
+			regPtr = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown INCr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	if (regPtr != nullptr)
+	{
+		(*regPtr)--;
+
+		setFlag(Zero, (*regPtr) == 0);
+		setFlag(Subtraction, true);
+		setFlag(HalfCarry, ((*regPtr) & 0x0F) == 0);
+	}
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::INCaRR()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0x34: // INC (HL)
+		{
+			uint8_t value = read(registers.hl);
+			value++;
+			write(registers.hl, value);
+
+			setFlag(Zero, value == 0);
+			setFlag(Subtraction, false);
+			setFlag(HalfCarry, (value & 0x0F) == 0);
+
+			break;
+		}
+		default:
+			std::cout << "Unknown INCaRR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::DECaRR()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0x34: // DEC (HL)
+		{
+			uint8_t value = read(registers.hl);
+			value--;
+			write(registers.hl, value);
+
+			setFlag(Zero, value == 0);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (value & 0x0F) == 0);
+
+			break;
+		}
+		default:
+			std::cout << "Unknown DECaRR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::LDrd8()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t value = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0x06:
+		{
+			registers.b = value;
+			break;
+		}
+		case 0x16:
+		{
+			registers.d = value;
+			break;
+		}
+		case 0x26:
+		{
+			registers.h = value;
+			break;
+		}
+		case 0x36:
+		{
+			write(registers.hl, value);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		default:
+			std::cout << "Unknown LDrd8 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 8;
+	cyclesRan += 8;
+}
+
+void Cpu::RLCA() // TODO: FINISH RLCA(); ROTATE REG A AND SET CARRY FLAG
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		default:
+			std::cout << "Unknown RLCA instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+}
+
+void Cpu::LDrR()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0x40:
+		{
+			registers.b = registers.b;
+			break;
+		}
+		case 0x41:
+		{
+			registers.b = registers.c;
+			break;
+		}
+		case 0x42:
+		{
+			registers.b = registers.d;
+			break;
+		}
+		case 0x43:
+		{
+			registers.b = registers.e;
+			break;
+		}
+		case 0x44:
+		{
+			registers.b = registers.h;
+			break;
+		}
+		case 0x45:
+		{
+			registers.b = registers.l;
+			break;
+		}
+		case 0x46:
+		{
+			registers.b = read(registers.hl);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x47:
+		{
+			registers.b = registers.a;
+			break;
+		}
+		case 0x48:
+		{
+			registers.c = registers.b;
+			break;
+		}
+		case 0x49:
+		{
+			registers.c = registers.c;
+			break;
+		}
+		case 0x4A:
+		{
+			registers.c = registers.d;
+			break;
+		}
+		case 0x4B:
+		{
+			registers.c = registers.e;
+			break;
+		}
+		case 0x4C:
+		{
+			registers.c = registers.h;
+			break;
+		}
+		case 0x4D:
+		{
+			registers.c = registers.l;
+			break;
+		}
+		case 0x4E:
+		{
+			registers.c = read(registers.hl);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x4F:
+		{
+			registers.c = registers.a;
+			break;
+		}
+		case 0x50:
+		{
+			registers.d = registers.b;
+			break;
+		}
+		case 0x51:
+		{
+			registers.d = registers.c;
+			break;
+		}
+		case 0x52:
+		{
+			registers.d = registers.d;
+			break;
+		}
+		case 0x53:
+		{
+			registers.d = registers.e;
+			break;
+		}
+		case 0x54:
+		{
+			registers.d = registers.h;
+			break;
+		}
+		case 0x55:
+		{
+			registers.d = registers.l;
+			break;
+		}
+		case 0x56:
+		{
+			registers.d = read(registers.hl);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x57:
+		{
+			registers.d = registers.a;
+			break;
+		}
+		case 0x58:
+		{
+			registers.e = registers.b;
+			break;
+		}
+		case 0x59:
+		{
+			registers.e = registers.c;
+			break;
+		}
+		case 0x5A:
+		{
+			registers.e = registers.d;
+			break;
+		}
+		case 0x5B:
+		{
+			registers.e = registers.e;
+			break;
+		}
+		case 0x5C:
+		{
+			registers.e = registers.h;
+			break;
+		}
+		case 0x5D:
+		{
+			registers.e = registers.l;
+			break;
+		}
+		case 0x5E:
+		{
+			registers.d = read(registers.hl);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x5F:
+		{
+			registers.e = registers.a;
+			break;
+		}
+		case 0x60:
+		{
+			registers.h = registers.b;
+			break;
+		}
+		case 0x61:
+		{
+			registers.h = registers.c;
+			break;
+		}
+		case 0x62:
+		{
+			registers.h = registers.d;
+			break;
+		}
+		case 0x63:
+		{
+			registers.h = registers.e;
+			break;
+		}
+		case 0x64:
+		{
+			registers.h = registers.h;
+			break;
+		}
+		case 0x65:
+		{
+			registers.h = registers.l;
+			break;
+		}
+		case 0x66:
+		{
+			registers.h = read(registers.hl);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x67:
+		{
+			registers.h = registers.a;
+			break;
+		}
+		case 0x68:
+		{
+			registers.l = registers.b;
+			break;
+		}
+		case 0x69:
+		{
+			registers.l = registers.c;
+			break;
+		}
+		case 0x6A:
+		{
+			registers.l = registers.d;
+			break;
+		}
+		case 0x6B:
+		{
+			registers.l = registers.e;
+			break;
+		}
+		case 0x6C:
+		{
+			registers.l = registers.h;
+			break;
+		}
+		case 0x6D:
+		{
+			registers.l = registers.l;
+			break;
+		}
+		case 0x6E:
+		{
+			registers.l = read(registers.hl);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x6F:
+		{
+			registers.l = registers.a;
+			break;
+		}
+		case 0x70:
+		{
+			write(registers.hl, registers.b);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x71:
+		{
+			write(registers.hl, registers.c);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x72:
+		{
+			write(registers.hl, registers.d);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x73:
+		{
+			write(registers.hl, registers.e);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x74:
+		{
+			write(registers.hl, registers.h);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x75:
+		{
+			write(registers.hl, registers.l);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x77:
+		{
+			write(registers.hl, registers.a);
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x78:
+		{
+			registers.a = registers.b;
+			break;
+		}
+		case 0x79:
+		{
+			registers.a = registers.c;
+			break;
+		}
+		case 0x7A:
+		{
+			registers.a = registers.d;
+			break;
+		}
+		case 0x7B:
+		{
+			registers.a = registers.e;
+			break;
+		}
+		case 0x7C:
+		{
+			registers.a = registers.h;
+			break;
+		}
+		case 0x7D:
+		{
+			registers.a = registers.l;
+			break;
+		}
+		case 0x7E:
+		{
+			registers.a = read(registers.hl);
+			break;
+		}
+		case 0x7F:
+		{
+			registers.a = registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown LDrR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::ADDrR()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+	uint16_t result = 0;
+
+	switch (opcode)
+	{
+		case 0x80:
+		{
+			result = registers.a + registers.b;
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.b & 0x0F) > 0x0F);
+			break;
+		}
+		case 0x81:
+		{
+			result = registers.a + registers.c;
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.c & 0x0F) > 0x0F);
+			break;
+		}
+		case 0x82:
+		{
+			result = registers.a + registers.d;
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.d & 0x0F) > 0x0F);
+			break;
+		}
+		case 0x83:
+		{
+			result = registers.a + registers.e;
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.e & 0x0F) > 0x0F);
+			break;
+		}
+		case 0x84:
+		{
+			result = registers.a + registers.h;
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.h & 0x0F) > 0x0F);
+			break;
+		}
+		case 0x85:
+		{
+			result = registers.a + registers.l;
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.l & 0x0F) > 0x0F);
+			break;
+		}
+		case 0x86:
+		{
+			result = registers.a + read(registers.hl);
+			setFlag(HalfCarry, (registers.a & 0x0F) + (read(registers.hl) & 0x0F) > 0x0F);
+
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x87:
+		{
+			result = registers.a + registers.a;
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.a & 0x0F) > 0x0F);
+			break;
+		}
+		case 0x88:
+		{
+			result = registers.a + registers.b + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.b & 0x0F) + carry > 0x0F);
+			break;
+		}
+		case 0x89:
+		{
+			result = registers.a + registers.c + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.c & 0x0F) + carry > 0x0F);
+			break;
+		}
+		case 0x8A:
+		{
+			result = registers.a + registers.d + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.d & 0x0F) + carry > 0x0F);
+			break;
+		}
+		case 0x8B:
+		{
+			result = registers.a + registers.e + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.e & 0x0F) + carry > 0x0F);
+			break;
+		}
+		case 0x8C:
+		{
+			result = registers.a + registers.h + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.h & 0x0F) + carry > 0x0F);
+			break;
+		}
+		case 0x8D:
+		{
+			result = registers.a + registers.l + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.l & 0x0F) + carry > 0x0F);
+			break;
+		}
+		case 0x8E:
+		{
+			result = registers.a + read(registers.hl) + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (read(registers.hl) & 0x0F) + carry > 0x0F);
+			
+			cycles += 4;
+			cycles += 4;
+			break;
+		}
+		case 0x8F:
+		{
+			result = registers.a + registers.a + carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.a & 0x0F) + carry > 0x0F);
+			break;
+		}
+		default:
+			std::cout << "Unknown ADDrR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	setFlag(Zero, (result & 0xFF) == 0x00);
+	setFlag(Subtraction, false);
+	setFlag(Carry, result > 0xFF);
+
+	registers.a = result & 0xFF;
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::SUBr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t result;
+
+	switch (opcode)
+	{
+		case 0x90:
+		{
+			result = registers.a - registers.b;
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.b & 0x0F));
+			setFlag(Carry, registers.b > registers.a);
+
+			break;
+		}
+		case 0x91:
+		{
+			result = registers.a - registers.c;
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.c & 0x0F));
+			setFlag(Carry, registers.c > registers.a);
+
+			break;
+		}
+		case 0x92:
+		{
+			result = registers.a - registers.d;
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.d & 0x0F));
+			setFlag(Carry, registers.d > registers.a);
+
+			break;
+		}
+		case 0x93:
+		{
+			result = registers.a - registers.e;
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.e & 0x0F));
+			setFlag(Carry, registers.e > registers.a);
+
+			break;
+		}
+		case 0x94:
+		{
+			result = registers.a - registers.h;
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.h & 0x0F));
+			setFlag(Carry, registers.h > registers.a);
+
+			break;
+		}
+		case 0x95:
+		{
+			result = registers.a - registers.l;
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.l & 0x0F));
+			setFlag(Carry, registers.l > registers.a);
+
+			break;
+		}
+		case 0x96:
+		{
+			result = registers.a - read(registers.hl);
+			setFlag(HalfCarry, (registers.a & 0x0F) < (read(registers.hl) & 0x0F));
+			setFlag(Carry, read(registers.hl) > registers.a);
+
+			break;
+		}
+		case 0x97:
+		{
+			result = registers.a - registers.a;
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.a & 0x0F));
+			setFlag(Carry, registers.a > registers.a);
+
+			cycles += 4;
+			cyclesRan += 4;
+
+			break;
+		}
+		case 0x98:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - registers.b - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.b & 0x0F) + carry);
+			setFlag(Carry, registers.b + carry > registers.a);
+
+			break;
+		}
+		case 0x99:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - registers.c - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.c & 0x0F) + carry);
+			setFlag(Carry, registers.c + carry > registers.a);
+
+			break;
+		}
+		case 0x9A:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - registers.d - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.d & 0x0F) + carry);
+			setFlag(Carry, registers.d + carry > registers.a);
+
+			break;
+		}
+		case 0x9B:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - registers.e - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.e & 0x0F) + carry);
+			setFlag(Carry, registers.e + carry > registers.a);
+
+			break;
+		}
+		case 0x9C:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - registers.h - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.h & 0x0F) + carry);
+			setFlag(Carry, registers.h + carry > registers.a);
+
+			break;
+		}
+		case 0x9D:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - registers.l - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.l & 0x0F) + carry);
+			setFlag(Carry, registers.l + carry > registers.a);
+
+			break;
+		}
+		case 0x9E:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - read(registers.hl) - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (read(registers.hl) & 0x0F) + carry);
+			setFlag(Carry, read(registers.hl) + carry > registers.a);
+
+			cycles += 4;
+			cycles += 4;
+
+			break;
+		}
+		case 0x9F:
+		{
+			uint8_t carry = isFlagSet(Carry) ? 1 : 0;
+			result = registers.a - registers.a - carry;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (registers.a & 0x0F) + carry);
+			setFlag(Carry, registers.a + carry > registers.a);
+			
+			break;
+		}
+		default:
+			std::cout << "Unknown SUBr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	setFlag(Zero, result == 0x00);
+	setFlag(Subtraction, true);
+
+	registers.a = result;
+
+	cycles += 4;
+	cyclesRan += 4;
+
+}
+
+void Cpu::ANDr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t hlValue;
+	uint8_t* regPtr = nullptr;
+
+	switch (opcode)
+	{
+		case 0xA0:
+		{
+			regPtr = &registers.b;
+			break;
+		}
+		case 0xA1:
+		{
+			regPtr = &registers.c;
+			break;
+		}
+		case 0xA2:
+		{
+			regPtr = &registers.d;
+			break;
+		}
+		case 0xA3:
+		{
+			regPtr = &registers.e;
+			break;
+		}
+		case 0xA4:
+		{
+			regPtr = &registers.h;
+			break;
+		}
+		case 0xA5:
+		{
+			regPtr = &registers.l;
+			break;
+		}
+		case 0xA6:
+		{
+			hlValue = read(registers.hl);
+			regPtr = &hlValue;
+
+			cycles += 4;
+			cyclesRan += 4;
+
+			break;
+		}
+		case 0xA7:
+		{
+			regPtr = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown ANDr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	registers.a &= (*regPtr);
+
+	setFlag(Zero, registers.a == 0x00);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, true);
+	setFlag(Carry, false);
+
+	cycles += 4;
+	cyclesRan += 4;
 }
