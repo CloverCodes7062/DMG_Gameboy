@@ -26,10 +26,10 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	loadNintendoLogo();
 
 	using a = Cpu;
-	lookup = 
-	{
 
-	}
+	lookup = {
+		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }
+	};
 }
 
 Cpu::~Cpu()
@@ -199,7 +199,7 @@ void Cpu::setFlag(Cpu::Flags flag, bool value)
 
 bool Cpu::isFlagSet(Cpu::Flags flag) const
 {
-	return (registers.f & (1 << flag)) != 0;;
+	return (registers.f & (1 << flag)) != 0;
 }
 
 void Cpu::runInstruction()
@@ -1513,4 +1513,250 @@ void Cpu::ANDr()
 
 	cycles += 4;
 	cyclesRan += 4;
+}
+
+void Cpu::XORr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t hlValue;
+	uint8_t* regPtr = nullptr;
+
+	switch (opcode)
+	{
+		case 0xA8:
+		{
+			regPtr = &registers.b;
+			break;
+		}
+		case 0xA9:
+		{
+			regPtr = &registers.c;
+			break;
+		}
+		case 0xAA:
+		{
+			regPtr = &registers.d;
+			break;
+		}
+		case 0xAB:
+		{
+			regPtr = &registers.e;
+			break;
+		}
+		case 0xAC:
+		{
+			regPtr = &registers.h;
+			break;
+		}
+		case 0xAD:
+		{
+			regPtr = &registers.l;
+			break;
+		}
+		case 0xAE:
+		{
+			hlValue = read(registers.hl);
+
+			regPtr = &hlValue;
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0xAF:
+		{
+			regPtr = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown XORr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	registers.a ^= (*regPtr);
+
+	setFlag(Zero, registers.a == 0x00);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+	setFlag(Carry, false);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::ORr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t hlValue;
+	uint8_t* regPtr = nullptr;
+
+	switch (opcode)
+	{
+		case 0xB0:
+		{
+			regPtr = &registers.b;
+			break;
+		}
+		case 0xB1:
+		{
+			regPtr = &registers.c;
+			break;
+		}
+		case 0xB2:
+		{
+			regPtr = &registers.d;
+			break;
+		}
+		case 0xB3:
+		{
+			regPtr = &registers.e;
+			break;
+		}
+		case 0xB4:
+		{
+			regPtr = &registers.h;
+			break;
+		}
+		case 0xB5:
+		{
+			regPtr = &registers.l;
+			break;
+		}
+		case 0xB6:
+		{
+			hlValue = read(registers.hl);
+
+			regPtr = &hlValue;
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0xB7:
+		{
+			regPtr = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown ORr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	registers.a |= (*regPtr);
+
+	setFlag(Zero, registers.a == 0x00);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+	setFlag(Carry, false);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::CPr() // TODO: COMPARE VALUES
+{
+
+}
+
+void Cpu::RETc()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0xC0:
+		{
+			if (!isFlagSet(Zero))
+			{
+				uint8_t lo = read(stkp++);
+				uint8_t hi = read(stkp++);
+
+				pc = (hi << 8) | lo;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+		}
+		case 0xD0:
+		{
+			if (!isFlagSet(Carry))
+			{
+				uint8_t lo = read(stkp++);
+				uint8_t hi = read(stkp++);
+
+				pc = (hi << 8) | lo;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+
+			break;
+		}
+		case 0xC8:
+		{
+			if (isFlagSet(Zero))
+			{
+				uint8_t lo = read(stkp++);
+				uint8_t hi = read(stkp++);
+
+				pc = (hi << 8) | lo;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+
+			break;
+		}
+		case 0xC9:
+		{
+			uint8_t lo = read(stkp++);
+			uint8_t hi = read(stkp++);
+
+			pc = (hi << 8) | lo;
+
+			cycles += 8;
+			cyclesRan += 8;
+
+			break;
+		}
+		case 0xD8:
+		{
+			if (isFlagSet(Zero))
+			{
+				uint8_t lo = read(stkp++);
+				uint8_t hi = read(stkp++);
+
+				pc = (hi << 8) | lo;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+
+			break;
+		}
+		case 0xD9:
+		{
+			uint8_t lo = read(stkp++);
+			uint8_t hi = read(stkp++);
+
+			pc = (hi << 8) | lo;
+			ime = 1;
+			cycles += 8;
+			cyclesRan += 8;
+
+			break;
+		}
+		default:
+			std::cout << "Unknown ORr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 8;
+	cyclesRan += 8;
 }
