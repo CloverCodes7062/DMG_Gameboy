@@ -1703,9 +1703,75 @@ void Cpu::ORr()
 	cyclesRan += 4;
 }
 
-void Cpu::CPr() // TODO: COMPARE VALUES
+void Cpu::CPr()
 {
+	uint8_t opcode = read(pc++);
 
+	uint8_t hlValue;
+
+	uint8_t* regPtr = nullptr;
+
+	switch (opcode)
+	{
+		case 0x88:
+		{
+			regPtr = &registers.b;
+			break;
+		}
+		case 0x89:
+		{
+			regPtr = &registers.c;
+			break;
+		}
+		case 0x8A:
+		{
+			regPtr = &registers.d;
+			break;
+		}
+		case 0x8B:
+		{
+			regPtr = &registers.e;
+			break;
+		}
+		case 0x8C:
+		{
+			regPtr = &registers.h;
+			break;
+		}
+		case 0x8D:
+		{
+			regPtr = &registers.l;
+			break;
+		}
+		case 0x8E:
+		{
+			hlValue = registers.hl;
+			regPtr = &hlValue;
+
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
+		case 0x8F:
+		{
+			regPtr = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown CPr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	uint8_t result = registers.a - (*regPtr);
+
+	setFlag(Zero, result == 0x00);
+	setFlag(Subtraction, true);
+	setFlag(HalfCarry, (registers.a & 0x0F) < (*regPtr & 0x0F));
+	setFlag(Carry, (*regPtr) > registers.a);
+
+	cycles += 4;
+	cyclesRan += 4;
 }
 
 void Cpu::RETc()
@@ -1921,6 +1987,26 @@ void Cpu::JPca16()
 	cyclesRan += 12;
 }
 
+void Cpu::JPaHL()
+{
+	uint8_t opcode = read(pc++);
+
+	switch (opcode)
+	{
+		case 0xE9:
+		{
+			pc = registers.hl;
+		}
+		default:
+			std::cout << "Unknown JPaHL instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
 void Cpu::CALLca16()
 {
 	uint8_t opcode = read(pc++);
@@ -2059,15 +2145,51 @@ void Cpu::PUSHrr()
 	cyclesRan += 16;
 }
 
-void Cpu::RSTn() // TODO: FINISH RSTn INSTRUCTIONS
+void Cpu::RSTn()
 {
 	uint8_t opcode = read(pc++);
-
+	uint8_t n;
 	switch (opcode)
 	{
 		case 0xC7:
 		{
-
+			n = 0x00;
+			break;
+		}
+		case 0xCF:
+		{
+			n = 0x08;
+			break;
+		}
+		case 0xD7:
+		{
+			n = 0x10;
+			break;
+		}
+		case 0xDF:
+		{
+			n = 0x18;
+			break;
+		}
+		case 0xE7:
+		{
+			n = 0x20;
+			break;
+		}
+		case 0xEF:
+		{
+			n = 0x28;
+			break;
+		}
+		case 0xF7:
+		{
+			n = 0x30;
+			break;
+		}
+		case 0xFF:
+		{
+			n = 0x38;
+			break;
 		}
 		default:
 			std::cout << "Unknown RSTn instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
@@ -2075,6 +2197,70 @@ void Cpu::RSTn() // TODO: FINISH RSTn INSTRUCTIONS
 			break;
 	}
 
+	write(--stkp, (pc >> 8) & 0xFF);
+	write(--stkp, pc & 0xFF);
+
+	pc = (0x00 << 8) | n;
+
 	cycles += 16;
 	cyclesRan += 16;
+}
+
+void Cpu::LDH()
+{
+	uint8_t opcode = read(pc++);
+	uint16_t a8 = (0xFF << 8) | read(pc++);
+
+	switch (opcode)
+	{
+		case 0xE0: // LDH (a8), A
+		{
+			write(a8, registers.a);
+			break;
+		}
+		case 0xF0: // LDH A, (a8)
+		{
+			registers.a = read(a8);
+			break;
+		}
+		default:
+			std::cout << "Unknown LDH instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::LD_C_A()
+{
+	uint8_t opcode = read(pc++);
+
+	switch (opcode)
+	{
+	case 0xE2: // LD (C),A
+	{
+		write(0xFF00 + registers.c, registers.a);
+		break;
+	}
+	case 0xF2: // LD A,(C)
+	{
+		registers.a = read(0xFF00 + registers.c);
+		break;
+	}
+	default:
+		std::cout << "Unknown LD (C),A instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+		setHasNotBroken(false);
+		break;
+	}
+
+	cycles += 8;
+	cyclesRan += 8;
+}
+
+void Cpu::XXX()
+{
+	std::cout << "Unknown/Illegal instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+	setHasNotBroken(false);
 }
