@@ -1252,6 +1252,18 @@ void Cpu::ADDrR()
 			setFlag(HalfCarry, (registers.a & 0x0F) + (registers.a & 0x0F) + carry > 0x0F);
 			break;
 		}
+		case 0xC6:
+		{
+			uint8_t d8 = read(pc++);
+
+			result = registers.a + d8;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) + (d8 & 0x0F) > 0x0F);
+
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
 		default:
 			std::cout << "Unknown ADDrR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 			setHasNotBroken(false);
@@ -1427,6 +1439,18 @@ void Cpu::SUBr()
 			
 			break;
 		}
+		case 0xD6:
+		{
+			uint8_t d8 = read(pc++);
+
+			result = registers.a - d8;
+
+			setFlag(HalfCarry, (registers.a & 0x0F) < (d8 & 0x0F));
+
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
 		default:
 			std::cout << "Unknown SUBr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 			setHasNotBroken(false);
@@ -1449,6 +1473,8 @@ void Cpu::ANDr()
 	pc++;
 
 	uint8_t hlValue;
+	uint8_t d8;
+
 	uint8_t* regPtr = nullptr;
 
 	switch (opcode)
@@ -1496,6 +1522,15 @@ void Cpu::ANDr()
 		case 0xA7:
 		{
 			regPtr = &registers.a;
+			break;
+		}
+		case 0xE6:
+		{
+			d8 = read(pc++);
+			regPtr = &d8;
+
+			cycles += 4;
+			cyclesRan += 4;
 			break;
 		}
 		default:
@@ -1592,6 +1627,8 @@ void Cpu::ORr()
 	pc++;
 
 	uint8_t hlValue;
+	uint8_t d8;
+
 	uint8_t* regPtr = nullptr;
 
 	switch (opcode)
@@ -1638,6 +1675,15 @@ void Cpu::ORr()
 		case 0xB7:
 		{
 			regPtr = &registers.a;
+			break;
+		}
+		case 0xF6:
+		{
+			d8 = read(pc++);
+			regPtr = &d8;
+
+			cycles += 4;
+			cyclesRan += 4;
 			break;
 		}
 		default:
@@ -1759,4 +1805,276 @@ void Cpu::RETc()
 
 	cycles += 8;
 	cyclesRan += 8;
+}
+
+void Cpu::POPrr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t lo = read(stkp++);
+	uint8_t hi = read(stkp++);
+
+	switch (opcode)
+	{
+		case 0xC1: // POP BC
+		{
+			registers.bc = (hi << 8) | lo;
+			break;
+		}
+		case 0xD1: // POP DE
+		{
+			registers.de = (hi << 8) | lo;
+			break;
+		}
+		case 0xE1: // POP HL
+		{
+			registers.hl = (hi << 8) | lo;
+			break;
+		}
+		case 0xF1: // POP AF
+		{
+			registers.af = (hi << 8) | lo;
+			break;
+		}
+		default:
+			std::cout << "Unknown POPrr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::JPca16()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	uint8_t lo = read(pc);
+	pc++;
+	uint8_t hi = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+		case 0xC2: // JP NZ,a16
+		{
+			if (!isFlagSet(Zero))
+			{
+				pc = (hi << 8) | lo;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		case 0xC3: // JP a16
+		{
+			pc = (hi << 8) | lo;
+			cycles += 4;
+			cyclesRan += 4;
+
+			break;
+		}
+		case 0xCA: // JP Z,a16
+		{
+			if (isFlagSet(Zero))
+			{
+				pc = (hi << 8) | lo;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		case 0xD2: // JP NC,a16
+		{
+			if (!isFlagSet(Carry))
+			{
+				pc = (hi << 8) | lo;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		case 0xDA: // JP C,a16
+		{
+			if (isFlagSet(Carry))
+			{
+				pc = (hi << 8) | lo;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		default:
+			std::cout << "Unknown JPca16 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::CALLca16()
+{
+	uint8_t opcode = read(pc++);
+
+	uint8_t lo = read(pc++);
+
+	uint8_t hi = read(pc++);
+
+	uint16_t nn = (hi << 8) | lo;
+
+	switch (opcode)
+	{
+		case 0xC4: // CALL NZ, a16
+		{
+			if (!isFlagSet(Zero))
+			{
+				write(--stkp, (pc >> 8) & 0xFF);
+				write(--stkp, pc & 0xFF);
+
+				pc = nn;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+
+			break;
+		}
+		case 0xCC: // CALL Z, a16
+		{
+			if (isFlagSet(Zero))
+			{
+				write(--stkp, (pc >> 8) & 0xFF);
+				write(--stkp, pc & 0xFF);
+
+				pc = nn;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+
+			break;
+		}
+		case 0xCD: // CALL a16
+		{
+			write(--stkp, (pc >> 8) & 0xFF);
+			write(--stkp, pc & 0xFF);
+
+			pc = nn;
+
+			cycles += 12;
+			cyclesRan += 12;
+
+			break;
+		}
+		case 0xD4: // CALL NC, a16
+		{
+			if (!isFlagSet(Carry))
+			{
+				write(--stkp, (pc >> 8) & 0xFF);
+				write(--stkp, pc & 0xFF);
+
+				pc = nn;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+
+			break;
+		}
+		case 0xDC: // CALL C, a16
+		{
+			if (isFlagSet(Carry))
+			{
+				write(--stkp, (pc >> 8) & 0xFF);
+				write(--stkp, pc & 0xFF);
+
+				pc = nn;
+
+				cycles += 12;
+				cyclesRan += 12;
+			}
+
+			break;
+		}
+		default:
+			std::cout << "Unknown CALLca16 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::PUSHrr()
+{
+	uint8_t opcode = read(pc++);
+
+	switch (opcode)
+	{
+		case 0xC5:
+		{
+			write(--stkp, (registers.bc >> 8) & 0xFF);
+			write(--stkp, registers.bc & 0xFF);
+
+			break;
+		}
+		case 0xD5:
+		{
+			write(--stkp, (registers.de >> 8) & 0xFF);
+			write(--stkp, registers.de & 0xFF);
+
+			break;
+		}
+		case 0xE5:
+		{
+			write(--stkp, (registers.hl >> 8) & 0xFF);
+			write(--stkp, registers.hl & 0xFF);
+
+			break;
+		}
+		case 0xF5:
+		{
+			write(--stkp, (registers.af >> 8) & 0xFF);
+			write(--stkp, registers.af & 0xFF);
+
+			break;
+		}
+		default:
+			std::cout << "Unknown PUSHrr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 16;
+	cyclesRan += 16;
+}
+
+void Cpu::RSTn() // TODO: FINISH RSTn INSTRUCTIONS
+{
+	uint8_t opcode = read(pc++);
+
+	switch (opcode)
+	{
+		case 0xC7:
+		{
+
+		}
+		default:
+			std::cout << "Unknown RSTn instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 16;
+	cyclesRan += 16;
 }
