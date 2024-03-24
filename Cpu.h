@@ -96,15 +96,15 @@ private:
     bool hasNintendoLogoLoaded = false;
 
     // Sets Step Mode
-    bool stepMode = true;
+    bool stepMode = false;
 
 private:
 
     // Program counter, Stack Pointer, and Interrupts
     uint16_t pc;
     uint16_t stkp;
-    uint8_t ie;
-    uint8_t ime;
+    uint8_t ie; // Interrupt Enable
+    uint8_t ime; // Interrupe Master Flag
 
     // Struct to hold CPU registers
     struct Registers {
@@ -157,7 +157,7 @@ private:
     void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
     void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
     void ANDr(); void ANDarr(); void XORr(); void XORarr();
-    void ORr(); void CPr(); void LDraRR();
+    void ORr(); void CPr(); void LDraRR(); void JRcr8();
     void RETc(); void POPrr(); void JPNZa16(); void JPca16(); void CALLNZa16(); void PUSHrr(); void ADDrd8(); void RSTn(); void RETZ(); void RET(); void JPZa16(); void PREFIXCB(); void CALLZa16(); void CALLa16(); void ACArd8(); void RST08();
     void RETNC(); void JPNCa16(); void CALLca16(); void SUBd8(); void RST10(); void RETC(); void RETI(); void JPCa16(); void CALLCa16(); void SBCrd8(); void RST18();
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();

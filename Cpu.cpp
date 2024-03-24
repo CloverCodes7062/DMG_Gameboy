@@ -18,6 +18,7 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	ly = 0xFF44;
 
 	ie = 0xFFFF;
+	ime = 0x00;
 
 	write(lcdc, 0x91);
 	write(stat, 0x85);
@@ -28,9 +29,9 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 
 	lookup = {
 		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (BC), A", &a::LDarrR }, INSTRUCTION{ "INC BC", &a::INCrr }, INSTRUCTION{ "INC B", &a::INCr }, INSTRUCTION{ "DEC B", &a::DECr }, INSTRUCTION{ "LD B, d8", &a::LDrd8 }, INSTRUCTION{ "RLCA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD (a16), SP", &a::LDa16SP }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (BC)", &a::LDraRR }, INSTRUCTION{ "DEC BC", &a::DECrr }, INSTRUCTION{ "INC C", &a::INCr }, INSTRUCTION{ "DEC C", &a::DECr }, INSTRUCTION{ "LD C, d8", &a::LDrd8 }, INSTRUCTION{ "RRCA; UNIMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "STOP 0; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD DE, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (DE), d16", &a::LDarrR }, INSTRUCTION{ "INC DE", &a::INCrr }, INSTRUCTION{ "INC D", &a::INCr }, INSTRUCTION{ "DEC D", &a::DECr }, INSTRUCTION{ "LD D, d8", &a::LDrd8 }, INSTRUCTION{ "RLA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (DE)", &a::LDraRR }, INSTRUCTION{ "DEC DE", &a::DECrr }, INSTRUCTION{ "INC E", &a::INCr }, INSTRUCTION{ "DEC E", &a::DECr }, INSTRUCTION{ "LD E, d8", &a::LDrd8 }, INSTRUCTION{ "RRA; UNIMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "JR NZ, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD HL, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL+), d16", &a::LDarrR }, INSTRUCTION{ "INC HL", &a::INCrr }, INSTRUCTION{ "INC H", &a::INCr }, INSTRUCTION{ "DEC H", &a::DECr }, INSTRUCTION{ "LD H, d8", &a::LDrd8 }, INSTRUCTION{ "DAA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR Z r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL+)", &a::LDraRR }, INSTRUCTION{ "DEC HL", &a::DECrr }, INSTRUCTION{ "INC L", &a::INCr }, INSTRUCTION{ "DEC L", &a::DECr }, INSTRUCTION{ "LD L, d8", &a::LDrd8 }, INSTRUCTION{ "CPL; UNIMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "JR NC, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD SP, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL-), d16", &a::LDarrR }, INSTRUCTION{ "INC SP", &a::INCrr }, INSTRUCTION{ "INC (HL)", &a::INCr }, INSTRUCTION{ "DEC (HL)", &a::DECr }, INSTRUCTION{ "LD (HL), d8", &a::LDrd8 }, INSTRUCTION{ "SCF; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR C r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, SP; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL-)", &a::LDraRR }, INSTRUCTION{ "DEC SP", &a::DECrr }, INSTRUCTION{ "INC A", &a::INCr }, INSTRUCTION{ "DEC A", &a::DECr }, INSTRUCTION{ "LD A, d8", &a::LDrd8 }, INSTRUCTION{ "CCF; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "STOP 0; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD DE, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (DE), d16", &a::LDarrR }, INSTRUCTION{ "INC DE", &a::INCrr }, INSTRUCTION{ "INC D", &a::INCr }, INSTRUCTION{ "DEC D", &a::DECr }, INSTRUCTION{ "LD D, d8", &a::LDrd8 }, INSTRUCTION{ "RLA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR r8", &a::JRcr8 }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (DE)", &a::LDraRR }, INSTRUCTION{ "DEC DE", &a::DECrr }, INSTRUCTION{ "INC E", &a::INCr }, INSTRUCTION{ "DEC E", &a::DECr }, INSTRUCTION{ "LD E, d8", &a::LDrd8 }, INSTRUCTION{ "RRA; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "JR NZ, r8", &a::JRcr8 }, INSTRUCTION{ "LD HL, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL+), d16", &a::LDarrR }, INSTRUCTION{ "INC HL", &a::INCrr }, INSTRUCTION{ "INC H", &a::INCr }, INSTRUCTION{ "DEC H", &a::DECr }, INSTRUCTION{ "LD H, d8", &a::LDrd8 }, INSTRUCTION{ "DAA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR Z r8", &a::JRcr8 }, INSTRUCTION{ "ADD HL, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL+)", &a::LDraRR }, INSTRUCTION{ "DEC HL", &a::DECrr }, INSTRUCTION{ "INC L", &a::INCr }, INSTRUCTION{ "DEC L", &a::DECr }, INSTRUCTION{ "LD L, d8", &a::LDrd8 }, INSTRUCTION{ "CPL; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "JR NC, r8", &a::JRcr8 }, INSTRUCTION{ "LD SP, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL-), d16", &a::LDarrR }, INSTRUCTION{ "INC SP", &a::INCrr }, INSTRUCTION{ "INC (HL)", &a::INCr }, INSTRUCTION{ "DEC (HL)", &a::DECr }, INSTRUCTION{ "LD (HL), d8", &a::LDrd8 }, INSTRUCTION{ "SCF; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR C r8", &a::JRcr8 }, INSTRUCTION{ "ADD HL, SP; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL-)", &a::LDraRR }, INSTRUCTION{ "DEC SP", &a::DECrr }, INSTRUCTION{ "INC A", &a::INCr }, INSTRUCTION{ "DEC A", &a::DECr }, INSTRUCTION{ "LD A, d8", &a::LDrd8 }, INSTRUCTION{ "CCF; UNIMPLEMENTED", &a::XXX },
 		INSTRUCTION{ "LD B, B", &a::LDrR }, INSTRUCTION{ "LD B, C", &a::LDrR }, INSTRUCTION{ "LD B, D", &a::LDrR }, INSTRUCTION{ "LD B, E", &a::LDrR }, INSTRUCTION{ "LD B, H", &a::LDrR }, INSTRUCTION{ "LD B, L", &a::LDrR }, INSTRUCTION{ "LD B, (HL)", &a::LDrR }, INSTRUCTION{ "LD B, A", &a::LDrR }, INSTRUCTION{ "LD C, B", &a::LDrR }, INSTRUCTION{ "LD C, C", &a::LDrR }, INSTRUCTION{ "LD C, D", &a::LDrR }, INSTRUCTION{ "LD C, E", &a::LDrR }, INSTRUCTION{ "LD C, H", &a::LDrR }, INSTRUCTION{ "LD C, L", &a::LDrR }, INSTRUCTION{ "LD C, (HL)", &a::LDrR }, INSTRUCTION{ "LD C, A", &a::LDrR },
 		INSTRUCTION{ "LD D, B", &a::LDrR }, INSTRUCTION{ "LD D, C", &a::LDrR }, INSTRUCTION{ "LD D, D", &a::LDrR }, INSTRUCTION{ "LD D, E", &a::LDrR }, INSTRUCTION{ "LD D, H", &a::LDrR }, INSTRUCTION{ "LD D, L", &a::LDrR }, INSTRUCTION{ "LD D, (HL)", &a::LDrR }, INSTRUCTION{ "LD D, A", &a::LDrR }, INSTRUCTION{ "LD E, B", &a::LDrR }, INSTRUCTION{ "LD E, C", &a::LDrR }, INSTRUCTION{ "LD E, D", &a::LDrR }, INSTRUCTION{ "LD E, E", &a::LDrR }, INSTRUCTION{ "LD E, H", &a::LDrR }, INSTRUCTION{ "LD E, L", &a::LDrR }, INSTRUCTION{ "LD E, (HL)", &a::LDrR }, INSTRUCTION{ "LD E, A", &a::LDrR },
 		INSTRUCTION{ "LD H, B", &a::LDrR }, INSTRUCTION{ "LD H, C", &a::LDrR }, INSTRUCTION{ "LD H, D", &a::LDrR }, INSTRUCTION{ "LD H, E", &a::LDrR }, INSTRUCTION{ "LD H, H", &a::LDrR }, INSTRUCTION{ "LD H, L", &a::LDrR }, INSTRUCTION{ "LD H, (HL)", &a::LDrR }, INSTRUCTION{ "LD H, A", &a::LDrR }, INSTRUCTION{ "LD L, B", &a::LDrR }, INSTRUCTION{ "LD L, C", &a::LDrR }, INSTRUCTION{ "LD L, D", &a::LDrR }, INSTRUCTION{ "LD L, E", &a::LDrR }, INSTRUCTION{ "LD L, H", &a::LDrR }, INSTRUCTION{ "LD L, L", &a::LDrR }, INSTRUCTION{ "LD L, (HL)", &a::LDrR }, INSTRUCTION{ "LD L, A", &a::LDrR },
@@ -41,8 +42,8 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 		INSTRUCTION{ "OR B", &a::ORr }, INSTRUCTION{ "OR C", &a::ORr }, INSTRUCTION{ "OR D", &a::ORr }, INSTRUCTION{ "OR E", &a::ORr }, INSTRUCTION{ "OR H", &a::ORr }, INSTRUCTION{ "OR L", &a::ORr }, INSTRUCTION{ "OR (HL)", &a::ORr }, INSTRUCTION{ "OR A", &a::ORr }, INSTRUCTION{ "CP B", &a::CPr }, INSTRUCTION{ "CP C", &a::CPr }, INSTRUCTION{ "CP D", &a::CPr }, INSTRUCTION{ "CP E", &a::CPr }, INSTRUCTION{ "CP H", &a::CPr }, INSTRUCTION{ "CP L", &a::CPr }, INSTRUCTION{ "CP (HL)", &a::CPr }, INSTRUCTION{ "CP A", &a::CPr },
 		INSTRUCTION{ "RET NZ", &a::RETc }, INSTRUCTION{ "POP BC", &a::POPrr }, INSTRUCTION{ "JP NZ, a16", &a::JPca16 }, INSTRUCTION{ "JP a16", &a::JPca16 }, INSTRUCTION{ "CALL NZ, a16", &a::CALLca16 }, INSTRUCTION{ "PUSH BC", &a::PUSHrr }, INSTRUCTION{ "ADD A, d8", &a::ADDrR }, INSTRUCTION{ "RST 00H", &a::RSTn }, INSTRUCTION{ "RET Z", &a::RETc }, INSTRUCTION{ "RET", &a::RETc }, INSTRUCTION{ "JP Z, a16", &a::JPca16 }, INSTRUCTION{ "PREFIX CB; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "CALL Z, a16", &a::CALLca16 }, INSTRUCTION{ "CALL a16", &a::CALLca16 }, INSTRUCTION{ "ADC A, d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 08H", &a::RSTn },
 		INSTRUCTION{ "RET NC", &a::RETc }, INSTRUCTION{ "POP DE", &a::POPrr }, INSTRUCTION{ "JP NC, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL NC, a16", &a::CALLca16 }, INSTRUCTION{ "PUSH DE", &a::PUSHrr }, INSTRUCTION{ "SUB d8", &a::SUBr }, INSTRUCTION{ "RST 10H", &a::RSTn }, INSTRUCTION{ "RET C", &a::RETc }, INSTRUCTION{ "RETI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JP C, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL C, a16", &a::CALLca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "SBC A, d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 18H", &a::RSTn },
-		INSTRUCTION{ "LDH (a8), A", &a::LDH }, INSTRUCTION{ "POP HL", &a::POPrr }, INSTRUCTION{ "LD (C), A", &a::LD_C_A }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH HL", &a::PUSHrr }, INSTRUCTION{ "AND d8", &a::ANDr }, INSTRUCTION{ "RST 20H", &a::RSTn }, INSTRUCTION{ "ADD SP, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JP (HL)", &a::JPaHL }, INSTRUCTION{ "LD (a16), A; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "XOR d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 28H", &a::RSTn },
-		INSTRUCTION{ "LDH A, (a8)", &a::LDH }, INSTRUCTION{ "POP AF", &a::POPrr }, INSTRUCTION{ "LD A, (C)", &a::LD_C_A }, INSTRUCTION{ "DI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH AF", &a::PUSHrr }, INSTRUCTION{ "OR d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 30H", &a::RSTn }, INSTRUCTION{ "LD HL, SP+r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD SP, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (a16); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "EI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CP d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 38H", &a::RSTn }
+		INSTRUCTION{ "LDH (a8), A", &a::LDH }, INSTRUCTION{ "POP HL", &a::POPrr }, INSTRUCTION{ "LD (C), A", &a::LD_C_A }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH HL", &a::PUSHrr }, INSTRUCTION{ "AND d8", &a::ANDr }, INSTRUCTION{ "RST 20H", &a::RSTn }, INSTRUCTION{ "ADD SP, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JP (HL)", &a::JPaHL }, INSTRUCTION{ "LD (a16), A", &a::LDa16A }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "XOR d8", &a::XORr }, INSTRUCTION{ "RST 28H", &a::RSTn },
+		INSTRUCTION{ "LDH A, (a8)", &a::LDH }, INSTRUCTION{ "POP AF", &a::POPrr }, INSTRUCTION{ "LD A, (C)", &a::LD_C_A }, INSTRUCTION{ "DI", &a::DI }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH AF", &a::PUSHrr }, INSTRUCTION{ "OR d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 30H", &a::RSTn }, INSTRUCTION{ "LD HL, SP+r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD SP, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (a16)", &a::LDa16A }, INSTRUCTION{ "EI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CP d8", &a::CPr }, INSTRUCTION{ "RST 38H", &a::RSTn }
 	};
 }
 
@@ -604,17 +605,17 @@ void Cpu::DECr()
 
 	switch (opcode)
 	{
-		case 0x04: // DEC B
+		case 0x05: // DEC B
 		{
 			regPtr = &registers.b;
 			break;
 		}
-		case 0x14: // DEC D
+		case 0x15: // DEC D
 		{
 			regPtr = &registers.d;
 			break;
 		}
-		case 0x24: // DEC H
+		case 0x25: // DEC H
 		{
 			regPtr = &registers.h;
 			break;
@@ -1524,7 +1525,9 @@ void Cpu::XORr()
 	uint8_t opcode = read(pc);
 	pc++;
 
+	uint8_t d8;
 	uint8_t hlValue;
+
 	uint8_t* regPtr = nullptr;
 
 	switch (opcode)
@@ -1573,10 +1576,25 @@ void Cpu::XORr()
 			regPtr = &registers.a;
 			break;
 		}
+		case 0xDE:
+		{
+			d8 = read(pc++);
+
+			regPtr = &d8;
+
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
 		default:
 			std::cout << "Unknown XORr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 			setHasNotBroken(false);
 			break;
+	}
+
+	if (regPtr == nullptr)
+	{
+		return;
 	}
 
 	registers.a ^= (*regPtr);
@@ -1676,6 +1694,7 @@ void Cpu::CPr()
 {
 	uint8_t opcode = read(pc++);
 
+	uint8_t d8;
 	uint8_t hlValue;
 
 	uint8_t* regPtr = nullptr;
@@ -1726,10 +1745,24 @@ void Cpu::CPr()
 			regPtr = &registers.a;
 			break;
 		}
+		case 0xFE:
+		{
+			d8 = read(pc++);
+			regPtr = &d8;
+
+			cycles += 4;
+			cyclesRan += 4;
+			break;
+		}
 		default:
 			std::cout << "Unknown CPr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 			setHasNotBroken(false);
 			break;
+	}
+
+	if (regPtr == nullptr)
+	{
+		return;
 	}
 
 	uint8_t result = registers.a - (*regPtr);
@@ -2250,4 +2283,122 @@ void Cpu::LDa16SP()
 
 	cycles += 20;
 	cyclesRan += 20;
+}
+
+void Cpu::JRcr8()
+{
+	uint8_t opcode = read(pc++);
+	int8_t offset = static_cast<int8_t>(read(pc++));
+
+	switch (opcode)
+	{
+		case 0x20:
+		{
+			if (!isFlagSet(Zero))
+			{
+				uint16_t targetAddress = static_cast<uint16_t>(pc) + offset;
+
+				pc = targetAddress;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		case 0x30:
+		{
+			if (!isFlagSet(Carry))
+			{
+				uint16_t targetAddress = static_cast<uint16_t>(pc) + offset;
+
+				pc = targetAddress;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		case 0x18:
+		{
+			uint16_t targetAddress = static_cast<uint16_t>(pc) + offset;
+
+			pc = targetAddress;
+			cycles += 4;
+			cyclesRan += 4;
+
+			break;
+		}
+		case 0x28:
+		{
+			if (isFlagSet(Zero))
+			{
+				uint16_t targetAddress = static_cast<uint16_t>(pc) + offset;
+
+				pc = targetAddress;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		case 0x38:
+		{
+			if (isFlagSet(Carry))
+			{
+				uint16_t targetAddress = static_cast<uint16_t>(pc) + offset;
+
+				pc = targetAddress;
+				cycles += 4;
+				cyclesRan += 4;
+			}
+
+			break;
+		}
+		default:
+			std::cout << "Unknown JRcr8 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 8;
+	cyclesRan += 8;
+}
+
+void Cpu::DI()
+{
+	uint8_t opcode = read(pc++);
+
+	ime = 0x00;
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::LDa16A()
+{
+	uint8_t opcode = read(pc++);
+
+	uint8_t lo = read(pc++);
+	uint8_t hi = read(pc++);
+
+	switch (opcode)
+	{
+		case 0xEA: // LD (a16), A
+		{
+			write((hi << 8) | lo, registers.a);
+			break;
+		}
+		case 0xFA: // LD A, (a16)
+		{
+			registers.a = read((hi << 8) | lo);
+			break;
+		}
+		default:
+			std::cout << "Unknown LDa16A instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 16;
+	cyclesRan += 16;
 }
