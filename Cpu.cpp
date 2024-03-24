@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
+#include <conio.h>
 
 Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 {
@@ -23,15 +24,13 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 
 	tileMapAddress = 0x9800;
 
-	loadNintendoLogo();
-
 	using a = Cpu;
 
 	lookup = {
-		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (BC), A", &a::LDarrR }, INSTRUCTION{ "INC BC", &a::INCrr }, INSTRUCTION{ "INC B", &a::INCr }, INSTRUCTION{ "DEC B", &a::DECr }, INSTRUCTION{ "LD B, d8", &a::LDrd8 }, INSTRUCTION{ "RLCA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD (a16), SP", &a::LDa16SP }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (BC); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC BC", &a::DECrr }, INSTRUCTION{ "INC C", &a::INCr }, INSTRUCTION{ "DEC C", &a::DECr }, INSTRUCTION{ "LD C, d8", &a::LDrd8 }, INSTRUCTION{ "RRCA; UNIMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "STOP 0; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD DE, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (DE), d16", &a::LDarrR }, INSTRUCTION{ "INC DE", &a::INCrr }, INSTRUCTION{ "INC D", &a::INCr }, INSTRUCTION{ "DEC D", &a::DECr }, INSTRUCTION{ "LD D, d8", &a::LDrd8 }, INSTRUCTION{ "RLA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (DE); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC DE", &a::DECrr }, INSTRUCTION{ "INC E", &a::INCr }, INSTRUCTION{ "DEC E", &a::DECr }, INSTRUCTION{ "LD E, d8", &a::LDrd8 }, INSTRUCTION{ "RRA; UNIMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "JR NZ, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD HL, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL+), d16", &a::LDarrR }, INSTRUCTION{ "INC HL", &a::INCrr }, INSTRUCTION{ "INC H", &a::INCr }, INSTRUCTION{ "DEC H", &a::DECr }, INSTRUCTION{ "LD H, d8", &a::LDrd8 }, INSTRUCTION{ "DAA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR Z r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL+); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC HL", &a::DECrr }, INSTRUCTION{ "INC L", &a::INCr }, INSTRUCTION{ "DEC L", &a::DECr }, INSTRUCTION{ "LD L, d8", &a::LDrd8 }, INSTRUCTION{ "CPL; UNIMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "JR NC, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD SP, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL-), d16", &a::LDarrR }, INSTRUCTION{ "INC SP", &a::INCrr }, INSTRUCTION{ "INC (HL)", &a::INCr }, INSTRUCTION{ "DEC (HL)", &a::DECr }, INSTRUCTION{ "LD (HL), d8", &a::LDrd8 }, INSTRUCTION{ "SCF; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR C r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, SP; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL-); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC SP", &a::DECrr }, INSTRUCTION{ "INC A", &a::INCr }, INSTRUCTION{ "DEC A", &a::DECr }, INSTRUCTION{ "LD A, d8", &a::LDrd8 }, INSTRUCTION{ "CCF; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (BC), A", &a::LDarrR }, INSTRUCTION{ "INC BC", &a::INCrr }, INSTRUCTION{ "INC B", &a::INCr }, INSTRUCTION{ "DEC B", &a::DECr }, INSTRUCTION{ "LD B, d8", &a::LDrd8 }, INSTRUCTION{ "RLCA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD (a16), SP", &a::LDa16SP }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (BC)", &a::LDraRR }, INSTRUCTION{ "DEC BC", &a::DECrr }, INSTRUCTION{ "INC C", &a::INCr }, INSTRUCTION{ "DEC C", &a::DECr }, INSTRUCTION{ "LD C, d8", &a::LDrd8 }, INSTRUCTION{ "RRCA; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "STOP 0; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD DE, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (DE), d16", &a::LDarrR }, INSTRUCTION{ "INC DE", &a::INCrr }, INSTRUCTION{ "INC D", &a::INCr }, INSTRUCTION{ "DEC D", &a::DECr }, INSTRUCTION{ "LD D, d8", &a::LDrd8 }, INSTRUCTION{ "RLA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (DE)", &a::LDraRR }, INSTRUCTION{ "DEC DE", &a::DECrr }, INSTRUCTION{ "INC E", &a::INCr }, INSTRUCTION{ "DEC E", &a::DECr }, INSTRUCTION{ "LD E, d8", &a::LDrd8 }, INSTRUCTION{ "RRA; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "JR NZ, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD HL, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL+), d16", &a::LDarrR }, INSTRUCTION{ "INC HL", &a::INCrr }, INSTRUCTION{ "INC H", &a::INCr }, INSTRUCTION{ "DEC H", &a::DECr }, INSTRUCTION{ "LD H, d8", &a::LDrd8 }, INSTRUCTION{ "DAA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR Z r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL+)", &a::LDraRR }, INSTRUCTION{ "DEC HL", &a::DECrr }, INSTRUCTION{ "INC L", &a::INCr }, INSTRUCTION{ "DEC L", &a::DECr }, INSTRUCTION{ "LD L, d8", &a::LDrd8 }, INSTRUCTION{ "CPL; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "JR NC, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD SP, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL-), d16", &a::LDarrR }, INSTRUCTION{ "INC SP", &a::INCrr }, INSTRUCTION{ "INC (HL)", &a::INCr }, INSTRUCTION{ "DEC (HL)", &a::DECr }, INSTRUCTION{ "LD (HL), d8", &a::LDrd8 }, INSTRUCTION{ "SCF; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR C r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, SP; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL-)", &a::LDraRR }, INSTRUCTION{ "DEC SP", &a::DECrr }, INSTRUCTION{ "INC A", &a::INCr }, INSTRUCTION{ "DEC A", &a::DECr }, INSTRUCTION{ "LD A, d8", &a::LDrd8 }, INSTRUCTION{ "CCF; UNIMPLEMENTED", &a::XXX },
 		INSTRUCTION{ "LD B, B", &a::LDrR }, INSTRUCTION{ "LD B, C", &a::LDrR }, INSTRUCTION{ "LD B, D", &a::LDrR }, INSTRUCTION{ "LD B, E", &a::LDrR }, INSTRUCTION{ "LD B, H", &a::LDrR }, INSTRUCTION{ "LD B, L", &a::LDrR }, INSTRUCTION{ "LD B, (HL)", &a::LDrR }, INSTRUCTION{ "LD B, A", &a::LDrR }, INSTRUCTION{ "LD C, B", &a::LDrR }, INSTRUCTION{ "LD C, C", &a::LDrR }, INSTRUCTION{ "LD C, D", &a::LDrR }, INSTRUCTION{ "LD C, E", &a::LDrR }, INSTRUCTION{ "LD C, H", &a::LDrR }, INSTRUCTION{ "LD C, L", &a::LDrR }, INSTRUCTION{ "LD C, (HL)", &a::LDrR }, INSTRUCTION{ "LD C, A", &a::LDrR },
 		INSTRUCTION{ "LD D, B", &a::LDrR }, INSTRUCTION{ "LD D, C", &a::LDrR }, INSTRUCTION{ "LD D, D", &a::LDrR }, INSTRUCTION{ "LD D, E", &a::LDrR }, INSTRUCTION{ "LD D, H", &a::LDrR }, INSTRUCTION{ "LD D, L", &a::LDrR }, INSTRUCTION{ "LD D, (HL)", &a::LDrR }, INSTRUCTION{ "LD D, A", &a::LDrR }, INSTRUCTION{ "LD E, B", &a::LDrR }, INSTRUCTION{ "LD E, C", &a::LDrR }, INSTRUCTION{ "LD E, D", &a::LDrR }, INSTRUCTION{ "LD E, E", &a::LDrR }, INSTRUCTION{ "LD E, H", &a::LDrR }, INSTRUCTION{ "LD E, L", &a::LDrR }, INSTRUCTION{ "LD E, (HL)", &a::LDrR }, INSTRUCTION{ "LD E, A", &a::LDrR },
 		INSTRUCTION{ "LD H, B", &a::LDrR }, INSTRUCTION{ "LD H, C", &a::LDrR }, INSTRUCTION{ "LD H, D", &a::LDrR }, INSTRUCTION{ "LD H, E", &a::LDrR }, INSTRUCTION{ "LD H, H", &a::LDrR }, INSTRUCTION{ "LD H, L", &a::LDrR }, INSTRUCTION{ "LD H, (HL)", &a::LDrR }, INSTRUCTION{ "LD H, A", &a::LDrR }, INSTRUCTION{ "LD L, B", &a::LDrR }, INSTRUCTION{ "LD L, C", &a::LDrR }, INSTRUCTION{ "LD L, D", &a::LDrR }, INSTRUCTION{ "LD L, E", &a::LDrR }, INSTRUCTION{ "LD L, H", &a::LDrR }, INSTRUCTION{ "LD L, L", &a::LDrR }, INSTRUCTION{ "LD L, (HL)", &a::LDrR }, INSTRUCTION{ "LD L, A", &a::LDrR },
@@ -40,7 +39,10 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 		INSTRUCTION{ "SUB B" , &a::SUBr }, INSTRUCTION{ "SUB C", &a::SUBr }, INSTRUCTION{ "SUB D", &a::SUBr }, INSTRUCTION{ "SUB E", &a::SUBr }, INSTRUCTION{ "SUB H", &a::SUBr }, INSTRUCTION{ "SUB L", &a::SUBr }, INSTRUCTION{ "SUB (HL)", &a::SUBr }, INSTRUCTION{ "SUB A", &a::SUBr }, INSTRUCTION{ "SBC A, B", &a::SUBr }, INSTRUCTION{ "SBC A, C", &a::SUBr }, INSTRUCTION{ "SBC A, D", &a::SUBr }, INSTRUCTION{ "SBC A, E", &a::SUBr }, INSTRUCTION{ "SBC A, H", &a::SUBr }, INSTRUCTION{ "SBC A, L", &a::SUBr }, INSTRUCTION{ "SBC A, (HL)", &a::SUBr }, INSTRUCTION{ "SBC A, A", &a::SUBr },
 		INSTRUCTION{ "AND B", &a::ANDr }, INSTRUCTION{ "AND C", &a::ANDr }, INSTRUCTION{ "AND D", &a::ANDr }, INSTRUCTION{ "AND E", &a::ANDr }, INSTRUCTION{ "AND H", &a::ANDr }, INSTRUCTION{ "AND L", &a::ANDr }, INSTRUCTION{ "AND (HL)", &a::ANDr }, INSTRUCTION{ "AND A", &a::ANDr }, INSTRUCTION{ "XOR B", &a::XORr }, INSTRUCTION{ "XOR C", &a::XORr }, INSTRUCTION{ "XOR D", &a::XORr }, INSTRUCTION{ "XOR E", &a::XORr }, INSTRUCTION{ "XOR H", &a::XORr }, INSTRUCTION{ "XOR L", &a::XORr }, INSTRUCTION{ "XOR (HL)", &a::XORr }, INSTRUCTION{ "XOR A", &a::XORr },
 		INSTRUCTION{ "OR B", &a::ORr }, INSTRUCTION{ "OR C", &a::ORr }, INSTRUCTION{ "OR D", &a::ORr }, INSTRUCTION{ "OR E", &a::ORr }, INSTRUCTION{ "OR H", &a::ORr }, INSTRUCTION{ "OR L", &a::ORr }, INSTRUCTION{ "OR (HL)", &a::ORr }, INSTRUCTION{ "OR A", &a::ORr }, INSTRUCTION{ "CP B", &a::CPr }, INSTRUCTION{ "CP C", &a::CPr }, INSTRUCTION{ "CP D", &a::CPr }, INSTRUCTION{ "CP E", &a::CPr }, INSTRUCTION{ "CP H", &a::CPr }, INSTRUCTION{ "CP L", &a::CPr }, INSTRUCTION{ "CP (HL)", &a::CPr }, INSTRUCTION{ "CP A", &a::CPr },
-
+		INSTRUCTION{ "RET NZ", &a::RETc }, INSTRUCTION{ "POP BC", &a::POPrr }, INSTRUCTION{ "JP NZ, a16", &a::JPca16 }, INSTRUCTION{ "JP a16", &a::JPca16 }, INSTRUCTION{ "CALL NZ, a16", &a::CALLca16 }, INSTRUCTION{ "PUSH BC", &a::PUSHrr }, INSTRUCTION{ "ADD A, d8", &a::ADDrR }, INSTRUCTION{ "RST 00H", &a::RSTn }, INSTRUCTION{ "RET Z", &a::RETc }, INSTRUCTION{ "RET", &a::RETc }, INSTRUCTION{ "JP Z, a16", &a::JPca16 }, INSTRUCTION{ "PREFIX CB; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "CALL Z, a16", &a::CALLca16 }, INSTRUCTION{ "CALL a16", &a::CALLca16 }, INSTRUCTION{ "ADC A, d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 08H", &a::RSTn },
+		INSTRUCTION{ "RET NC", &a::RETc }, INSTRUCTION{ "POP DE", &a::POPrr }, INSTRUCTION{ "JP NC, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL NC, a16", &a::CALLca16 }, INSTRUCTION{ "PUSH DE", &a::PUSHrr }, INSTRUCTION{ "SUB d8", &a::SUBr }, INSTRUCTION{ "RST 10H", &a::RSTn }, INSTRUCTION{ "RET C", &a::RETc }, INSTRUCTION{ "RETI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JP C, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL C, a16", &a::CALLca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "SBC A, d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 18H", &a::RSTn },
+		INSTRUCTION{ "LDH (a8), A", &a::LDH }, INSTRUCTION{ "POP HL", &a::POPrr }, INSTRUCTION{ "LD (C), A", &a::LD_C_A }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH HL", &a::PUSHrr }, INSTRUCTION{ "AND d8", &a::ANDr }, INSTRUCTION{ "RST 20H", &a::RSTn }, INSTRUCTION{ "ADD SP, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JP (HL)", &a::JPaHL }, INSTRUCTION{ "LD (a16), A; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "XOR d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 28H", &a::RSTn },
+		INSTRUCTION{ "LDH A, (a8)", &a::LDH }, INSTRUCTION{ "POP AF", &a::POPrr }, INSTRUCTION{ "LD A, (C)", &a::LD_C_A }, INSTRUCTION{ "DI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH AF", &a::PUSHrr }, INSTRUCTION{ "OR d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 30H", &a::RSTn }, INSTRUCTION{ "LD HL, SP+r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD SP, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (a16); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "EI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CP d8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "RST 38H", &a::RSTn }
 	};
 }
 
@@ -216,89 +218,32 @@ bool Cpu::isFlagSet(Cpu::Flags flag) const
 
 void Cpu::runInstruction()
 {
-	//printVram();
-
 	if (cycles == 0)
 	{
-		runOpcode();
-
-		//std::cout << "CYCLES RAN: " << cyclesRan << std::endl;
-
-		// LY REG CURRENT IMPL
-		/*
-		if (cyclesRan >= 456)
+		if (stepMode) 
 		{
-			std::cout << "INCREMENTING LY" << std::endl;
-
-			std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
-
-			write(ly, read(ly) + 1);
-
-			std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
-			cyclesRan = 0;
-
-			if (read(ly) % 8 == 0)
-			{
-				setVramTiles();
-
-				for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
-				{
-					std::cout << "VRAM TILES SIZE: " << vramTiles.size() << std::endl;
-					std::cout << "ADDR: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(addr) << std::endl;
-					backgroundTiles.push_back(vramTiles[read(addr)]);
-				}
-				tileMapAddress += 32;
-
-				std::cout << "SCANLINE GENERATED BG TILES SIZE: 0x" << std::hex << std::setw(2) << std::setfill('0') << backgroundTiles.size() << std::endl;
-
-				scanlinesGenerated++;
-
-				std::cout << "TILE MAP ADDRESS: " << tileMapAddress << std::endl;
-
-			}
-
-			if (read(ly) >= 0x90)
-			{
-				std::cout << "FRAME GENERATED BG TILES SIZE: 0x" << std::hex << std::setw(2) << std::setfill('0') << backgroundTiles.size() << std::endl;
-				totalFramesGenerated++;
-
-				std::cout << "VRAM TILES SIZE: " << vramTiles.size() << std::endl;
-
-				std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
-
-				engine.setBuffer(backgroundTiles);
-
-				bool running = true;
-				auto startTime = std::chrono::steady_clock::now();
-
-				while (running) {
-
-					auto currentTime = std::chrono::steady_clock::now();
-					auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
-					if (elapsedTime >= 3) {
-						running = false;
-					}
-
-					SDL_Event event;
-					while (SDL_PollEvent(&event)) {
-						if (event.type == SDL_QUIT) {
-							running = false;
-						}
-					}
-
-					engine.render();
-
-					std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				}
-
-				// HANDLE VBLANK
-				write(ly, 0x00);
-				setFlag(Zero, true);
-				backgroundTiles.clear();
-				tileMapAddress = 0x9800;
-			}
+			std::cout << "Press spacebar to execute the next instruction..." << std::endl;
+			while (!_kbhit() || _getch() != ' ');
 		}
-		*/
+
+		std::cout << "Registers:" << std::endl;
+
+		std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
+		std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
+		std::cout << "BC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.bc) << std::endl;
+		std::cout << "DE: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.de) << std::endl;
+		std::cout << "HL: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.hl) << std::endl;
+		std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
+		std::cout << "SP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
+
+		std::cout << "LCDC: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(lcdc)) << std::endl;
+		std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
+		std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
+
+		std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl;
+		std::cout << "INSTRUCTION: " << lookup[read(pc)].name << std::endl << std::endl;
+
+		(this->*lookup[read(pc)].operate)();
 		
 	}
 	cycles--;
@@ -312,37 +257,6 @@ void Cpu::printVram()
 		std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(addr)) << std::endl;
 	}
 	std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(bus.getRamSize()) << std::endl;
-}
-
-void Cpu::runOpcode()
-{
-	if (read(0xFF01) != 0x00)
-	{
-		std::cout << "RESULT FROM BLARGG TEST: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(0xFF01)) << std::endl;
-		setHasNotBroken(false);
-	}
-
-	if (read(0xFF02) != 0x00)
-	{
-		std::cout << "RESULT FROM BLARGG TEST: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(0xFF01)) << std::endl;
-		setHasNotBroken(false);
-	}
-
-	std::cout << "Registers:" << std::endl;
-
-	std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
-	std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
-	std::cout << "BC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.bc) << std::endl;
-	std::cout << "DE: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.de) << std::endl;
-	std::cout << "HL: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.hl) << std::endl;
-	std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
-	std::cout << "SP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
-
-	std::cout << "LCDC: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(lcdc)) << std::endl;
-	std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
-	std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
-
-	std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl << std::endl;
 }
 
 void Cpu::loadRom(std::vector<uint8_t> romData)
@@ -389,6 +303,7 @@ std::string Cpu::getTitle()
 
 void Cpu::NOP()
 {
+	pc++;
 	cycles += 4;
 	cyclesRan += 4;
 }
@@ -434,6 +349,41 @@ void Cpu::LDrrd16()
 
 	cycles += 12;
 	cyclesRan += 12;
+}
+
+void Cpu::LDraRR()
+{
+	uint8_t opcode = read(pc++);
+
+	switch (opcode)
+	{
+		case 0x0A:
+		{
+			registers.a = read(registers.bc);
+			break;
+		}
+		case 0x1A:
+		{
+			registers.a = read(registers.de);
+			break;
+		}
+		case 0x2A:
+		{
+			registers.a = read(registers.hl++);
+			break;
+		}
+		case 0x3A:
+		{
+			registers.a = read(registers.hl--);
+			break;
+		}
+		default:
+			std::cout << "Unknown LDraRR instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			break;
+	}
+
+	cycles += 8;
 }
 
 void Cpu::LDarrR()

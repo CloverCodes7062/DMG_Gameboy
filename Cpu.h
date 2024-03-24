@@ -95,6 +95,9 @@ private:
     // True if Nintendo Logo has been rendered else False
     bool hasNintendoLogoLoaded = false;
 
+    // Sets Step Mode
+    bool stepMode = true;
+
 private:
 
     // Program counter, Stack Pointer, and Interrupts
@@ -150,12 +153,11 @@ private:
     void STOP0(); void RLA(); void JRr8(); void RRA();
     void JRNZr8(); void LDarrINCR(); void DAA(); void JRZr8(); void LDaRRINC(); void CPL();
     void JRNCr8(); void LDarrDECR(); void INCaRR(); void DECaRR(); void LDarrD8(); void SCF(); void JRCr8(); void LDaRRDEC(); void CCF();
-    void LDrR(); void LDrARR();
-    void LDarrR(); void HALT();
+    void LDrR(); void HALT();
     void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
     void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
     void ANDr(); void ANDarr(); void XORr(); void XORarr();
-    void ORr(); void CPr();
+    void ORr(); void CPr(); void LDraRR();
     void RETc(); void POPrr(); void JPNZa16(); void JPca16(); void CALLNZa16(); void PUSHrr(); void ADDrd8(); void RSTn(); void RETZ(); void RET(); void JPZa16(); void PREFIXCB(); void CALLZa16(); void CALLa16(); void ACArd8(); void RST08();
     void RETNC(); void JPNCa16(); void CALLca16(); void SUBd8(); void RST10(); void RETC(); void RETI(); void JPCa16(); void CALLCa16(); void SBCrd8(); void RST18();
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
