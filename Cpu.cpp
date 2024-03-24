@@ -28,7 +28,19 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	using a = Cpu;
 
 	lookup = {
-		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }
+		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (BC), A", &a::LDarrR }, INSTRUCTION{ "INC BC", &a::INCrr }, INSTRUCTION{ "INC B", &a::INCr }, INSTRUCTION{ "DEC B", &a::DECr }, INSTRUCTION{ "LD B, d8", &a::LDrd8 }, INSTRUCTION{ "RLCA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD (a16), SP", &a::LDa16SP }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (BC); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC BC", &a::DECrr }, INSTRUCTION{ "INC C", &a::INCr }, INSTRUCTION{ "DEC C", &a::DECr }, INSTRUCTION{ "LD C, d8", &a::LDrd8 }, INSTRUCTION{ "RRCA; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "STOP 0; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD DE, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (DE), d16", &a::LDarrR }, INSTRUCTION{ "INC DE", &a::INCrr }, INSTRUCTION{ "INC D", &a::INCr }, INSTRUCTION{ "DEC D", &a::DECr }, INSTRUCTION{ "LD D, d8", &a::LDrd8 }, INSTRUCTION{ "RLA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, BC; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (DE); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC DE", &a::DECrr }, INSTRUCTION{ "INC E", &a::INCr }, INSTRUCTION{ "DEC E", &a::DECr }, INSTRUCTION{ "LD E, d8", &a::LDrd8 }, INSTRUCTION{ "RRA; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "JR NZ, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD HL, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL+), d16", &a::LDarrR }, INSTRUCTION{ "INC HL", &a::INCrr }, INSTRUCTION{ "INC H", &a::INCr }, INSTRUCTION{ "DEC H", &a::DECr }, INSTRUCTION{ "LD H, d8", &a::LDrd8 }, INSTRUCTION{ "DAA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR Z r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, HL; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL+); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC HL", &a::DECrr }, INSTRUCTION{ "INC L", &a::INCr }, INSTRUCTION{ "DEC L", &a::DECr }, INSTRUCTION{ "LD L, d8", &a::LDrd8 }, INSTRUCTION{ "CPL; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "JR NC, r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD SP, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL-), d16", &a::LDarrR }, INSTRUCTION{ "INC SP", &a::INCrr }, INSTRUCTION{ "INC (HL)", &a::INCr }, INSTRUCTION{ "DEC (HL)", &a::DECr }, INSTRUCTION{ "LD (HL), d8", &a::LDrd8 }, INSTRUCTION{ "SCF; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR C r8; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "ADD HL, SP; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD A, (HL-); UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "DEC SP", &a::DECrr }, INSTRUCTION{ "INC A", &a::INCr }, INSTRUCTION{ "DEC A", &a::DECr }, INSTRUCTION{ "LD A, d8", &a::LDrd8 }, INSTRUCTION{ "CCF; UNIMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "LD B, B", &a::LDrR }, INSTRUCTION{ "LD B, C", &a::LDrR }, INSTRUCTION{ "LD B, D", &a::LDrR }, INSTRUCTION{ "LD B, E", &a::LDrR }, INSTRUCTION{ "LD B, H", &a::LDrR }, INSTRUCTION{ "LD B, L", &a::LDrR }, INSTRUCTION{ "LD B, (HL)", &a::LDrR }, INSTRUCTION{ "LD B, A", &a::LDrR }, INSTRUCTION{ "LD C, B", &a::LDrR }, INSTRUCTION{ "LD C, C", &a::LDrR }, INSTRUCTION{ "LD C, D", &a::LDrR }, INSTRUCTION{ "LD C, E", &a::LDrR }, INSTRUCTION{ "LD C, H", &a::LDrR }, INSTRUCTION{ "LD C, L", &a::LDrR }, INSTRUCTION{ "LD C, (HL)", &a::LDrR }, INSTRUCTION{ "LD C, A", &a::LDrR },
+		INSTRUCTION{ "LD D, B", &a::LDrR }, INSTRUCTION{ "LD D, C", &a::LDrR }, INSTRUCTION{ "LD D, D", &a::LDrR }, INSTRUCTION{ "LD D, E", &a::LDrR }, INSTRUCTION{ "LD D, H", &a::LDrR }, INSTRUCTION{ "LD D, L", &a::LDrR }, INSTRUCTION{ "LD D, (HL)", &a::LDrR }, INSTRUCTION{ "LD D, A", &a::LDrR }, INSTRUCTION{ "LD E, B", &a::LDrR }, INSTRUCTION{ "LD E, C", &a::LDrR }, INSTRUCTION{ "LD E, D", &a::LDrR }, INSTRUCTION{ "LD E, E", &a::LDrR }, INSTRUCTION{ "LD E, H", &a::LDrR }, INSTRUCTION{ "LD E, L", &a::LDrR }, INSTRUCTION{ "LD E, (HL)", &a::LDrR }, INSTRUCTION{ "LD E, A", &a::LDrR },
+		INSTRUCTION{ "LD H, B", &a::LDrR }, INSTRUCTION{ "LD H, C", &a::LDrR }, INSTRUCTION{ "LD H, D", &a::LDrR }, INSTRUCTION{ "LD H, E", &a::LDrR }, INSTRUCTION{ "LD H, H", &a::LDrR }, INSTRUCTION{ "LD H, L", &a::LDrR }, INSTRUCTION{ "LD H, (HL)", &a::LDrR }, INSTRUCTION{ "LD H, A", &a::LDrR }, INSTRUCTION{ "LD L, B", &a::LDrR }, INSTRUCTION{ "LD L, C", &a::LDrR }, INSTRUCTION{ "LD L, D", &a::LDrR }, INSTRUCTION{ "LD L, E", &a::LDrR }, INSTRUCTION{ "LD L, H", &a::LDrR }, INSTRUCTION{ "LD L, L", &a::LDrR }, INSTRUCTION{ "LD L, (HL)", &a::LDrR }, INSTRUCTION{ "LD L, A", &a::LDrR },
+		INSTRUCTION{ "LD (HL), B", &a::LDarrR }, INSTRUCTION{ "LD (HL), C", &a::LDarrR }, INSTRUCTION{ "LD (HL), D", &a::LDarrR }, INSTRUCTION{ "LD (HL), E", &a::LDarrR }, INSTRUCTION{ "LD (HL), H", &a::LDarrR }, INSTRUCTION{ "LD (HL), L", &a::LDarrR }, INSTRUCTION{ "HALT; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD (HL), A", &a::LDarrR }, INSTRUCTION{ "LD A, B", &a::LDrR }, INSTRUCTION{ "LD A, C", &a::LDrR }, INSTRUCTION{ "LD A, D", &a::LDrR }, INSTRUCTION{ "LD A, E", &a::LDrR }, INSTRUCTION{ "LD A, H", &a::LDrR }, INSTRUCTION{ "LD A, L", &a::LDrR }, INSTRUCTION{ "LD A, (HL)", &a::LDrR }, INSTRUCTION{ "LD A, A", &a::LDrR },
+		INSTRUCTION{ "ADD A, B", &a::ADDrR }, INSTRUCTION{ "ADD A, C", &a::ADDrR }, INSTRUCTION{ "ADD A, D", &a::ADDrR }, INSTRUCTION{ "ADD A, E", &a::ADDrR }, INSTRUCTION{ "ADD A, H", &a::ADDrR }, INSTRUCTION{ "ADD A, L", &a::ADDrR }, INSTRUCTION{ "ADD A, (HL)", &a::ADDrR }, INSTRUCTION{ "ADD A, A", &a::ADDrR }, INSTRUCTION{ "ADC A, B", &a::ADDrR }, INSTRUCTION{ "ADC A, C", &a::ADDrR }, INSTRUCTION{ "ADC A, D", &a::ADDrR }, INSTRUCTION{ "ADC A, E", &a::ADDrR }, INSTRUCTION{ "ADC A, H", &a::ADDrR }, INSTRUCTION{ "ADC A, L", &a::ADDrR }, INSTRUCTION{ "ADC A, (HL)", &a::ADDrR }, INSTRUCTION{ "ADC A, A", &a::ADDrR },
+		INSTRUCTION{ "SUB B" , &a::SUBr }, INSTRUCTION{ "SUB C", &a::SUBr }, INSTRUCTION{ "SUB D", &a::SUBr }, INSTRUCTION{ "SUB E", &a::SUBr }, INSTRUCTION{ "SUB H", &a::SUBr }, INSTRUCTION{ "SUB L", &a::SUBr }, INSTRUCTION{ "SUB (HL)", &a::SUBr }, INSTRUCTION{ "SUB A", &a::SUBr }, INSTRUCTION{ "SBC A, B", &a::SUBr }, INSTRUCTION{ "SBC A, C", &a::SUBr }, INSTRUCTION{ "SBC A, D", &a::SUBr }, INSTRUCTION{ "SBC A, E", &a::SUBr }, INSTRUCTION{ "SBC A, H", &a::SUBr }, INSTRUCTION{ "SBC A, L", &a::SUBr }, INSTRUCTION{ "SBC A, (HL)", &a::SUBr }, INSTRUCTION{ "SBC A, A", &a::SUBr },
+		INSTRUCTION{ "AND B", &a::ANDr }, INSTRUCTION{ "AND C", &a::ANDr }, INSTRUCTION{ "AND D", &a::ANDr }, INSTRUCTION{ "AND E", &a::ANDr }, INSTRUCTION{ "AND H", &a::ANDr }, INSTRUCTION{ "AND L", &a::ANDr }, INSTRUCTION{ "AND (HL)", &a::ANDr }, INSTRUCTION{ "AND A", &a::ANDr }, INSTRUCTION{ "XOR B", &a::XORr }, INSTRUCTION{ "XOR C", &a::XORr }, INSTRUCTION{ "XOR D", &a::XORr }, INSTRUCTION{ "XOR E", &a::XORr }, INSTRUCTION{ "XOR H", &a::XORr }, INSTRUCTION{ "XOR L", &a::XORr }, INSTRUCTION{ "XOR (HL)", &a::XORr }, INSTRUCTION{ "XOR A", &a::XORr },
+		INSTRUCTION{ "OR B", &a::ORr }, INSTRUCTION{ "OR C", &a::ORr }, INSTRUCTION{ "OR D", &a::ORr }, INSTRUCTION{ "OR E", &a::ORr }, INSTRUCTION{ "OR H", &a::ORr }, INSTRUCTION{ "OR L", &a::ORr }, INSTRUCTION{ "OR (HL)", &a::ORr }, INSTRUCTION{ "OR A", &a::ORr }, INSTRUCTION{ "CP B", &a::CPr }, INSTRUCTION{ "CP C", &a::CPr }, INSTRUCTION{ "CP D", &a::CPr }, INSTRUCTION{ "CP E", &a::CPr }, INSTRUCTION{ "CP H", &a::CPr }, INSTRUCTION{ "CP L", &a::CPr }, INSTRUCTION{ "CP (HL)", &a::CPr }, INSTRUCTION{ "CP A", &a::CPr },
+
 	};
 }
 
@@ -302,7 +314,6 @@ void Cpu::printVram()
 	std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(bus.getRamSize()) << std::endl;
 }
 
-
 void Cpu::runOpcode()
 {
 	if (read(0xFF01) != 0x00)
@@ -331,7 +342,7 @@ void Cpu::runOpcode()
 	std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
 	std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
 
-	std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(instruction) << std::endl << std::endl;
+	std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl << std::endl;
 }
 
 void Cpu::loadRom(std::vector<uint8_t> romData)
@@ -534,6 +545,43 @@ void Cpu::INCrr()
 	cyclesRan += 8;
 }
 
+void Cpu::DECrr()
+{
+	uint8_t opcode = read(pc);
+	pc++;
+
+	switch (opcode)
+	{
+	case 0x0B: // DEC BC
+	{
+		registers.bc--;
+		break;
+	}
+	case 0x1B: // DEC DE
+	{
+		registers.de--;
+		break;
+	}
+	case 0x2B: // DEC HL
+	{
+		registers.hl--;
+		break;
+	}
+	case 0x3B: // DEC SP (Stack Pointer)
+	{
+		stkp--;
+		break;
+	}
+	default:
+		std::cout << "Unknown DECrr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+		setHasNotBroken(false);
+		break;
+	}
+
+	cycles += 8;
+	cyclesRan += 8;
+}
+
 void Cpu::INCr()
 {
 	uint8_t opcode = read(pc);
@@ -621,28 +669,28 @@ void Cpu::DECr()
 			regPtr = &registers.h;
 			break;
 		}
-		case 0x0C: // DEC C
+		case 0x0D: // DEC C
 		{
 			regPtr = &registers.c;
 			break;
 		}
-		case 0x1C: // DEC E
+		case 0x1D: // DEC E
 		{
 			regPtr = &registers.e;
 			break;
 		}
-		case 0x2C: // DEC L
+		case 0x2D: // DEC L
 		{
 			regPtr = &registers.l;
 			break;
 		}
-		case 0x3C: // DEC A
+		case 0x3D: // DEC A
 		{
 			regPtr = &registers.a;
 			break;
 		}
 		default:
-			std::cout << "Unknown INCr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			std::cout << "Unknown DECr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 			setHasNotBroken(false);
 			break;
 	}
@@ -696,7 +744,7 @@ void Cpu::DECaRR()
 
 	switch (opcode)
 	{
-		case 0x34: // DEC (HL)
+		case 0x35: // DEC (HL)
 		{
 			uint8_t value = read(registers.hl);
 			value--;
@@ -748,6 +796,26 @@ void Cpu::LDrd8()
 			write(registers.hl, value);
 			cycles += 4;
 			cyclesRan += 4;
+			break;
+		}
+		case 0x0E:
+		{
+			registers.c = value;
+			break;
+		}
+		case 0x1E:
+		{
+			registers.e = value;
+			break;
+		}
+		case 0x2E:
+		{
+			registers.l = value;
+			break;
+		}
+		case 0x3E:
+		{
+			registers.a = value;
 			break;
 		}
 		default:
@@ -1031,55 +1099,6 @@ void Cpu::LDrR()
 		case 0x6F:
 		{
 			registers.l = registers.a;
-			break;
-		}
-		case 0x70:
-		{
-			write(registers.hl, registers.b);
-			cycles += 4;
-			cyclesRan += 4;
-			break;
-		}
-		case 0x71:
-		{
-			write(registers.hl, registers.c);
-			cycles += 4;
-			cyclesRan += 4;
-			break;
-		}
-		case 0x72:
-		{
-			write(registers.hl, registers.d);
-			cycles += 4;
-			cyclesRan += 4;
-			break;
-		}
-		case 0x73:
-		{
-			write(registers.hl, registers.e);
-			cycles += 4;
-			cyclesRan += 4;
-			break;
-		}
-		case 0x74:
-		{
-			write(registers.hl, registers.h);
-			cycles += 4;
-			cyclesRan += 4;
-			break;
-		}
-		case 0x75:
-		{
-			write(registers.hl, registers.l);
-			cycles += 4;
-			cyclesRan += 4;
-			break;
-		}
-		case 0x77:
-		{
-			write(registers.hl, registers.a);
-			cycles += 4;
-			cyclesRan += 4;
 			break;
 		}
 		case 0x78:
@@ -1713,37 +1732,37 @@ void Cpu::CPr()
 
 	switch (opcode)
 	{
-		case 0x88:
+		case 0xB8:
 		{
 			regPtr = &registers.b;
 			break;
 		}
-		case 0x89:
+		case 0xB9:
 		{
 			regPtr = &registers.c;
 			break;
 		}
-		case 0x8A:
+		case 0xBA:
 		{
 			regPtr = &registers.d;
 			break;
 		}
-		case 0x8B:
+		case 0xBB:
 		{
 			regPtr = &registers.e;
 			break;
 		}
-		case 0x8C:
+		case 0xBC:
 		{
 			regPtr = &registers.h;
 			break;
 		}
-		case 0x8D:
+		case 0xBD:
 		{
 			regPtr = &registers.l;
 			break;
 		}
-		case 0x8E:
+		case 0xBE:
 		{
 			hlValue = registers.hl;
 			regPtr = &hlValue;
@@ -1752,7 +1771,7 @@ void Cpu::CPr()
 			cyclesRan += 4;
 			break;
 		}
-		case 0x8F:
+		case 0xBF:
 		{
 			regPtr = &registers.a;
 			break;
@@ -2261,6 +2280,24 @@ void Cpu::LD_C_A()
 
 void Cpu::XXX()
 {
+	uint8_t opcode = read(pc++);
+
 	std::cout << "Unknown/Illegal instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 	setHasNotBroken(false);
+}
+
+void Cpu::LDa16SP()
+{
+	uint8_t opcode = read(pc++);
+
+	uint8_t lo = read(pc++);
+	uint8_t hi = read(pc++);
+
+	uint16_t a16 = (hi << 8) | lo;
+
+	write(a16, stkp & 0xFF);
+	write(a16 + 1, (stkp >> 8) & 0xFF);
+
+	cycles += 20;
+	cyclesRan += 20;
 }

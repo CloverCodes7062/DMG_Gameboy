@@ -151,8 +151,6 @@ private:
     void JRNZr8(); void LDarrINCR(); void DAA(); void JRZr8(); void LDaRRINC(); void CPL();
     void JRNCr8(); void LDarrDECR(); void INCaRR(); void DECaRR(); void LDarrD8(); void SCF(); void JRCr8(); void LDaRRDEC(); void CCF();
     void LDrR(); void LDrARR();
-    //
-    //
     void LDarrR(); void HALT();
     void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
     void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
