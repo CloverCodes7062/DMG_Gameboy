@@ -250,26 +250,22 @@ void Cpu::runInstruction()
 			std::cout << "Press spacebar to execute the next instruction..." << std::endl;
 			while (!_kbhit() || _getch() != ' ');
 		}
-
-		if (!wasCB)
+		if (_kbhit())
 		{
-			if (pc == 0xCE67)
+			char keyPressed = _getch();
+			if (keyPressed == 's')
 			{
-				std::cout << "TEST FINISHED!" << std::endl;
 				setHasNotBroken(false);
 				return;
 			}
+		}
 
+		if (!wasCB)
+		{
 			(this->*lookup[read(pc)].operate)();
 		}
 		else
 		{
-			if (pc == 0xCE67)
-			{
-				std::cout << "TEST FINISHED!" << std::endl;
-				setHasNotBroken(false);
-				return;
-			}
 			(this->*lookupCB[read(pc)].operate)();
 			wasCB = false;
 		}
@@ -1119,7 +1115,7 @@ void Cpu::LDrR()
 		}
 		case 0x5E:
 		{
-			registers.d = read(registers.hl);
+			registers.e = read(registers.hl);
 			cycles += 4;
 			cyclesRan += 4;
 			break;
