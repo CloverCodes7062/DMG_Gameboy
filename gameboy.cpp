@@ -41,6 +41,9 @@ void gameboy::emulate()
     {
         cpu.runInstruction();
     }
+
+    cpu.printStatus();
+    cpu.printSerialPorts();
 }
 
 void gameboy::write(uint16_t addr, uint8_t data)

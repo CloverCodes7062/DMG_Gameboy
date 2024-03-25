@@ -48,6 +48,8 @@ public:
 	bool getHasNotBroken();
 	uint16_t getPc();
     void printVram();
+    void printStatus();
+    void printSerialPorts();
 	void setHasNotBroken(bool value);
 	std::string getTitle();
     std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb);
@@ -58,7 +60,7 @@ public:
     int cyclesRan = 0;
 
     // SDL Engine
-    Engine engine = Engine(256, 256);
+    //Engine engine = Engine(256, 256); UNUSED FOR NOW
 
     // INSTRUCTION LOOKUP TABLES
     struct INSTRUCTION
@@ -97,6 +99,10 @@ private:
 
     // Sets Step Mode
     bool stepMode = false;
+
+    // Holds changes to 0xFF01 (SB, Serial Transfer Data)
+    uint8_t previousFF01 = 0x00;
+    std::vector<uint8_t> FF01Changes;
 
 private:
 
@@ -153,7 +159,7 @@ private:
     void STOP0(); void RLA(); void JRr8(); void RRA();
     void JRNZr8(); void LDarrINCR(); void DAA(); void JRZr8(); void LDaRRINC(); void CPL();
     void JRNCr8(); void LDarrDECR(); void INCaRR(); void DECaRR(); void LDarrD8(); void SCF(); void JRCr8(); void LDaRRDEC(); void CCF();
-    void LDrR(); void HALT();
+    void LDrR(); void HALT(); void DECB();
     void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
     void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
     void ANDr(); void ANDarr(); void XORr(); void XORarr();
@@ -163,7 +169,7 @@ private:
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
     void LDHra8(); void LDraC(); void DI(); void ORd8(); void RST30(); void LDHLSPr8(); void LDSPHL(); void LDAa16(); void EI(); void CPd8(); void RST38();
 
-    void RLCr8(); void RRCr8();
+    void RLCr8(); void RRCr8(); void RLr8(); void SLAr8(); void SRAr8();
     void SRLr8(); void RRr8(); void SWAPr8();
 
     void XXX();

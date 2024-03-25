@@ -28,8 +28,8 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	using a = Cpu;
 
 	lookup = {
-		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (BC), A", &a::LDarrR }, INSTRUCTION{ "INC BC", &a::INCrr }, INSTRUCTION{ "INC B", &a::INCr }, INSTRUCTION{ "DEC B", &a::DECr }, INSTRUCTION{ "LD B, d8", &a::LDrd8 }, INSTRUCTION{ "RLCA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD (a16), SP", &a::LDa16SP }, INSTRUCTION{ "ADD HL, BC", &a::ADDrrRR }, INSTRUCTION{ "LD A, (BC)", &a::LDraRR }, INSTRUCTION{ "DEC BC", &a::DECrr }, INSTRUCTION{ "INC C", &a::INCr }, INSTRUCTION{ "DEC C", &a::DECr }, INSTRUCTION{ "LD C, d8", &a::LDrd8 }, INSTRUCTION{ "RRCA; UNIMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "STOP 0; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD DE, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (DE), d16", &a::LDarrR }, INSTRUCTION{ "INC DE", &a::INCrr }, INSTRUCTION{ "INC D", &a::INCr }, INSTRUCTION{ "DEC D", &a::DECr }, INSTRUCTION{ "LD D, d8", &a::LDrd8 }, INSTRUCTION{ "RLA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR r8", &a::JRcr8 }, INSTRUCTION{ "ADD HL, BC", &a::ADDrrRR }, INSTRUCTION{ "LD A, (DE)", &a::LDraRR }, INSTRUCTION{ "DEC DE", &a::DECrr }, INSTRUCTION{ "INC E", &a::INCr }, INSTRUCTION{ "DEC E", &a::DECr }, INSTRUCTION{ "LD E, d8", &a::LDrd8 }, INSTRUCTION{ "RRA", &a::RRA },
+		INSTRUCTION{ "NOP", &a::NOP }, INSTRUCTION{ "LD BC, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (BC), A", &a::LDarrR }, INSTRUCTION{ "INC BC", &a::INCrr }, INSTRUCTION{ "INC B", &a::INCr }, INSTRUCTION{ "DEC B", &a::DECr }, INSTRUCTION{ "LD B, d8", &a::LDrd8 }, INSTRUCTION{ "RLCA", &a::RLCA }, INSTRUCTION{ "LD (a16), SP", &a::LDa16SP }, INSTRUCTION{ "ADD HL, BC", &a::ADDrrRR }, INSTRUCTION{ "LD A, (BC)", &a::LDraRR }, INSTRUCTION{ "DEC BC", &a::DECrr }, INSTRUCTION{ "INC C", &a::INCr }, INSTRUCTION{ "DEC C", &a::DECr }, INSTRUCTION{ "LD C, d8", &a::LDrd8 }, INSTRUCTION{ "RRCA", &a::RRCA },
+		INSTRUCTION{ "STOP 0; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "LD DE, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (DE), d16", &a::LDarrR }, INSTRUCTION{ "INC DE", &a::INCrr }, INSTRUCTION{ "INC D", &a::INCr }, INSTRUCTION{ "DEC D", &a::DECr }, INSTRUCTION{ "LD D, d8", &a::LDrd8 }, INSTRUCTION{ "RLA", &a::RLA }, INSTRUCTION{ "JR r8", &a::JRcr8 }, INSTRUCTION{ "ADD HL, BC", &a::ADDrrRR }, INSTRUCTION{ "LD A, (DE)", &a::LDraRR }, INSTRUCTION{ "DEC DE", &a::DECrr }, INSTRUCTION{ "INC E", &a::INCr }, INSTRUCTION{ "DEC E", &a::DECr }, INSTRUCTION{ "LD E, d8", &a::LDrd8 }, INSTRUCTION{ "RRA", &a::RRA },
 		INSTRUCTION{ "JR NZ, r8", &a::JRcr8 }, INSTRUCTION{ "LD HL, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL+), d16", &a::LDarrR }, INSTRUCTION{ "INC HL", &a::INCrr }, INSTRUCTION{ "INC H", &a::INCr }, INSTRUCTION{ "DEC H", &a::DECr }, INSTRUCTION{ "LD H, d8", &a::LDrd8 }, INSTRUCTION{ "DAA; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JR Z r8", &a::JRcr8 }, INSTRUCTION{ "ADD HL, HL", &a::ADDrrRR }, INSTRUCTION{ "LD A, (HL+)", &a::LDraRR }, INSTRUCTION{ "DEC HL", &a::DECrr }, INSTRUCTION{ "INC L", &a::INCr }, INSTRUCTION{ "DEC L", &a::DECr }, INSTRUCTION{ "LD L, d8", &a::LDrd8 }, INSTRUCTION{ "CPL", &a::CPL },
 		INSTRUCTION{ "JR NC, r8", &a::JRcr8 }, INSTRUCTION{ "LD SP, d16", &a::LDrrd16 }, INSTRUCTION{ "LD (HL-), d16", &a::LDarrR }, INSTRUCTION{ "INC SP", &a::INCrr }, INSTRUCTION{ "INC (HL)", &a::INCr }, INSTRUCTION{ "DEC (HL)", &a::DECr }, INSTRUCTION{ "LD (HL), d8", &a::LDrd8 }, INSTRUCTION{ "SCF", &a::SCF }, INSTRUCTION{ "JR C r8", &a::JRcr8 }, INSTRUCTION{ "ADD HL, SP", &a::ADDrrRR }, INSTRUCTION{ "LD A, (HL-)", &a::LDraRR }, INSTRUCTION{ "DEC SP", &a::DECrr }, INSTRUCTION{ "INC A", &a::INCr }, INSTRUCTION{ "DEC A", &a::DECr }, INSTRUCTION{ "LD A, d8", &a::LDrd8 }, INSTRUCTION{ "CCF", &a::CCF },
 		INSTRUCTION{ "LD B, B", &a::LDrR }, INSTRUCTION{ "LD B, C", &a::LDrR }, INSTRUCTION{ "LD B, D", &a::LDrR }, INSTRUCTION{ "LD B, E", &a::LDrR }, INSTRUCTION{ "LD B, H", &a::LDrR }, INSTRUCTION{ "LD B, L", &a::LDrR }, INSTRUCTION{ "LD B, (HL)", &a::LDrR }, INSTRUCTION{ "LD B, A", &a::LDrR }, INSTRUCTION{ "LD C, B", &a::LDrR }, INSTRUCTION{ "LD C, C", &a::LDrR }, INSTRUCTION{ "LD C, D", &a::LDrR }, INSTRUCTION{ "LD C, E", &a::LDrR }, INSTRUCTION{ "LD C, H", &a::LDrR }, INSTRUCTION{ "LD C, L", &a::LDrR }, INSTRUCTION{ "LD C, (HL)", &a::LDrR }, INSTRUCTION{ "LD C, A", &a::LDrR },
@@ -47,9 +47,9 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	};
 
 	lookupCB = {
-		INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX },
-		INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "RR B", &a::RRr8 }, INSTRUCTION{ "RR C", &a::RRr8 }, INSTRUCTION{ "RR D", &a::RRr8 }, INSTRUCTION{ "RR E", &a::RRr8 }, INSTRUCTION{ "RR H", &a::RRr8 }, INSTRUCTION{ "RR L", &a::RRr8 }, INSTRUCTION{ "RR (HL)", &a::RRr8 }, INSTRUCTION{ "RR A", &a::RRr8 },
-		INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX },
+		INSTRUCTION{ "RLC B", &a::RLCr8 }, INSTRUCTION{ "RLC C", &a::RLCr8 }, INSTRUCTION{ "RLC D", &a::RLCr8 }, INSTRUCTION{ "RLC E", &a::RLCr8 }, INSTRUCTION{ "RLC H", &a::RLCr8 }, INSTRUCTION{ "RLC L", &a::RLCr8 }, INSTRUCTION{ "RLC (HL)", &a::RLCr8 }, INSTRUCTION{ "RLC A", &a::RLCr8 }, INSTRUCTION{ "RRC B", &a::RRCr8 }, INSTRUCTION{ "RRC C", &a::RRCr8 }, INSTRUCTION{ "RRC D", &a::RRCr8 }, INSTRUCTION{ "RRC E", &a::RRCr8 }, INSTRUCTION{ "RRC H", &a::RRCr8 }, INSTRUCTION{ "RRC L", &a::RRCr8 }, INSTRUCTION{ "RRC (HL)", &a::RRCr8 }, INSTRUCTION{ "RRC A", &a::RRCr8 },
+		INSTRUCTION{ "RL B", &a::RLr8 }, INSTRUCTION{ "RL C", &a::RLr8 }, INSTRUCTION{ "RL D", &a::RLr8 }, INSTRUCTION{ "RL E", &a::RLr8 }, INSTRUCTION{ "RL H", &a::RLr8 }, INSTRUCTION{ "RL L", &a::RLr8 }, INSTRUCTION{ "RL (HL)", &a::RLr8 }, INSTRUCTION{ "RL A", &a::RLr8 }, INSTRUCTION{ "RR B", &a::RRr8 }, INSTRUCTION{ "RR C", &a::RRr8 }, INSTRUCTION{ "RR D", &a::RRr8 }, INSTRUCTION{ "RR E", &a::RRr8 }, INSTRUCTION{ "RR H", &a::RRr8 }, INSTRUCTION{ "RR L", &a::RRr8 }, INSTRUCTION{ "RR (HL)", &a::RRr8 }, INSTRUCTION{ "RR A", &a::RRr8 },
+		INSTRUCTION{ "SLA B", &a::SLAr8 }, INSTRUCTION{ "SLA C", &a::SLAr8 }, INSTRUCTION{ "SLA D", &a::SLAr8 }, INSTRUCTION{ "SLA E", &a::SLAr8 }, INSTRUCTION{ "SLA H", &a::SLAr8 }, INSTRUCTION{ "SLA L", &a::SLAr8 }, INSTRUCTION{ "SLA (HL)", &a::SLAr8 }, INSTRUCTION{ "SLA A", &a::SLAr8 }, INSTRUCTION{ "SRA B", &a::SRAr8 }, INSTRUCTION{ "SRA C", &a::SRAr8 }, INSTRUCTION{ "SRA D", &a::SRAr8 }, INSTRUCTION{ "SRA E", &a::SRAr8 }, INSTRUCTION{ "SRA H", &a::SRAr8 }, INSTRUCTION{ "SRA L", &a::SRAr8 }, INSTRUCTION{ "SRA (HL)", &a::SRAr8 }, INSTRUCTION{ "SLA A", &a::SRAr8 },
 		INSTRUCTION{ "SWAP B", &a::SWAPr8 }, INSTRUCTION{ "SWAP C", &a::SWAPr8 }, INSTRUCTION{ "SWAP D", &a::SWAPr8 }, INSTRUCTION{ "SWAP E", &a::SWAPr8 }, INSTRUCTION{ "SWAP H", &a::SWAPr8 }, INSTRUCTION{ "SWAP L", &a::SWAPr8 }, INSTRUCTION{ "SWAP (HL)", &a::SWAPr8 }, INSTRUCTION{ "SWAP A", &a::SWAPr8 }, INSTRUCTION{ "SRL B", &a::SRLr8 }, INSTRUCTION{ "SRL C", &a::SRLr8 }, INSTRUCTION{ "SRL D", &a::SRLr8 }, INSTRUCTION{ "SRL E", &a::SRLr8 }, INSTRUCTION{ "SRL H", &a::SRLr8 }, INSTRUCTION{ "SRL L", &a::SRLr8 }, INSTRUCTION{ "SRL (HL)", &a::SRLr8 }, INSTRUCTION{ "SRL A", &a::SRLr8 },
 		INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX },
 		INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX }, INSTRUCTION{ "NOT IMPLEMENTED", &a::XXX },
@@ -124,7 +124,7 @@ void Cpu::loadNintendoLogo()
 	backgroundTiles = BgTiles;
 
 	std::cout << "TILES GENERATED" << std::endl;
-	
+
 	engine.setBuffer(backgroundTiles);
 
 	bool running = true;
@@ -239,7 +239,12 @@ bool Cpu::isFlagSet(Cpu::Flags flag) const
 void Cpu::runInstruction()
 {
 	if (cycles == 0)
-	{
+	{	
+		if (read(0xFF01) != previousFF01)
+		{
+			FF01Changes.push_back(read(0xFF01));
+			previousFF01 = read(0xFF01);
+		}
 		if (stepMode) 
 		{
 			std::cout << "Press spacebar to execute the next instruction..." << std::endl;
@@ -248,25 +253,9 @@ void Cpu::runInstruction()
 
 		if (!wasCB)
 		{
-			std::cout << "Registers:" << std::endl;
-
-			std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
-			std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
-			std::cout << "BC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.bc) << std::endl;
-			std::cout << "DE: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.de) << std::endl;
-			std::cout << "HL: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.hl) << std::endl;
-			std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
-			std::cout << "SP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
-
-			std::cout << "LCDC: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(lcdc)) << std::endl;
-			std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
-			std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
-
-			std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl;
-			std::cout << "INSTRUCTION: " << lookup[read(pc)].name << std::endl << std::endl;
-
 			if (pc == 0xCE67)
 			{
+				std::cout << "TEST FINISHED!" << std::endl;
 				setHasNotBroken(false);
 				return;
 			}
@@ -275,25 +264,9 @@ void Cpu::runInstruction()
 		}
 		else
 		{
-			std::cout << "Registers:" << std::endl;
-
-			std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
-			std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
-			std::cout << "BC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.bc) << std::endl;
-			std::cout << "DE: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.de) << std::endl;
-			std::cout << "HL: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.hl) << std::endl;
-			std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
-			std::cout << "SP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
-
-			std::cout << "LCDC: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(lcdc)) << std::endl;
-			std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
-			std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
-
-			std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl;
-			std::cout << "INSTRUCTION: " << lookupCB[read(pc)].name << std::endl << std::endl;
-
 			if (pc == 0xCE67)
 			{
+				std::cout << "TEST FINISHED!" << std::endl;
 				setHasNotBroken(false);
 				return;
 			}
@@ -313,6 +286,41 @@ void Cpu::printVram()
 		std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(addr)) << std::endl;
 	}
 	std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(bus.getRamSize()) << std::endl;
+}
+
+void Cpu::printStatus()
+{
+	std::cout << "Registers:" << std::endl;
+
+	std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
+	std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
+	std::cout << "BC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.bc) << std::endl;
+	std::cout << "DE: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.de) << std::endl;
+	std::cout << "HL: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.hl) << std::endl;
+	std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
+	std::cout << "SP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
+
+	std::cout << "LCDC: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(lcdc)) << std::endl;
+	std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
+	std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
+}
+
+void Cpu::printSerialPorts()
+{
+	std::cout << "0xFF02: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(0xFF02)) << std::endl << std::endl;
+	
+	for (size_t addr = 0; addr < FF01Changes.size(); addr++)
+	{
+		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(FF01Changes[addr]) << " ";
+	}
+
+	std::cout << std::endl;
+	std::cout << std::endl;
+
+	for (size_t addr = 0x9800; addr <= 0x9BFF; addr++)
+	{
+		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(addr)) << " ";
+	}
 }
 
 void Cpu::loadRom(std::vector<uint8_t> romData)
@@ -697,46 +705,92 @@ void Cpu::INCr()
 
 void Cpu::DECr()
 {
-	uint8_t opcode = read(pc);
-	pc++;
-
-	uint8_t* regPtr = nullptr;
+	uint8_t opcode = read(pc++);
 
 	switch (opcode)
 	{
 		case 0x05: // DEC B
 		{
-			regPtr = &registers.b;
+			uint8_t value = registers.b;
+			value--;
+			registers.b = value;
+
+			setFlag(Zero, registers.b == 0x00);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (registers.b & 0x0F) == 0x0F);
+
 			break;
 		}
 		case 0x15: // DEC D
 		{
-			regPtr = &registers.d;
+			uint8_t value = registers.d;
+			value--;
+			registers.d = value;
+
+			setFlag(Zero, registers.d == 0x00);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (registers.d & 0x0F) == 0x0F);
+
 			break;
 		}
 		case 0x25: // DEC H
 		{
-			regPtr = &registers.h;
+			uint8_t value = registers.h;
+			value--;
+			registers.h = value;
+
+			setFlag(Zero, registers.h == 0x00);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (registers.h & 0x0F) == 0x0F);
+
 			break;
 		}
 		case 0x0D: // DEC C
 		{
-			regPtr = &registers.c;
+			uint8_t value = registers.c;
+			value--;
+			registers.c = value;
+
+			setFlag(Zero, registers.c == 0x00);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (registers.c & 0x0F) == 0x0F);
+
 			break;
 		}
 		case 0x1D: // DEC E
 		{
-			regPtr = &registers.e;
+			uint8_t value = registers.e;
+			value--;
+			registers.e = value;
+
+			setFlag(Zero, registers.e == 0x00);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (registers.e & 0x0F) == 0x0F);
+
 			break;
 		}
 		case 0x2D: // DEC L
 		{
-			regPtr = &registers.l;
+			uint8_t value = registers.l;
+			value--;
+			registers.l = value;
+
+			setFlag(Zero, registers.l == 0x00);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (registers.l & 0x0F) == 0x0F);
+
 			break;
 		}
 		case 0x3D: // DEC A
 		{
-			regPtr = &registers.a;
+			uint8_t value = registers.a;
+			value--;
+			registers.a = value;
+
+			setFlag(Zero, registers.a == 0x00);
+			setFlag(Subtraction, true);
+			setFlag(HalfCarry, (registers.a & 0x0F) == 0x0F);
+
 			break;
 		}
 		case 0x35: // DEC (HL)
@@ -749,8 +803,8 @@ void Cpu::DECr()
 			setFlag(Subtraction, true);
 			setFlag(HalfCarry, (value & 0x0F) == 0);
 
-			cycles += 12;
-			cyclesRan += 12;
+			cycles += 8;
+			cyclesRan += 8;
 
 			break;
 		}
@@ -760,19 +814,21 @@ void Cpu::DECr()
 			break;
 	}
 
-	if (regPtr == nullptr)
-	{
-		return;
-	}
+	cycles += 4;
+	cyclesRan += 4;
+}
 
-	if (regPtr != nullptr)
-	{
-		(*regPtr)--;
+void Cpu::DECB()
+{
+	uint8_t opcode = read(pc++);
 
-		setFlag(Zero, (*regPtr) == 0);
-		setFlag(Subtraction, true);
-		setFlag(HalfCarry, ((*regPtr) & 0x0F) == 0);
-	}
+	uint8_t value = registers.b;
+	value--;
+	registers.b = value;
+
+	setFlag(Zero, registers.b == 0x00);
+	setFlag(Subtraction, true);
+	setFlag(HalfCarry, (registers.b & 0x0F) == 0x0F);
 
 	cycles += 4;
 	cyclesRan += 4;
@@ -896,20 +952,6 @@ void Cpu::LDrd8()
 
 	cycles += 8;
 	cyclesRan += 8;
-}
-
-void Cpu::RLCA() // TODO: FINISH RLCA(); ROTATE REG A AND SET CARRY FLAG
-{
-	uint8_t opcode = read(pc);
-	pc++;
-
-	switch (opcode)
-	{
-		default:
-			std::cout << "Unknown RLCA instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
-			setHasNotBroken(false);
-			break;
-	}
 }
 
 void Cpu::LDrR()
@@ -2405,7 +2447,7 @@ void Cpu::LD_C_A()
 
 void Cpu::XXX()
 {
-	uint8_t opcode = read(pc++);
+	uint8_t opcode = read(pc);
 
 	std::cout << "Unknown/Illegal instruction: "<< "PREFIX CB: " << wasCB << " 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 	setHasNotBroken(false);
@@ -2554,7 +2596,7 @@ void Cpu::RRA()
 
 	registers.a = (registers.a >> 1) | (carry << 7);
 
-	setFlag(Zero, registers.a == 0);
+	setFlag(Zero, false);
 	setFlag(Subtraction, false);
 	setFlag(HalfCarry, false);
 	setFlag(Carry, new_carry);
@@ -2612,6 +2654,57 @@ void Cpu::LDSPHL()
 	cyclesRan += 8;
 }
 
+void Cpu::RRCA()
+{
+	uint8_t opcode = read(pc++);
+
+	bool carry = registers.a & 0x01;
+
+	registers.a >>= 1;
+	registers.a |= (carry << 7);
+
+	setFlag(Zero, false);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+	setFlag(Carry, carry);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::RLCA() {
+	uint8_t opcode = read(pc++);
+
+	bool carry = (registers.a & 0x80) != 0;
+
+	registers.a <<= 1;
+	registers.a |= carry;
+
+	setFlag(Zero, false);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+	setFlag(Carry, carry);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::RLA() {
+	uint8_t opcode = read(pc++);
+
+	bool carry = isFlagSet(Carry);
+
+	setFlag(Carry, (registers.a & 0x80) != 0);
+	registers.a = (registers.a << 1) | carry;
+
+	setFlag(Zero, false);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
 void Cpu::PREFIXCB()
 {
 	uint8_t opcode = read(pc++);
@@ -2663,18 +2756,19 @@ void Cpu::RLCr8()
 		case 0x06:
 		{
 			uint8_t value = read(registers.hl);
-			bool carry = isFlagSet(Carry);
-			value = (value << 1) | carry;
+			
+			bool msb = (value & 0x80) != 0;
+			value = (value << 1) | msb;
 
 			write(registers.hl, value);
 
 			setFlag(Zero, value == 0);
 			setFlag(Subtraction, false);
 			setFlag(HalfCarry, false);
-			setFlag(Carry, (value & 0x80) != 0);
+			setFlag(Carry, msb);
 
-			cycles += 16;
-			cyclesRan += 16;
+			cycles += 12;
+			cyclesRan += 12;
 			break;
 		}
 		case 0x07:
@@ -2693,17 +2787,17 @@ void Cpu::RLCr8()
 		return;
 	}
 
-	bool carry = isFlagSet(Carry);
+	bool msb = (*r8 & 0x80) != 0;
 
-	*r8 = (*r8 << 1) | carry;
+	*r8 = (*r8 << 1) | msb;
 
 	setFlag(Zero, *r8 == 0);
 	setFlag(Subtraction, false);
 	setFlag(HalfCarry, false);
-	setFlag(Carry, (*r8 & 0x80) != 0);
+	setFlag(Carry, msb);
 
-	cycles += 8;
-	cyclesRan += 8;
+	cycles += 4;
+	cyclesRan += 4;
 }
 
 void Cpu::RRCr8()
@@ -2758,8 +2852,8 @@ void Cpu::RRCr8()
 			setFlag(HalfCarry, false);
 			setFlag(Carry, carry);
 
-			cycles += 16;
-			cyclesRan += 16;
+			cycles += 12;
+			cyclesRan += 12;
 			break;
 		}
 		case 0x0F:
@@ -2787,8 +2881,8 @@ void Cpu::RRCr8()
 	setFlag(HalfCarry, false);
 	setFlag(Carry, carry);
 
-	cycles += 8;
-	cyclesRan += 8;
+	cycles += 4;
+	cyclesRan += 4;
 }
 
 void Cpu::SRLr8()
@@ -2843,8 +2937,13 @@ void Cpu::SRLr8()
 			setFlag(HalfCarry, false);
 			setFlag(Carry, carry);
 
-			cycles += 16;
-			cyclesRan += 16;
+			cycles += 12;
+			cyclesRan += 12;
+			break;
+		}
+		case 0x3F:
+		{
+			r8 = &registers.a;
 			break;
 		}
 		default:
@@ -3022,6 +3121,269 @@ void Cpu::SWAPr8()
 	cyclesRan += 8;
 }
 
+void Cpu::RLr8()
+{
+	uint8_t opcode = read(pc++);
+	uint8_t* r8 = nullptr;
+
+	switch (opcode) {
+		case 0x10:
+		{
+			r8 = &registers.b;
+			break;
+		}
+		case 0x11:
+		{
+			r8 = &registers.c;
+			break;
+		}
+		case 0x12:
+		{
+			r8 = &registers.d;
+			break;
+		}
+		case 0x13:
+		{
+			r8 = &registers.e;
+			break;
+		}
+		case 0x14:
+		{
+			r8 = &registers.h;
+			break;
+		}
+		case 0x15:
+		{
+			r8 = &registers.l;
+			break;
+		}
+		case 0x16: 
+		{
+			uint8_t value = read(registers.hl);
+			bool carry = isFlagSet(Carry);
+			bool msb = (value & 0x80) != 0;
+
+			value = (value << 1) | carry;
+
+			write(registers.hl, value);
+
+			setFlag(Zero, value == 0);
+			setFlag(Subtraction, false);
+			setFlag(HalfCarry, false);
+			setFlag(Carry, msb);
+
+			cycles += 12;
+			cyclesRan += 12;
+			break;
+		}
+		case 0x17:
+		{
+			r8 = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown RLr8 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			return;
+	}
+
+	if (r8 == nullptr) {
+		return;
+	}
+
+	bool carry = isFlagSet(Carry);
+	bool msb = (*r8 & 0x80) != 0;
+
+	*r8 <<= 1;
+	*r8 |= carry;
+
+	setFlag(Zero, *r8 == 0);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+	setFlag(Carry, msb);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::SLAr8()
+{
+	uint8_t opcode = read(pc++);
+	uint8_t* r8 = nullptr;
+
+	switch (opcode)
+	{
+		case 0x20:
+		{
+			r8 = &registers.b;
+			break;
+		}
+		case 0x21:
+		{
+			r8 = &registers.c;
+			break;
+		}
+		case 0x22:
+		{
+			r8 = &registers.d;
+			break;
+		}
+		case 0x23:
+		{
+			r8 = &registers.e;
+			break;
+		}
+		case 0x24:
+		{
+			r8 = &registers.h;
+			break;
+		}
+		case 0x25:
+		{
+			r8 = &registers.l;
+			break;
+		}
+		case 0x26:
+		{
+			uint8_t value = read(registers.hl);
+			bool carry = (value & 0x80) != 0;
+			value <<= 1;
+
+			write(registers.hl, value);
+
+			setFlag(Zero, value == 0x00);
+			setFlag(Subtraction, false);
+			setFlag(HalfCarry, false);
+			setFlag(Carry, carry);
+
+			cycles += 12;
+			cyclesRan += 12;
+			break;
+		}
+		case 0x27:
+		{
+			r8 = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown SLAr8 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			return;
+	}
+
+	if (r8 == nullptr)
+	{
+		return;
+	}
+
+	bool carry = (*r8 & 0x80) != 0;
+
+	*r8 <<= 1;
+
+	setFlag(Zero, *r8 == 0x00);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+	setFlag(Carry, carry);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
+
+void Cpu::SRAr8()
+{
+	uint8_t opcode = read(pc++);
+	uint8_t* r8 = nullptr;
+
+	switch (opcode)
+	{
+		case 0x28:
+		{
+			r8 = &registers.b;
+			break;
+		}
+		case 0x29:
+		{
+			r8 = &registers.c;
+			break;
+		}
+		case 0x2A:
+		{
+			r8 = &registers.d;
+			break;
+		}
+		case 0x2B:
+		{
+			r8 = &registers.e;
+			break;
+		}
+		case 0x2C:
+		{
+			r8 = &registers.h;
+			break;
+		}
+		case 0x2D:
+		{
+			r8 = &registers.l;
+			break;
+		}
+		case 0x2E:
+		{
+			uint8_t value = read(registers.hl);
+			bool carry = (value & 0x01) != 0;
+			bool bit7 = (value & 0x80) != 0;
+
+			value >>= 1;
+
+			if (bit7)
+			{
+				value |= 0x80;
+			}
+
+			write(registers.hl, value);
+
+			setFlag(Zero, value == 0x00);
+			setFlag(Subtraction, false);
+			setFlag(HalfCarry, false);
+			setFlag(Carry, carry);
+
+			cycles += 12;
+			cyclesRan += 12;
+			break;
+		}
+		case 0x2F:
+		{
+			r8 = &registers.a;
+			break;
+		}
+		default:
+			std::cout << "Unknown SRAr8 instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
+			setHasNotBroken(false);
+			return;
+	}
+
+	if (r8 == nullptr)
+	{
+		return;
+	}
+
+	bool carry = (*r8 & 0x01) != 0;
+	bool bit7 = (*r8 & 0x80) != 0;
+
+	*r8 >>= 1;
+
+	if (bit7)
+	{
+		*r8 |= 0x80;
+	}
+
+	setFlag(Zero, *r8 == 0x00);
+	setFlag(Subtraction, false);
+	setFlag(HalfCarry, false);
+	setFlag(Carry, carry);
+
+	cycles += 4;
+	cyclesRan += 4;
+}
 
 
 /* PLACEHOLDER TO TEST FUNCTIONS
