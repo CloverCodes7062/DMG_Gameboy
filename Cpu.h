@@ -163,6 +163,9 @@ private:
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
     void LDHra8(); void LDraC(); void DI(); void ORd8(); void RST30(); void LDHLSPr8(); void LDSPHL(); void LDAa16(); void EI(); void CPd8(); void RST38();
 
+    void RLCr8(); void RRCr8();
+    void SRLr8(); void RRr8(); void SWAPr8();
+
     void XXX();
 
 private:
