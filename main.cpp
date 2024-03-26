@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[]) {
 
-	std::string rom_path = "C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\06-ld r,r.gb";
+	std::string rom_path = "C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\03-op sp,hl.gb";
 
 	Bus bus;
 	Cpu cpu(bus);

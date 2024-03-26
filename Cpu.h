@@ -159,7 +159,7 @@ private:
     void STOP0(); void RLA(); void JRr8(); void RRA();
     void JRNZr8(); void LDarrINCR(); void DAA(); void JRZr8(); void LDaRRINC(); void CPL();
     void JRNCr8(); void LDarrDECR(); void INCaRR(); void DECaRR(); void LDarrD8(); void SCF(); void JRCr8(); void LDaRRDEC(); void CCF();
-    void LDrR(); void HALT(); void DECB();
+    void LDrR(); void HALT(); void DECB(); void DECHL();
     void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
     void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
     void ANDr(); void ANDarr(); void XORr(); void XORarr();
