@@ -167,7 +167,7 @@ private:
     void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
     void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
     void ANDr(); void ANDarr(); void XORr(); void XORarr();
-    void ORr(); void CPr(); void LDraRR(); void JRcr8();
+    void ORr(); void CPr(); void LDraRR(); void JRcr8(); void INCHL();
     void RETc(); void POPrr(); void JPNZa16(); void JPca16(); void CALLNZa16(); void PUSHrr(); void ADDrd8(); void RSTn(); void RETZ(); void RET(); void JPZa16(); void PREFIXCB(); void CALLZa16(); void CALLa16(); void ACArd8(); void RST08();
     void RETNC(); void JPNCa16(); void CALLca16(); void SUBd8(); void RST10(); void RETC(); void RETI(); void JPCa16(); void CALLCa16(); void SBCrd8(); void RST18();
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
@@ -175,6 +175,14 @@ private:
 
     void RLCr8(); void RRCr8(); void RLr8(); void SLAr8(); void SRAr8();
     void SRLr8(); void RRr8(); void SWAPr8(); void RESu3r8();
+    void BIT0r8(); void BIT1r8(); void BIT2r8(); void BIT3r8();
+    void BIT4r8(); void BIT5r8(); void BIT6r8(); void BIT7r8();
+
+    void RES0r8(); void RES1r8(); void RES2r8(); void RES3r8();
+    void RES4r8(); void RES5r8(); void RES6r8(); void RES7r8();
+
+    void SET0r8(); void SET1r8(); void SET2r8(); void SET3r8();
+    void SET4r8(); void SET5r8(); void SET6r8(); void SET7r8();
 
     void XXX();
 

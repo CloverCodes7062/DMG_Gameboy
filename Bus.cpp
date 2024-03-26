@@ -18,8 +18,8 @@ Bus::~Bus()
 
 void Bus::write(uint16_t addr, uint8_t data)
 {
-	std::cout << "Writing to RAM: " << std::hex << std::setw(4) << std::setfill('0') << addr << std::endl;
-	std::cout << "Data: " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(data) << std::endl;
+	//std::cout << "Writing to RAM: " << std::hex << std::setw(4) << std::setfill('0') << addr << std::endl;
+	//std::cout << "Data: " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(data) << std::endl;
 	if (addr == 0xFF00)
 	{
 		if (addr == 0xFF00)
