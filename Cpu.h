@@ -60,7 +60,7 @@ public:
     int cyclesRan = 0;
 
     // SDL Engine
-    //Engine engine = Engine(256, 256); UNUSED FOR NOW
+    Engine engine = Engine(256, 256);
 
     // INSTRUCTION LOOKUP TABLES
     struct INSTRUCTION
@@ -110,7 +110,11 @@ private:
     uint16_t pc;
     uint16_t stkp;
     uint8_t ie; // Interrupt Enable
-    uint8_t ime; // Interrupe Master Flag
+    uint8_t ime; // Interrupt Master Flag
+
+    // Tells the cpu to set IME
+    bool ranEI = false;
+    bool instructionRanAfterEI = false;
 
     // Struct to hold CPU registers
     struct Registers {
@@ -170,7 +174,7 @@ private:
     void LDHra8(); void LDraC(); void DI(); void ORd8(); void RST30(); void LDHLSPr8(); void LDSPHL(); void LDAa16(); void EI(); void CPd8(); void RST38();
 
     void RLCr8(); void RRCr8(); void RLr8(); void SLAr8(); void SRAr8();
-    void SRLr8(); void RRr8(); void SWAPr8();
+    void SRLr8(); void RRr8(); void SWAPr8(); void RESu3r8();
 
     void XXX();
 
@@ -180,5 +184,6 @@ private:
     uint16_t lcdc; // Address of LCDC FF40
     uint16_t stat; // Address of LCD Status Register FF41
     uint16_t ly; // Address of the LY register FF44
+    uint16_t vBlankIRQ;
 
 };
