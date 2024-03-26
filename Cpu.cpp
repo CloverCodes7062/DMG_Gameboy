@@ -2154,8 +2154,6 @@ void Cpu::ADDSPr8()
 	int data = static_cast<int>(static_cast<int8_t>(read(pc++)));
 	int result = stkp + data;
 
-	
-
 	setFlag(Zero, false);
 	setFlag(Subtraction, false);
 	setFlag(HalfCarry, ((stkp & 0x0F) + (data & 0x0F)) > 0x0F);
