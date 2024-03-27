@@ -22,14 +22,18 @@ void Bus::write(uint16_t addr, uint8_t data)
 	//std::cout << "Data: " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(data) << std::endl;
 	if (addr == 0xFF00)
 	{
-		if (addr == 0xFF00)
-		{
-			std::cout << "Attempted to write to Joypad Input" << std::endl;
-			return;
-		}
+		std::cout << "Attempted to write to Joypad Input" << std::endl;
 		return;
 	}
-	ram[addr] = data;
+	else if (addr == 0x2000)
+	{
+		std::cout << "Attemped a rom bank switch" << std::endl;
+		return;
+	}
+	else
+	{
+		ram[addr] = data;
+	}
 }
 
 uint8_t Bus::read(uint16_t addr)

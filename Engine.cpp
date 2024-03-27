@@ -45,7 +45,7 @@ Engine::~Engine() {
 
 void Engine::setBuffer(std::vector<std::vector<std::vector<uint8_t>>>& tiles)
 {
-    std::cout << "TILES SIZE: " << tiles.size() << std::endl;
+    //std::cout << "TILES SIZE: " << tiles.size() << std::endl;
 
     /* DEBUG PRINTS OUT ALL TILES
     for (auto& vec2D : tiles)

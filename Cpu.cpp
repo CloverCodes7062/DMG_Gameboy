@@ -18,8 +18,9 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 	ly = 0xFF44;
 	vBlankIRQ = 0xFF85;
 
-	ie = 0xFFFF;
-	ime = 0x00;
+	ime = false;
+	IE = 0xFFFF;
+	IF = 0xFF0F;
 
 	write(lcdc, 0x91);
 	write(stat, 0x85);
@@ -41,9 +42,9 @@ Cpu::Cpu(Bus& bus) : bus(bus), pc(0x100), stkp(0xFFFE)
 		INSTRUCTION{ "AND B", &a::ANDr }, INSTRUCTION{ "AND C", &a::ANDr }, INSTRUCTION{ "AND D", &a::ANDr }, INSTRUCTION{ "AND E", &a::ANDr }, INSTRUCTION{ "AND H", &a::ANDr }, INSTRUCTION{ "AND L", &a::ANDr }, INSTRUCTION{ "AND (HL)", &a::ANDr }, INSTRUCTION{ "AND A", &a::ANDr }, INSTRUCTION{ "XOR B", &a::XORr }, INSTRUCTION{ "XOR C", &a::XORr }, INSTRUCTION{ "XOR D", &a::XORr }, INSTRUCTION{ "XOR E", &a::XORr }, INSTRUCTION{ "XOR H", &a::XORr }, INSTRUCTION{ "XOR L", &a::XORr }, INSTRUCTION{ "XOR (HL)", &a::XORr }, INSTRUCTION{ "XOR A", &a::XORr },
 		INSTRUCTION{ "OR B", &a::ORr }, INSTRUCTION{ "OR C", &a::ORr }, INSTRUCTION{ "OR D", &a::ORr }, INSTRUCTION{ "OR E", &a::ORr }, INSTRUCTION{ "OR H", &a::ORr }, INSTRUCTION{ "OR L", &a::ORr }, INSTRUCTION{ "OR (HL)", &a::ORr }, INSTRUCTION{ "OR A", &a::ORr }, INSTRUCTION{ "CP B", &a::CPr }, INSTRUCTION{ "CP C", &a::CPr }, INSTRUCTION{ "CP D", &a::CPr }, INSTRUCTION{ "CP E", &a::CPr }, INSTRUCTION{ "CP H", &a::CPr }, INSTRUCTION{ "CP L", &a::CPr }, INSTRUCTION{ "CP (HL)", &a::CPr }, INSTRUCTION{ "CP A", &a::CPr },
 		INSTRUCTION{ "RET NZ", &a::RETc }, INSTRUCTION{ "POP BC", &a::POPrr }, INSTRUCTION{ "JP NZ, a16", &a::JPca16 }, INSTRUCTION{ "JP a16", &a::JPca16 }, INSTRUCTION{ "CALL NZ, a16", &a::CALLca16 }, INSTRUCTION{ "PUSH BC", &a::PUSHrr }, INSTRUCTION{ "ADD A, d8", &a::ADDrR }, INSTRUCTION{ "RST 00H", &a::RSTn }, INSTRUCTION{ "RET Z", &a::RETc }, INSTRUCTION{ "RET", &a::RETc }, INSTRUCTION{ "JP Z, a16", &a::JPca16 }, INSTRUCTION{ "PREFIX CB", &a::PREFIXCB }, INSTRUCTION{ "CALL Z, a16", &a::CALLca16 }, INSTRUCTION{ "CALL a16", &a::CALLca16 }, INSTRUCTION{ "ADC A, d8", &a::ADDrR }, INSTRUCTION{ "RST 08H", &a::RSTn },
-		INSTRUCTION{ "RET NC", &a::RETc }, INSTRUCTION{ "POP DE", &a::POPrr }, INSTRUCTION{ "JP NC, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL NC, a16", &a::CALLca16 }, INSTRUCTION{ "PUSH DE", &a::PUSHrr }, INSTRUCTION{ "SUB d8", &a::SUBr }, INSTRUCTION{ "RST 10H", &a::RSTn }, INSTRUCTION{ "RET C", &a::RETc }, INSTRUCTION{ "RETI; UNIMPLEMENTED", &a::XXX }, INSTRUCTION{ "JP C, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL C, a16", &a::CALLca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "SBC A, d8", &a::SUBr }, INSTRUCTION{ "RST 18H", &a::RSTn },
+		INSTRUCTION{ "RET NC", &a::RETc }, INSTRUCTION{ "POP DE", &a::POPrr }, INSTRUCTION{ "JP NC, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL NC, a16", &a::CALLca16 }, INSTRUCTION{ "PUSH DE", &a::PUSHrr }, INSTRUCTION{ "SUB d8", &a::SUBr }, INSTRUCTION{ "RST 10H", &a::RSTn }, INSTRUCTION{ "RET C", &a::RETc }, INSTRUCTION{ "RETI", &a::RETI }, INSTRUCTION{ "JP C, a16", &a::JPca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CALL C, a16", &a::CALLca16 }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "SBC A, d8", &a::SUBr }, INSTRUCTION{ "RST 18H", &a::RSTn },
 		INSTRUCTION{ "LDH (a8), A", &a::LDH }, INSTRUCTION{ "POP HL", &a::POPrr }, INSTRUCTION{ "LD (C), A", &a::LD_C_A }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH HL", &a::PUSHrr }, INSTRUCTION{ "AND d8", &a::ANDr }, INSTRUCTION{ "RST 20H", &a::RSTn }, INSTRUCTION{ "ADD SP, r8", &a::ADDSPr8 }, INSTRUCTION{ "JP (HL)", &a::JPaHL }, INSTRUCTION{ "LD (a16), A", &a::LDa16A }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "XOR d8", &a::XORr }, INSTRUCTION{ "RST 28H", &a::RSTn },
-		INSTRUCTION{ "LDH A, (a8)", &a::LDH }, INSTRUCTION{ "POP AF", &a::POPrr }, INSTRUCTION{ "LD A, (C)", &a::LD_C_A }, INSTRUCTION{ "DI", &a::DI }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH AF", &a::PUSHrr }, INSTRUCTION{ "OR d8", &a::ORr }, INSTRUCTION{ "RST 30H", &a::RSTn }, INSTRUCTION{ "LD HL, SP+r8", &a::LDHLSPr8 }, INSTRUCTION{ "LD SP, HL", &a::LDSPHL }, INSTRUCTION{ "LD A, (a16)", &a::LDa16A }, INSTRUCTION{ "EI", &a::EI }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CP d8", &a::CPr }, INSTRUCTION{ "RST 38H", &a::RSTn }
+		INSTRUCTION{ "LDH A, (a8)", &a::LDH }, INSTRUCTION{ "POP AF", &a::POPAF }, INSTRUCTION{ "LD A, (C)", &a::LD_C_A }, INSTRUCTION{ "DI", &a::DI }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "PUSH AF", &a::PUSHAF }, INSTRUCTION{ "OR d8", &a::ORr }, INSTRUCTION{ "RST 30H", &a::RSTn }, INSTRUCTION{ "LD HL, SP+r8", &a::LDHLSPr8 }, INSTRUCTION{ "LD SP, HL", &a::LDSPHL }, INSTRUCTION{ "LD A, (a16)", &a::LDa16A }, INSTRUCTION{ "EI", &a::EI }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "ILLEGAL", &a::XXX }, INSTRUCTION{ "CP d8", &a::CPr }, INSTRUCTION{ "RST 38H", &a::RSTn }
 	};
 
 	lookupCB = {
@@ -263,34 +264,33 @@ void Cpu::runInstruction()
 				return;
 			}
 		}
-		//std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(0xFF00)) << std::endl;
 		if (!wasCB)
 		{
-			//std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
-			//std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
-			//std::cout << "INSTRUCTION: " << (lookup[read(pc)].name) << std::endl;
-
 			(this->*lookup[read(pc)].operate)();
 		}
 		else
 		{
-			//std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
-			//std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
-			//std::cout << "INSTRUCTION: " << (lookup[read(pc)].name) << std::endl;
-
 			(this->*lookupCB[read(pc)].operate)();
 			wasCB = false;
 		}
 
-		if (cyclesRan >= 456)
+		if (ime && read(IE) && read(IF))
 		{
-			//std::cout << "INCREMENTING LY" << std::endl;
+			uint8_t ifired = read(IE) & read(IF);
 
-			//std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
+			if (ifired & 0x01)
+			{
+				uint8_t IFvalue = read(IF);
+				IFvalue &= (255 - 0x01);
+				write(IF, IFvalue);
 
+				RST40();
+			}
+		}
+
+		if (cyclesRan >= 456 / 4)
+		{
 			write(ly, read(ly) + 1);
-
-			//std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
 			cyclesRan = 0;
 
 			if (read(ly) % 8 == 0)
@@ -313,7 +313,7 @@ void Cpu::runInstruction()
 
 			}
 
-			if (read(ly) >= 0x99)
+			if (read(ly) >= 0x90 && !inVblank)
 			{
 				//std::cout << "FRAME GENERATED BG TILES SIZE: 0x" << std::hex << std::setw(2) << std::setfill('0') << backgroundTiles.size() << std::endl;
 				totalFramesGenerated++;
@@ -345,10 +345,11 @@ void Cpu::runInstruction()
 					engine.render();
 				}
 
-				// HANDLE VBLANK
-				write(ly, 0x00);
-				backgroundTiles.clear();
 				tileMapAddress = 0x9800;
+				backgroundTiles.clear();
+				uint8_t ieValue = read(IE);
+				ieValue |= (1 << 0);
+				write(IE, ieValue);
 			}
 		}
 	}
@@ -375,11 +376,16 @@ void Cpu::printStatus()
 	std::cout << "DE: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.de) << std::endl;
 	std::cout << "HL: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.hl) << std::endl;
 	std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
-	std::cout << "SP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
+	std::cout << "STKP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
 
 	std::cout << "LCDC: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(lcdc)) << std::endl;
 	std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
 	std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
+
+	std::cout << "IME: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(ime) << std::endl;
+	std::cout << "IE: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(IE)) << std::endl;
+	std::cout << "IF: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(IF)) << std::endl;
+
 }
 
 void Cpu::printSerialPorts()
@@ -447,6 +453,38 @@ void Cpu::NOP()
 	pc++;
 	cycles += 4;
 	cyclesRan += 4;
+}
+
+void Cpu::RST40()
+{
+	std::cout << "ENTERING A VBLANK" << std::endl;
+	inVblank = true;
+	ime = 0;
+
+	write(--stkp, (pc >> 8) & 0xFF);
+	write(--stkp, pc & 0xFF);
+
+	pc = 0x0040;
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::RETI()
+{
+	std::cout << "RETURNING FROM INTERRUPT" << std::endl;
+	if (inVblank)
+	{
+		inVblank = false;
+	}
+	ime = 1;
+	uint8_t lo = read(stkp++);
+	uint8_t hi = read(stkp++);
+
+	pc = (hi << 8) | lo;
+
+	cycles += 12;
+	cyclesRan += 12;
 }
 
 void Cpu::LDrrd16()
@@ -2507,16 +2545,36 @@ void Cpu::POPrr()
 		registers.hl = (hi << 8) | lo;
 		break;
 	}
-	case 0xF1: // POP AF
-	{
-		registers.af = (hi << 8) | lo;
-		break;
-	}
 	default:
 		std::cout << "Unknown POPrr instruction: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(opcode) << " found" << std::endl;
 		setHasNotBroken(false);
 		break;
 	}
+
+	cycles += 12;
+	cyclesRan += 12;
+}
+
+void Cpu::PUSHAF()
+{
+	pc++;
+
+	write(--stkp, (registers.af >> 8) & 0xFF);
+	write(--stkp, registers.af & 0xFF);
+
+	cycles += 16;
+	cyclesRan += 16;
+}
+
+void Cpu::POPAF()
+{
+	pc++;
+
+	uint8_t lo = read(stkp++);
+	uint8_t hi = read(stkp++);
+
+	registers.af = (hi << 8) | lo;
+	registers.f &= 0xF0;
 
 	cycles += 12;
 	cyclesRan += 12;
@@ -2743,7 +2801,7 @@ void Cpu::DI()
 {
 	uint8_t opcode = read(pc++);
 
-	ime = 0x00;
+	ime = 0;
 
 	cycles += 4;
 	cyclesRan += 4;
@@ -2753,8 +2811,7 @@ void Cpu::EI()
 {
 	uint8_t opcode = read(pc++);
 
-	ranEI = true;
-	instructionRanAfterEI = false;
+	ime = 1;
 	cycles += 4;
 	cyclesRan += 4;
 }
@@ -2904,11 +2961,6 @@ void Cpu::RLA() {
 
 	cycles += 4;
 	cyclesRan += 4;
-}
-
-void Cpu::HALT()
-{
-
 }
 
 void Cpu::PREFIXCB()

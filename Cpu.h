@@ -106,11 +106,14 @@ private:
 
 private:
 
-    // Program counter, Stack Pointer, and Interrupts
+    // Program counter, Stack Pointer and Interrupts
     uint16_t pc;
     uint16_t stkp;
-    uint8_t ie; // Interrupt Enable
-    uint8_t ime; // Interrupt Master Flag
+    bool halt;
+    bool stopped;
+    bool ime;
+    uint8_t IE;
+    uint8_t IF;
 
     // Tells the cpu to set IME
     bool ranEI = false;
@@ -166,12 +169,14 @@ private:
     void LDrR(); void HALT(); void DECB(); void DECHL();
     void ADDrR(); void ADDrARR(); void ADCrR(); void ADCrARR();
     void SUBr(); void SUBarr(); void SBCrR(); void SBCrARR();
-    void ANDr(); void ANDarr(); void XORr(); void XORarr();
+    void ANDr(); void ANDarr(); void XORr(); void XORarr(); void POPAF(); void PUSHAF();
     void ORr(); void CPr(); void LDraRR(); void JRcr8(); void INCHL();
     void RETc(); void POPrr(); void JPNZa16(); void JPca16(); void CALLNZa16(); void PUSHrr(); void ADDrd8(); void RSTn(); void RETZ(); void RET(); void JPZa16(); void PREFIXCB(); void CALLZa16(); void CALLa16(); void ACArd8(); void RST08();
     void RETNC(); void JPNCa16(); void CALLca16(); void SUBd8(); void RST10(); void RETC(); void RETI(); void JPCa16(); void CALLCa16(); void SBCrd8(); void RST18();
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
     void LDHra8(); void LDraC(); void DI(); void ORd8(); void RST30(); void LDHLSPr8(); void LDSPHL(); void LDAa16(); void EI(); void CPd8(); void RST38();
+
+    void RST40();
 
     void RLCr8(); void RRCr8(); void RLr8(); void SLAr8(); void SRAr8();
     void SRLr8(); void RRr8(); void SWAPr8(); void RESu3r8();
@@ -193,5 +198,6 @@ private:
     uint16_t stat; // Address of LCD Status Register FF41
     uint16_t ly; // Address of the LY register FF44
     uint16_t vBlankIRQ;
+    bool inVblank = false; // Is in vblank
 
 };
