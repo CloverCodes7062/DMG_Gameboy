@@ -3,7 +3,9 @@
 #include <cstdint>
 #include "Bus.h"
 #include <string>
+#include <deque>
 #include "Engine.h"
+#include <string>
 
 class Cpu
 {
@@ -51,8 +53,28 @@ public:
     void printStatus();
     void printSerialPorts();
 	void setHasNotBroken(bool value);
+    void writeStateToLog();
 	std::string getTitle();
     std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb);
+
+    // More helper Debug Vars
+    //
+    // Trace Deque
+    std::deque<std::string> pcDeque;
+    bool hasC505ran = false;
+    //
+    // Turn Step Mode On/Off
+    bool stepMode = false;
+    //
+    // Breakpoints
+    std::vector<uint16_t> breakpoints;
+    int bpIndex = 0;
+    //
+    // Checks if pc is in a CALL
+    bool inCALL = false;
+    //
+    // Prints Out PC Trace
+    void printTrace();
 
     // Cycles
     uint64_t cycles = 0;
@@ -97,12 +119,12 @@ private:
     // True if Nintendo Logo has been rendered else False
     bool hasNintendoLogoLoaded = false;
 
-    // Sets Step Mode
-    bool stepMode = false;
-
     // Holds changes to 0xFF01 (SB, Serial Transfer Data)
     uint8_t previousFF01 = 0x00;
     std::vector<uint8_t> FF01Changes;
+
+    // True if CPU is halted
+    bool halted = false;
 
 private:
 
@@ -176,7 +198,7 @@ private:
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
     void LDHra8(); void LDraC(); void DI(); void ORd8(); void RST30(); void LDHLSPr8(); void LDSPHL(); void LDAa16(); void EI(); void CPd8(); void RST38();
 
-    void RST40();
+    void RST40(); void JP16();
 
     void RLCr8(); void RRCr8(); void RLr8(); void SLAr8(); void SRAr8();
     void SRLr8(); void RRr8(); void SWAPr8(); void RESu3r8();

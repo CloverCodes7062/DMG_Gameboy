@@ -17,18 +17,23 @@ gameboy::~gameboy()
 
 void gameboy::loadRom(const std::string& filepath)
 {
-    std::ifstream file(filepath, std::ios::binary);
-    if (!file.is_open()) {
+    FILE* file;
+
+    if (fopen_s(&file, filepath.c_str(), "rb") != 0) {
         std::cout << "File not loaded:" << std::endl;
         return;
     }
 
-    std::vector<uint8_t> rom_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-    file.close();
+    std::vector<uint8_t> rom_data(fileSize);
+    fread(rom_data.data(), 1, fileSize, file);
+    fclose(file);
 
     cpu.loadRom(rom_data);
-    std::cout << "ROM TITLE" << cpu.getTitle() << std::endl;
+    std::cout << "ROM TITLE: " << cpu.getTitle() << std::endl;
 
     emulate();
 }
@@ -43,7 +48,8 @@ void gameboy::emulate()
     }
 
     cpu.printStatus();
-    cpu.printSerialPorts();
+    cpu.printTrace();
+    //cpu.printSerialPorts();
 }
 
 void gameboy::write(uint16_t addr, uint8_t data)
