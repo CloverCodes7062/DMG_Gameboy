@@ -136,12 +136,14 @@
   <ItemGroup>
     <ClInclude Include="Bus.h" />
     <ClInclude Include="Cpu.h" />
+    <ClInclude Include="CpuInstructions.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="gameboy.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bus.cpp" />
     <ClCompile Include="Cpu.cpp" />
+    <ClCompile Include="CpuInstructions.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="gameboy.cpp" />
     <ClCompile Include="main.cpp" />

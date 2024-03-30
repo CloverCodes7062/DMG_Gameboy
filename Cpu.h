@@ -2,15 +2,18 @@
 
 #include <cstdint>
 #include "Bus.h"
+#include "CpuInstructions.h"
 #include <string>
 #include <deque>
 #include "Engine.h"
 #include <string>
 
+class CpuInstructions;
+
 class Cpu
 {
 public:
-	Cpu(Bus& bus);
+	Cpu(Bus& bus, CpuInstructions& CpuInstructions);
 	~Cpu();
 
 	// Write and read to ram stored on bus
@@ -57,7 +60,7 @@ public:
 	std::string getTitle();
     std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb);
 
-    // More helper Debug Vars
+    // More helper Debug Variables
     //
     // Trace Deque
     std::deque<std::string> pcDeque;
@@ -84,31 +87,38 @@ public:
     // SDL Engine
     Engine engine = Engine(256, 256);
 
-    // INSTRUCTION LOOKUP TABLES
-    struct INSTRUCTION
-    {
-        std::string name;
-        void(Cpu::* operate)(void) = nullptr;
-    };
+    // Program counter, Stack Pointer and Interrupts
+    uint16_t pc;
+    uint16_t stkp;
+    bool halt;
+    bool stopped;
+    bool ime;
+    uint8_t IE;
+    uint8_t IF;
 
-    std::vector<INSTRUCTION> lookup;
-    std::vector<INSTRUCTION> lookupCB;
+    // stores whether or not the last instruction was 0xCB, used to index the CB Table instead
+    bool wasCB = false;
+
+    // Loads the Boot Rom
+    void loadBootRom();
 
 private:
 	// Bus that has the ram on it
 	Bus& bus;
+
+    CpuInstructions& cpuInstructions;
 
 	// Set to false when an error happens
 	bool hasNotBroken = true;
 
 	// Vector that stores the entire rom
 	std::vector<uint8_t> rom;
-
+    //
 	// Stores the rom title
 	std::string romTitle;
-
-    // stores whether or not the last instruction was 0xCB, used to index the CB Table instead
-    bool wasCB = false;
+    //
+    // True if we've loaded the rom into ram
+    bool hasLoadedRom = false;
 
     // Tiles in Vram
     std::vector<std::vector<std::vector<uint8_t>>> vramTiles;
@@ -123,23 +133,19 @@ private:
     uint8_t previousFF01 = 0x00;
     std::vector<uint8_t> FF01Changes;
 
-    // True if CPU is halted
-    bool halted = false;
+    void handlePCTrace();
+    void handleInterrupts();
+    void handleSerialPortOutput();
+    void handleDebugStepMode();
 
-private:
-
-    // Program counter, Stack Pointer and Interrupts
-    uint16_t pc;
-    uint16_t stkp;
-    bool halt;
-    bool stopped;
-    bool ime;
-    uint8_t IE;
-    uint8_t IF;
+public:
 
     // Tells the cpu to set IME
     bool ranEI = false;
     bool instructionRanAfterEI = false;
+
+    // True if CPU is halted
+    bool halted = false;
 
     // Struct to hold CPU registers
     struct Registers {
@@ -184,7 +190,7 @@ private:
 
 private:
 
-    void NOP(); void LDrrd16(); void LDarrR(); void INCrr(); void INCr(); void DECr(); void LDrd8(); void RLCA(); void LDa16SP(); void ADDrrRR(); void LDrARR(); void DECrr(); void RRCA();
+    void NOP(Cpu &cpu); void LDrrd16(); void LDarrR(); void INCrr(); void INCr(); void DECr(); void LDrd8(); void RLCA(); void LDa16SP(); void ADDrrRR(); void LDrARR(); void DECrr(); void RRCA();
     void STOP0(); void RLA(); void JRr8(); void RRA();
     void JRNZr8(); void LDarrINCR(); void DAA(); void JRZr8(); void LDaRRINC(); void CPL();
     void JRNCr8(); void LDarrDECR(); void INCaRR(); void DECaRR(); void LDarrD8(); void SCF(); void JRCr8(); void LDaRRDEC(); void CCF();
@@ -196,7 +202,7 @@ private:
     void RETc(); void POPrr(); void JPNZa16(); void JPca16(); void CALLNZa16(); void PUSHrr(); void ADDrd8(); void RSTn(); void RETZ(); void RET(); void JPZa16(); void PREFIXCB(); void CALLZa16(); void CALLa16(); void ACArd8(); void RST08();
     void RETNC(); void JPNCa16(); void CALLca16(); void SUBd8(); void RST10(); void RETC(); void RETI(); void JPCa16(); void CALLCa16(); void SBCrd8(); void RST18();
     void LDH(); void LD_C_A(); void LDaCr(); void ANDd8(); void RST20(); void ADDSPr8(); void JPaHL(); void LDa16A(); void XORd8(); void RST28();
-    void LDHra8(); void LDraC(); void DI(); void ORd8(); void RST30(); void LDHLSPr8(); void LDSPHL(); void LDAa16(); void EI(); void CPd8(); void RST38();
+    void DI(); void LDHLSPr8(); void LDSPHL(); void EI();
 
     void RST40(); void JP16();
 
@@ -213,7 +219,7 @@ private:
 
     void XXX();
 
-private:
+public:
     // PPU
 
     uint16_t lcdc; // Address of LCDC FF40
