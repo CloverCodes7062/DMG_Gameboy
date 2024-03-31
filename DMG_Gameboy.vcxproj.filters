@@ -33,6 +33,9 @@
     <ClInclude Include="CpuInstructions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Gpu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gameboy.cpp">
@@ -51,6 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CpuInstructions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Gpu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

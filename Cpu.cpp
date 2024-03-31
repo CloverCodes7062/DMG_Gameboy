@@ -91,108 +91,18 @@ void Cpu::loadRom(std::vector<uint8_t> romData = std::vector<uint8_t>())
 	setTitle();
 }
 
-void Cpu::loadNintendoLogo()
-{
-	// Nintendo Logo in Hex
-	const std::string nintendoLogoHex = "00000000000000000000000000000000F000F000FC00FC00FC00FC00F300F3003C003C003C003C003C003C003C003C00F000F000F000F00000000000F300F300000000000000000000000000CF00CF00000000000F000F003F003F000F000F000000000000000000C000C0000F000F00000000000000000000000000F000F000000000000000000000000000F300F300000000000000000000000000C000C000030003000300030003000300FF00FF00C000C000C000C000C000C000C300C300000000000000000000000000FC00FC00F300F300F000F000F000F000F000F0003C003C00FC00FC00FC00FC003C003C00F300F300F300F300F300F300F300F300F300F300C300C300C300C300C300C300CF00CF00CF00CF00CF00CF00CF00CF003C003C003F003F003C003C000F000F003C003C00FC00FC0000000000FC00FC00FC00FC00F000F000F000F000F000F000F300F300F300F300F300F300F000F000C300C300C300C300C300C300FF00FF00CF00CF00CF00CF00CF00CF00C300C3000F000F000F000F000F000F00FC00FC003C004200B900A500B900A50042003C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-
-	std::vector<uint8_t> nintendoLogoData;
-	for (size_t i = 0; i < nintendoLogoHex.length(); i += 2)
-	{
-		std::string byteString = nintendoLogoHex.substr(i, 2);
-		uint8_t byte = std::stoi(byteString, nullptr, 16);
-		nintendoLogoData.push_back(byte);
-	}
-
-	// Loads into RAM
-	uint16_t vramAddress = 0x8000;
-	for (size_t i = 0; i < nintendoLogoData.size(); ++i)
-	{
-		write(vramAddress++, nintendoLogoData[i]);
-	}
-
-	// Nintendo Logo TileMap
-	const std::string nintendoTileMap = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000102030405060708090A0B0C19000000000000000000000000000000000000000D0E0F101112131415161718000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-
-	// Creates and Loads Tiles into RAM
-	setVramTiles();
-
-	std::vector<uint8_t> nintendoLogoTileMap;
-	for (size_t i = 0; i < nintendoTileMap.length(); i += 2)
-	{
-		std::string byteString = nintendoTileMap.substr(i, 2);
-		uint8_t byte = std::stoi(byteString, nullptr, 16);
-		nintendoLogoTileMap.push_back(byte);
-	}
-
-	for (size_t i = 0; i < nintendoLogoTileMap.size(); ++i)
-	{
-		write(tileMapAddress++, nintendoLogoTileMap[i]);
-	}
-
-	tileMapAddress = 0x9800;
-
-	std::cout << "VRAM TILES SIZE: " << vramTiles.size() << std::endl;
-}
-
-void Cpu::setVramTiles()
-{
-	std::vector<std::vector<std::vector<uint8_t>>> tiles;
-	std::vector<std::vector<uint8_t>> tile;
-
-	for (size_t i = 0x8000; i <= 0x8FFF; i += 2)
-	{
-		std::vector<uint8_t> tileRow = createTileRow(read(i), read(i + 1));
-
-		tile.push_back(tileRow);
-
-		if (tile.size() == 8)
-		{
-			tiles.push_back(tile);
-			tile.clear();
-		}
-	}
-
-	vramTiles = tiles;
-}
-
 void Cpu::write(uint16_t addr, uint8_t data)
 {
-	/*
-	if (addr >= 0x0000 && addr <= 0x3FFF)
-	{
-		std::cout << "WROTE TO ROM BANK 00" << std::endl;
-	}
-
-	if (addr >= 0x4000 && addr <= 0x7FFF)
-	{
-		std::cout << "WROTE TO ROM BANK 01-NN" << std::endl;
-	}
-
-	if (addr >= 0x8000 && addr <= 0x97FF)
-	{
-		std::cout << "WROTE TO TILE RAME" << std::endl;
-	}
-
-	if (addr >= 0xC000 && addr <= 0xCFFF)
-	{
-		std::cout << "WROTE TO WORK RAM 0" << std::endl;
-	}
-
-	if (addr >= 0xD000 && addr <= 0xDFFF)
-	{
-		std::cout << "WROTE TO WORK RAM 1" << std::endl;
-	}
-
-	if (addr >= 0xFF80 && addr <= 0xFFFE)
-	{
-		std::cout << "WROTE TO HIGH RAM" << std::endl;
-	}
-	*/
 
 	if ((stepMode) && (addr >= 0xFF80) && (addr <= 0xFFFE))
 	{
 		std::cout << "WROTE TO HIGH RAM" << std::endl;
+	}
+
+	
+	if (addr >= 0x8000 && addr <= 0x9FFF)
+	{
+		gpu.vram[addr] = data;
 	}
 
 	bus.write(addr, data);
@@ -200,6 +110,10 @@ void Cpu::write(uint16_t addr, uint8_t data)
 
 uint8_t Cpu::read(uint16_t addr)
 {
+	if (addr >= 0x8000 && addr <= 0x9FFF)
+	{
+		return gpu.vram[addr];
+	}
 	return bus.read(addr);
 }
 
@@ -240,7 +154,7 @@ void Cpu::runInstruction()
 		if (pc == 0x100 && !hasLoadedRom)
 		{
 			loadRom();
-			stepMode = true;
+			//stepMode = true;
 		}
 		// FOR BLARRGS CPU TEST OUTPUTS
 		handleSerialPortOutput();
@@ -249,7 +163,7 @@ void Cpu::runInstruction()
 		handleDebugStepMode();
 
 		// PROGRAM COUTER TRACE
-		handlePCTrace();
+		//handlePCTrace();
 
 		// HANDLES INTERRUPTS
 		handleInterrupts();
@@ -275,80 +189,20 @@ void Cpu::runInstruction()
 		}
 		//
 
-		
-		if (cyclesRan >= 456)
+
+		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank);
+		write(ly, updatedLy);
+		cyclesRan = 0;
+
+		if (gpu.InVblank() && !inVblank)
 		{
-			write(ly, read(ly) + 1);
-			cyclesRan = 0;
-
-			if (read(ly) % 8 == 0)
-			{
-				setVramTiles();
-
-				for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
-				{
-					//std::cout << "VRAM TILES SIZE: " << vramTiles.size() << std::endl;
-					//std::cout << "ADDR: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(addr) << std::endl;
-					backgroundTiles.push_back(vramTiles[read(addr)]);
-				}
-				tileMapAddress += 32;
-
-				//std::cout << "SCANLINE GENERATED BG TILES SIZE: 0x" << std::hex << std::setw(2) << std::setfill('0') << backgroundTiles.size() << std::endl;
-
-				scanlinesGenerated++;
-
-				//std::cout << "TILE MAP ADDRESS: " << tileMapAddress << std::endl;
-
-			}
-
-			if (read(ly) >= 0x99 && !inVblank)
-			{
-				
-				//std::cout << "FRAME GENERATED BG TILES SIZE: 0x" << std::hex << std::setw(2) << std::setfill('0') << backgroundTiles.size() << std::endl;
-				totalFramesGenerated++;
-
-				//std::cout << "VRAM TILES SIZE: " << vramTiles.size() << std::endl;
-
-				std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
-
-				
-				engine.setBuffer(backgroundTiles);
-
-				bool running = true;
-				auto startTime = std::chrono::steady_clock::now();
-
-				while (running) {
-
-					auto currentTime = std::chrono::steady_clock::now();
-					auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-					if (elapsedTime >= 1000 / 60) {
-						running = false;
-					}
-
-					SDL_Event event;
-					while (SDL_PollEvent(&event)) {
-						if (event.type == SDL_QUIT) {
-							running = false;
-						}
-					}
-
-					engine.render();
-				}
-				
-				tileMapAddress = 0x9800;
-				backgroundTiles.clear();
-
-				// SETS VBLANK IN INTERRUPT FLAG
-				uint8_t IFValue = read(IF);
-				IFValue |= (1 << 0);
-				write(IF, IFValue);
-			}
+			uint8_t IFValue = read(IF);
+			IFValue |= (1 << 0);
+			write(IF, IFValue);
 		}
-		
 	}
 	cycles -= 4;
 }
-
 
 void Cpu::handlePCTrace()
 {
@@ -381,6 +235,8 @@ void Cpu::handleInterrupts()
 			uint8_t IFvalue = read(IF);
 			IFvalue &= (255 - 0x01);
 			write(IF, IFvalue);
+
+			gpu.setVblank(false);
 
 			halted = false;
 			cpuInstructions.RST40(*this);
@@ -523,24 +379,6 @@ void Cpu::writeStateToLog() {
 	else {
 		std::cerr << "Error: Unable to open logfile for writing." << std::endl;
 	}
-}
-
-std::vector<uint8_t> Cpu::createTileRow(uint8_t lsb, uint8_t msb)
-{
-	std::vector<uint8_t> tileRow;
-
-	for (int i = 7; i >= 0; i--)
-	{
-		uint8_t lsbBit = (lsb >> i) & 0x01;
-		uint8_t msbBit = (msb >> i) & 0x01;
-
-		uint8_t color = (msbBit << 1) | lsbBit;
-
-		tileRow.push_back(color);
-	}
-
-	return tileRow;
-
 }
 
 void Cpu::setTitle()

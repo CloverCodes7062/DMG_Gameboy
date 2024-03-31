@@ -45,23 +45,6 @@ Engine::~Engine() {
 
 void Engine::setBuffer(std::vector<std::vector<std::vector<uint8_t>>>& tiles)
 {
-    //std::cout << "TILES SIZE: " << tiles.size() << std::endl;
-
-    /* DEBUG PRINTS OUT ALL TILES
-    for (auto& vec2D : tiles)
-    {
-        for (auto& vec1D : vec2D)
-        {
-            for (auto& value : vec1D)
-            {
-                std::cout << std::bitset<1>(value) << " ";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << std::endl;
-    }
-    */
-
     int tileSize = 8;
     int tilesPerRow = 32;
     int tilesPrinted = 0;
