@@ -9,12 +9,12 @@
 #include <fstream>
 #include <sstream>
 
-Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstructions(cpuInstructions), pc(0x0000), stkp(0xFFFE)
+Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstructions(cpuInstructions), pc(0x0100), stkp(0xFFFE)
 {
-	registers.af = 0x0000;
-	registers.bc = 0x0000;
-	registers.de = 0x0000;
-	registers.hl = 0x0000;
+	registers.af = 0x01B0;
+	registers.bc = 0x0013;
+	registers.de = 0x00D8;
+	registers.hl = 0x014D;
 
 	lcdc = 0xFF40;
 	stat = 0xFF41;
@@ -29,7 +29,7 @@ Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstruction
 	write(stat, 0x85);
 	tileMapAddress = 0x9800;
 
-	loadBootRom();
+	//loadBootRom();
 }
 
 Cpu::~Cpu()
@@ -66,28 +66,11 @@ void Cpu::loadBootRom()
 
 void Cpu::loadRom(std::vector<uint8_t> romData = std::vector<uint8_t>())
 {
-	if (pc < 0x100)
+	for (uint16_t addr = 0x0000; addr < romData.size(); addr++)
 	{
-		rom = romData;
-		
-		for (size_t addr = 0x0104; addr <= 0x0133; addr++)
-		{
-			write(addr, rom[addr]);
-		}
+		write(addr, romData[addr]);
+	}
 
-		for (size_t addr = 0x0134; addr <= 0x014D; addr++)
-		{
-			write(addr, rom[addr]);
-		}
-	}
-	else
-	{
-		for (uint16_t addr = 0x0000; addr < rom.size(); addr++)
-		{
-			write(addr, rom[addr]);
-		}
-		hasLoadedRom = true;
-	}
 	setTitle();
 }
 
@@ -151,11 +134,6 @@ void Cpu::runInstruction()
 {
 	if (cycles == 0)
 	{	
-		if (pc == 0x100 && !hasLoadedRom)
-		{
-			loadRom();
-			//stepMode = true;
-		}
 		// FOR BLARRGS CPU TEST OUTPUTS
 		handleSerialPortOutput();
 
@@ -163,7 +141,7 @@ void Cpu::runInstruction()
 		handleDebugStepMode();
 
 		// PROGRAM COUTER TRACE
-		//handlePCTrace();
+		handlePCTrace();
 
 		// HANDLES INTERRUPTS
 		handleInterrupts();
