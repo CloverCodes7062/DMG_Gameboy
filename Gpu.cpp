@@ -79,24 +79,6 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 
 void Gpu::updateTiles()
 {
-	/*
-	addr &= 0x1FFE;
-
-	auto tile = (addr >> 4) & 511;
-	auto y = (addr >> 1) & 7;
-
-	uint8_t sx;
-
-	for (size_t x = 0; x < 8; x++)
-	{
-		sx = 1 << (7 - x);
-
-		tileSet[tile][y][x] =
-			((vram[addr] & sx) ? 1 : 0) +
-			((vram[addr + 1] & sx) ? 2 : 0);
-	}
-	*/
-
 	std::vector<std::vector<std::vector<uint8_t>>> tiles;
 	std::vector<std::vector<uint8_t>> tile;
 

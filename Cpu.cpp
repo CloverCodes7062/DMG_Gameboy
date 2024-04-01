@@ -88,6 +88,13 @@ void Cpu::write(uint16_t addr, uint8_t data)
 		gpu.vram[addr] = data;
 	}
 
+	if (addr == 0xFF00)
+	{
+		std::cout << "ATTEMPTED TO WRITE TO JOYPAD: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(data) << std::endl;
+		bus.write(0xFF00, 0xFF);
+		return;
+	}
+
 	bus.write(addr, data);
 }
 
@@ -96,6 +103,18 @@ uint8_t Cpu::read(uint16_t addr)
 	if (addr >= 0x8000 && addr <= 0x9FFF)
 	{
 		return gpu.vram[addr];
+	}
+
+	if (addr == 0xFF00)
+	{
+		std::cout << "ATTEMPTED TO READ FROM JOYPAD: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bus.read(0xFF00)) << std::endl;
+
+		return 0xFF;
+	}
+
+	if (addr == 0xFF44)
+	{
+		return 0x90;
 	}
 	return bus.read(addr);
 }
@@ -134,14 +153,15 @@ void Cpu::runInstruction()
 {
 	if (cycles == 0)
 	{	
+		writeStateToLog();
 		// FOR BLARRGS CPU TEST OUTPUTS
 		handleSerialPortOutput();
 
 		// HANDLE DEBUG STEP MODE
 		handleDebugStepMode();
 
-		// PROGRAM COUTER TRACE
-		handlePCTrace();
+		// HANDLES PROGRAM COUTER TRACE
+		//handlePCTrace();
 
 		// HANDLES INTERRUPTS
 		handleInterrupts();
@@ -153,7 +173,7 @@ void Cpu::runInstruction()
 			{
 				cpuInstructions.runInstruction(*this);
 			}
-			else
+			if (wasCB)
 			{
 				cpuInstructions.runCBInstruction(*this);
 				wasCB = false;
@@ -168,6 +188,7 @@ void Cpu::runInstruction()
 		//
 
 
+		/*
 		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank);
 		write(ly, updatedLy);
 		cyclesRan = 0;
@@ -178,6 +199,7 @@ void Cpu::runInstruction()
 			IFValue |= (1 << 0);
 			write(IF, IFValue);
 		}
+		*/
 	}
 	cycles -= 4;
 }
