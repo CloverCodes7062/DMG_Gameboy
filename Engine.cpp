@@ -58,7 +58,32 @@ void Engine::setBuffer(std::vector<std::vector<std::vector<uint8_t>>>& tiles)
                 uint8_t pixelValue = tiles[tileIndex][y][x];
 
                 int pixelIndex = ((tileRow * tileSize) + y) * screenWidth + ((tileCol * tileSize) + x);
-                pixelBuffer[pixelIndex] = pixelValue == 0 ? 0xFFFFFFFF : 0xFF000000;
+                switch (pixelValue) {
+                    case 0:
+                    {
+                        pixelBuffer[pixelIndex] = 0xFFFFFFFF;  // White
+                        break;
+                    }
+                    case 1:
+                    {
+                        pixelBuffer[pixelIndex] = 0xFFC0C0C0;  // Light gray
+                        break;
+                    }
+                    case 2:
+                    {
+                        pixelBuffer[pixelIndex] = 0xFF808080;  // Dark gray
+                        break;
+                    }
+                    case 3:
+                    {
+                        pixelBuffer[pixelIndex] = 0xFF000000;  // Black
+                        break;
+                    }
+                    default:
+                        std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
+                        pixelBuffer[pixelIndex] = 0xFF000000;  // Black
+                        break;
+                }
             }
         }
     }

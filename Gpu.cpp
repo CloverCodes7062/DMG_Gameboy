@@ -42,7 +42,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 		{
 			totalFramesGenerated++;
 
-			std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
+			//std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
 
 			engine.setBuffer(backgroundTiles);
 
@@ -53,7 +53,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 
 				auto currentTime = std::chrono::steady_clock::now();
 				auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-				if (elapsedTime >= 1000 / 60) {
+				if (elapsedTime >= 1000 / 10000) {
 					running = false;
 				}
 
