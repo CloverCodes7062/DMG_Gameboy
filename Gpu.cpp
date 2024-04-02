@@ -115,7 +115,14 @@ std::vector<uint8_t> Gpu::createTileRow(uint8_t lsb, uint8_t msb)
 	return tileRow;
 }
 
-void Gpu::renderScanline()
+void Gpu::vramWrite(uint16_t addr, uint8_t data)
+{
+	vram[addr] = data;
+
+	updateTile(addr);
+}
+
+void Gpu::updateTile(uint16_t addr)
 {
 
 }

@@ -9,12 +9,12 @@
 #include <fstream>
 #include <sstream>
 
-Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstructions(cpuInstructions), pc(0x0100), stkp(0xFFFE)
+Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstructions(cpuInstructions), pc(0x0000), stkp(0xFFFE)
 {
-	registers.af = 0x01B0;
-	registers.bc = 0x0013;
-	registers.de = 0x00D8;
-	registers.hl = 0x014D;
+	registers.af = 0x0000;
+	registers.bc = 0x0000;
+	registers.de = 0x0000;
+	registers.hl = 0x0000;
 
 	lcdc = 0xFF40;
 	stat = 0xFF41;
@@ -28,7 +28,7 @@ Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstruction
 	tileMapAddress = 0x9800;
 
 	previousJoyPadState = 0x0F;
-	//loadBootRom();
+	loadBootRom();
 }
 
 Cpu::~Cpu()
@@ -65,28 +65,36 @@ void Cpu::loadBootRom()
 
 void Cpu::loadRom(std::vector<uint8_t> romData = std::vector<uint8_t>())
 {
-	for (uint16_t addr = 0x0000; addr < romData.size(); addr++)
+	if (pc < 0x100)
 	{
-		write(addr, romData[addr]);
+		rom = romData;
+
+		for (size_t addr = 0x0104; addr <= 0x0133; addr++)
+		{
+			write(addr, rom[addr]);
+		}
+
+		for (size_t addr = 0x0134; addr <= 0x014D; addr++)
+		{
+			write(addr, rom[addr]);
+		}
 	}
-
+	else
+	{
+		for (uint16_t addr = 0x0000; addr < rom.size(); addr++)
+		{
+			write(addr, rom[addr]);
+		}
+		hasLoadedRom = true;
+	}
 	setTitle();
-	setRomType();
-}
-
-void Cpu::setRomType()
-{
-	romType = read(0x147);
-	bus.setRomType(romType);
-	bus.setRomLoaded();
-	hasLoadedRom = true;
 }
 
 void Cpu::write(uint16_t addr, uint8_t data)
 {
 	if (addr >= 0x8000 && addr <= 0x9FFF)
 	{
-		gpu.vram[addr] = data;
+		gpu.vramWrite(addr, data);
 	}
 
 	bus.write(addr, data);
@@ -141,19 +149,25 @@ void Cpu::runInstruction()
 {
 	if (cycles == 0)
 	{	
+		if (pc == 0x100 && !hasLoadedRom)
+		{
+			loadRom();
+			return;
+		}
+
 		//printStatus();
 		//writeStateToLog();
 		// FOR BLARRGS CPU TEST OUTPUTS
 		handleSerialPortOutput();
 
 		// HANDLE DEBUG STEP MODE
-		handleDebugStepMode();
+		//handleDebugStepMode();
 
 		// HANDLES PROGRAM COUTER TRACE
 		//handlePCTrace();
 
 		// Checks Inputs For JoyPad
-		checkInputs();
+		//checkInputs();
 		// HANDLES INTERRUPTS
 		handleInterrupts();
 
@@ -172,7 +186,7 @@ void Cpu::runInstruction()
 		}
 		else 
 		{
-			std::cout << "CPU HALTED; WAITING FOR INTERRUPT" << std::endl;
+			//std::cout << "CPU HALTED; WAITING FOR INTERRUPT" << std::endl;
 			cycles += 4;
 			cyclesRan += 4;
 		}

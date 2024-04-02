@@ -15,6 +15,8 @@ public:
 	void updateTiles(); // Updates all Tiles in Vram
 	std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb); // Creates a TileRow
 	void setVblank(bool newVblank); // Sets Vblank
+	void vramWrite(uint16_t addr, uint8_t data); // Writes to vram;
+	void updateTile(uint16_t addr); // Updates a Single Tile
 
 	// Vram
 	std::vector<uint8_t> vram;
@@ -41,7 +43,7 @@ private:
 	uint16_t tileMapAddress;
 
 	// SDL Engine
-	Engine engine = Engine(256, 256);
+	Engine engine = Engine(256 * 3, 256 * 3); // CHANGE SCALE IN ENGINE AS WELL
 
 	// Total Frames Generated
 	int totalFramesGenerated = 0;

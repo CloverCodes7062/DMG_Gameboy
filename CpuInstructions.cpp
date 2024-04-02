@@ -2108,6 +2108,7 @@ void CpuInstructions::runInstruction(Cpu& cpu)
 		}
 		case 0xD9:
 		{
+			//std::cout << "RETURNING FROM INTERRUPT" << std::endl;
 			if (cpu.inVblank)
 			{
 				cpu.inVblank = false;
