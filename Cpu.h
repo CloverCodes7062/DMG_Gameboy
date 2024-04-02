@@ -91,14 +91,18 @@ public:
     bool halt;
     bool stopped;
     bool ime;
-    uint8_t IE;
-    uint8_t IF;
 
     // Stores whether or not the last instruction was 0xCB, used to index the CB Table instead
     bool wasCB = false;
 
     // Loads the Boot Rom
     void loadBootRom();
+
+    enum InterruptRegs
+    {
+        IE = 0xFFFF,
+        IF = 0xFF0F,
+    };
 
 private:
 	// Bus that has the ram on it
@@ -115,6 +119,10 @@ private:
 	// Stores the rom title
 	std::string romTitle;
     //
+    // Rom Type 32KB is ROM ONLY; 0x00 (NO MEMORY BANKING)
+    uint8_t romType;
+    // Sets Rom Type
+    void setRomType();
     // True if we've loaded the rom into ram
     bool hasLoadedRom = false;
 
@@ -135,6 +143,10 @@ private:
     void handleInterrupts();
     void handleSerialPortOutput();
     void handleDebugStepMode();
+    
+    // FOR JOYPAD
+    uint8_t previousJoyPadState;
+    void checkInputs();
 
 public:
 

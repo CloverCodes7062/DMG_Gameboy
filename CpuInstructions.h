@@ -11,40 +11,13 @@ public:
     ~CpuInstructions();
 
 public:
-    // INSTRUCTION LOOKUP TABLES
-    struct INSTRUCTION
-    {
-        std::string name;
-        void(CpuInstructions::* operate)(Cpu& cpu) = nullptr;
-    };
-
-    std::vector<INSTRUCTION> lookup;
-    std::vector<INSTRUCTION> lookupCB;
 
     void runInstruction(Cpu& cpu);
     void runCBInstruction(Cpu& cpu);
 
-    std::string getCBInstructionName(Cpu& cpu, uint16_t pc);
-    std::string getInstructionName(Cpu& cpu, uint16_t pc);
-
     // INTERRUPTS
     void RST40(Cpu& cpu);
-
-    // CB TABLE
-    void RLCr8(Cpu& cpu); void RRCr8(Cpu& cpu); void RLr8(Cpu& cpu);
-    void SLAr8(Cpu& cpu); void SRAr8(Cpu& cpu); void SRLr8(Cpu& cpu);
-    void RRr8(Cpu& cpu); void SWAPr8(Cpu& cpu); void RESu3r8(Cpu& cpu);
-    void BIT0r8(Cpu& cpu); void BIT1r8(Cpu& cpu); void BIT2r8(Cpu& cpu); 
-    void BIT3r8(Cpu& cpu); void BIT4r8(Cpu& cpu); void BIT5r8(Cpu& cpu);
-    void BIT6r8(Cpu& cpu); void BIT7r8(Cpu& cpu); void RES0r8(Cpu& cpu);
-    void RES1r8(Cpu& cpu); void RES2r8(Cpu& cpu); void RES3r8(Cpu& cpu);
-    void RES4r8(Cpu& cpu); void RES5r8(Cpu& cpu); void RES6r8(Cpu& cpu);
-    void RES7r8(Cpu& cpu); void SET0r8(Cpu& cpu); void SET1r8(Cpu& cpu);
-    void SET2r8(Cpu& cpu); void SET3r8(Cpu& cpu); void SET4r8(Cpu& cpu);
-    void SET5r8(Cpu& cpu); void SET6r8(Cpu& cpu); void SET7r8(Cpu& cpu);
-
-    // ILLEGAL/UNIMPLEMENTED INSTRUCTION
-    void XXX(Cpu& cpu);
+    void RST60(Cpu& cpu);
 
     // INSTRUCTION MODE ENUM
     enum InstructionMode

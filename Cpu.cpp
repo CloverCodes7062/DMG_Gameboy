@@ -22,13 +22,12 @@ Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstruction
 	//vBlankIRQ = 0xFF85;
 
 	ime = false;
-	IE = 0xFFFF;
-	IF = 0xFF0F;
 
 	write(lcdc, 0x91);
 	write(stat, 0x85);
 	tileMapAddress = 0x9800;
 
+	previousJoyPadState = 0x0F;
 	//loadBootRom();
 }
 
@@ -72,16 +71,19 @@ void Cpu::loadRom(std::vector<uint8_t> romData = std::vector<uint8_t>())
 	}
 
 	setTitle();
+	setRomType();
+}
+
+void Cpu::setRomType()
+{
+	romType = read(0x147);
+	bus.setRomType(romType);
+	bus.setRomLoaded();
+	hasLoadedRom = true;
 }
 
 void Cpu::write(uint16_t addr, uint8_t data)
 {
-
-	if ((stepMode) && (addr >= 0xFF80) && (addr <= 0xFFFE))
-	{
-		std::cout << "WROTE TO HIGH RAM" << std::endl;
-	}
-
 	if (addr >= 0x8000 && addr <= 0x9FFF)
 	{
 		gpu.vram[addr] = data;
@@ -99,7 +101,7 @@ uint8_t Cpu::read(uint16_t addr)
 
 	if (addr == 0xFF00)
 	{
-		std::cout << "ATTEMPTED TO READ FROM JOYPAD: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bus.read(0xFF00)) << std::endl;
+		//std::cout << "ATTEMPTED TO READ FROM JOYPAD: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bus.read(0xFF00)) << std::endl;
 	}
 
 	return bus.read(addr);
@@ -150,6 +152,8 @@ void Cpu::runInstruction()
 		// HANDLES PROGRAM COUTER TRACE
 		//handlePCTrace();
 
+		// Checks Inputs For JoyPad
+		checkInputs();
 		// HANDLES INTERRUPTS
 		handleInterrupts();
 
@@ -175,12 +179,10 @@ void Cpu::runInstruction()
 		//
 
 
+		
 		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank);
 		write(ly, updatedLy);
 		cyclesRan = 0;
-
-		
-		
 		
 		if (gpu.InVblank() && !inVblank)
 		{
@@ -190,28 +192,32 @@ void Cpu::runInstruction()
 		}
 		
 		
-		
 	}
 	cycles -= 4;
 }
 
-void Cpu::handlePCTrace()
+void Cpu::checkInputs()
 {
-	std::stringstream ss;
-	if (wasCB)
-	{
-		ss << "pc: 0x" << std::hex << std::setw(4) << std::setfill('0') << pc << ", opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << ", instruction: " << "NOT IMPL YET";
-	}
-	else
-	{
-		ss << "pc: 0x" << std::hex << std::setw(4) << std::setfill('0') << pc << ", opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << ", instruction: " << "NOT IMPL YET";
-	}
-	std::string result = ss.str();
-	pcDeque.push_back(result);
+	char key;
 
-	while (pcDeque.size() > 2000)
+	if (_kbhit())
 	{
-		pcDeque.pop_front();
+		key = _getch();
+
+		if (!key)
+		{
+			return;
+		}
+
+		if (key == 13)
+		{
+			std::cout << "ENTER KEY PRESSED" << std::endl;
+			bus.writeToJoyPad(0x17);
+			
+			uint8_t IFValue = read(IF);
+			IFValue |= (1 << 4);
+			write(IF, IFValue);
+		}
 	}
 }
 
@@ -232,6 +238,39 @@ void Cpu::handleInterrupts()
 			halted = false;
 			cpuInstructions.RST40(*this);
 		}
+
+		
+		if (ifired & 0x10) // JOYPAD
+		{
+			uint8_t IFvalue = read(IF);
+			IFvalue &= (255 - 0x10);
+			write(IF, IFvalue);
+
+			halted = false;
+
+			cpuInstructions.RST60(*this);
+		}
+		
+	}
+}
+
+void Cpu::handlePCTrace()
+{
+	std::stringstream ss;
+	if (wasCB)
+	{
+		ss << "pc: 0x" << std::hex << std::setw(4) << std::setfill('0') << pc << ", opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << ", instruction: " << "NOT IMPL YET";
+	}
+	else
+	{
+		ss << "pc: 0x" << std::hex << std::setw(4) << std::setfill('0') << pc << ", opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << ", instruction: " << "NOT IMPL YET";
+	}
+	std::string result = ss.str();
+	pcDeque.push_back(result);
+
+	while (pcDeque.size() > 2000)
+	{
+		pcDeque.pop_front();
 	}
 }
 

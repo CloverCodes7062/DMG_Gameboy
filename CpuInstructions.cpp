@@ -5278,7 +5278,7 @@ void CpuInstructions::runCBInstruction(Cpu& cpu)
 
 void CpuInstructions::RST40(Cpu& cpu)
 {
-	std::cout << "ENTERING A VBLANK" << std::endl;
+	//std::cout << "ENTERING A VBLANK" << std::endl;
 	cpu.halted = false;
 	cpu.inVblank = true;
 	cpu.ime = 0;
@@ -5287,6 +5287,24 @@ void CpuInstructions::RST40(Cpu& cpu)
 	cpu.write(--cpu.stkp, cpu.pc & 0xFF);
 
 	cpu.pc = 0x0040;
+
+	cpu.cycles += 12;
+	cpu.cyclesRan += 12;
+
+	return;
+}
+
+void CpuInstructions::RST60(Cpu& cpu)
+{
+	std::cout << "JOYPAD INPUT DETECTED" << std::endl;
+
+	cpu.halted = false;
+	cpu.ime = 0;
+
+	cpu.write(--cpu.stkp, (cpu.pc >> 8) & 0xFF);
+	cpu.write(--cpu.stkp, cpu.pc & 0xFF);
+
+	cpu.pc = 0x0060;
 
 	cpu.cycles += 12;
 	cpu.cyclesRan += 12;
