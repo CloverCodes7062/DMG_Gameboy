@@ -107,11 +107,6 @@ uint8_t Cpu::read(uint16_t addr)
 		return gpu.vram[addr];
 	}
 
-	if (addr == 0xFF00)
-	{
-		//std::cout << "ATTEMPTED TO READ FROM JOYPAD: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(bus.read(0xFF00)) << std::endl;
-	}
-
 	return bus.read(addr);
 }
 
@@ -192,9 +187,7 @@ void Cpu::runInstruction()
 		}
 		//
 
-
-		
-		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank);
+		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc));
 		write(ly, updatedLy);
 		cyclesRan = 0;
 		
@@ -204,7 +197,6 @@ void Cpu::runInstruction()
 			IFValue |= (1 << 0);
 			write(IF, IFValue);
 		}
-		
 		
 	}
 	cycles -= 4;

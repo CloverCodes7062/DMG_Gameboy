@@ -1203,7 +1203,7 @@ void CpuInstructions::runInstruction(Cpu& cpu)
 			cpu.cycles += 4;
 			cpu.cyclesRan += 4;
 
-			std::cout << "CPU HALTED!" << std::endl;
+			//std::cout << "CPU HALTED!" << std::endl;
 
 			return;
 			break;
