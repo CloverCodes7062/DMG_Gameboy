@@ -32,7 +32,6 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 		if (lyValue % 8 == 0 && backgroundTiles.size() < 576)
 		{
 			updateTiles();
-			updateVramViewer();
 
 			for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
 			{
@@ -57,28 +56,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 			totalFramesGenerated++;
 			//std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
 
-			engine.setBuffer(backgroundTiles, Sprites);
-
-			bool running = true;
-			auto startTime = std::chrono::steady_clock::now();
-
-			while (running) {
-
-				auto currentTime = std::chrono::steady_clock::now();
-				auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-				if (elapsedTime >= 1000 / 10000) {
-					running = false;
-				}
-
-				SDL_Event event;
-				while (SDL_PollEvent(&event)) {
-					if (event.type == SDL_QUIT) {
-						running = false;
-					}
-				}
-
-				engine.render();
-			}
+			frameReady = true;
 
 			if (prevLcdcValue != lcdcValue)
 			{
@@ -113,8 +91,6 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 			{
 				tileMapAddress = lastMapUsed;
 			}
-			backgroundTiles.clear();
-
 			gpuInVblank = true;
 		}
 	}
@@ -172,68 +148,6 @@ void Gpu::updateSprites()
 	{
 		Sprites.push_back(Sprite{ vram[addr], vram[addr + 1], tileSet[vram[addr + 2]], vram[addr + 3] });
 	}
-}
-
-void Gpu::updateVramViewer()
-{
-	vramViewerEngine.setBuffer(tileSet);
-
-	bool running = true;
-	auto startTime = std::chrono::steady_clock::now();
-
-	while (running) {
-
-		auto currentTime = std::chrono::steady_clock::now();
-		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-		if (elapsedTime >= 1000 / 10000) {
-			running = false;
-		}
-
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				running = false;
-			}
-		}
-
-		vramViewerEngine.render();
-	}
-}
-
-void Gpu::renderFrame()
-{
-	totalFramesGenerated++;
-
-	//std::cout << "VRAM TILES SIZE: " << vramTiles.size() << std::endl;
-
-	std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
-
-
-	engine.setBuffer(backgroundTiles);
-
-	bool running = true;
-	auto startTime = std::chrono::steady_clock::now();
-
-	while (running) {
-
-		auto currentTime = std::chrono::steady_clock::now();
-		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-		if (elapsedTime >= 1000 / 60) {
-			running = false;
-		}
-
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				running = false;
-			}
-		}
-
-		engine.render();
-	}
-
-	tileMapAddress = 0x9800;
-	backgroundTiles.clear();
 }
 
 bool Gpu::InVblank()

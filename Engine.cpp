@@ -43,7 +43,7 @@ Engine::~Engine() {
     SDL_Quit();
 }
 
-void Engine::setBuffer(std::vector<std::vector<std::vector<uint8_t>>>& tiles, std::vector<Sprite> Sprites)
+void Engine::setBuffer(std::vector<std::vector<std::vector<uint8_t>>>& tiles, std::vector<Sprite>& Sprites)
 {
     int tileSize = 8;
     int tilesPerRow = 32;

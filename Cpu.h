@@ -112,6 +112,14 @@ public:
         JOYPAD = 0xFF00,
     };
 
+    std::vector<std::vector<std::vector<uint8_t>>> getBackgroundTiles();
+    std::vector<Sprite> getSprites();
+    std::vector<std::vector<std::vector<uint8_t>>> getTileSet();
+
+    bool frameReady = false;
+    void setFrameReady(bool value);
+    void clearGpuBackgroundTiles();
+
 private:
 	// Bus that has the ram on it
 	Bus& bus;

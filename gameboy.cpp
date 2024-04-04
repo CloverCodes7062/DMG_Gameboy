@@ -4,6 +4,7 @@
 #include <array>
 #include <iomanip>
 #include <SDL.h>
+#include <chrono>
 
 gameboy::gameboy(Cpu& cpu) : cpu(cpu)
 {
@@ -42,15 +43,79 @@ void gameboy::emulate()
 {
     // Emulate until cpu reports an error
 
-    while (cpu.getHasNotBroken())
+    std::vector<std::vector<std::vector<uint8_t>>> backgroundTiles;
+    std::vector<Sprite> Sprites;
+    std::vector<std::vector<std::vector<uint8_t>>> tileSet;
+
+    bool running = true;
+
+    while (running)
     {
-        cpu.runInstruction();
+        while (cpu.getHasNotBroken())
+        {
+            // HANDLE INPUTS
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
+            {
+                if (event.type == SDL_QUIT)
+                {
+                    running = false;
+                }
+            }
+
+            // RUN INSTRUCTION
+            cpu.runInstruction();
+
+            // RENDER WHEN NEEDED
+            if (cpu.frameReady)
+            {
+                cpu.setFrameReady(false);
+
+                backgroundTiles = cpu.getBackgroundTiles();
+                Sprites = cpu.getSprites();
+                tileSet = cpu.getTileSet();
+
+                engine.setBuffer(backgroundTiles, Sprites);
+                engine.render();
+
+                cpu.clearGpuBackgroundTiles();
+            }
+        }
+        running = false;
     }
 
     cpu.printStatus();
     cpu.printTrace();
     cpu.printSerialPorts();
 }
+
+/*
+void gameboy::updateVramViewer(std::vector<std::vector<std::vector<uint8_t>>> tileSet)
+{
+    vramViewerEngine.setBuffer(tileSet);
+
+    bool running = true;
+    auto startTime = std::chrono::steady_clock::now();
+
+    while (running) {
+
+        auto currentTime = std::chrono::steady_clock::now();
+        auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
+        if (elapsedTime >= 1000 / 10000) {
+            running = false;
+        }
+
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+        }
+
+        vramViewerEngine.render();
+    }
+}
+*/
 
 void gameboy::write(uint16_t addr, uint8_t data)
 {

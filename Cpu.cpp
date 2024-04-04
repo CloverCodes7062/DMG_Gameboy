@@ -129,6 +129,32 @@ void Cpu::handleDMATransfer()
 	gpu.updateSprites();
 }
 
+std::vector<std::vector<std::vector<uint8_t>>> Cpu::getBackgroundTiles()
+{
+	return gpu.backgroundTiles;
+}
+
+std::vector<Sprite> Cpu::getSprites()
+{
+	return gpu.Sprites;
+}
+
+std::vector<std::vector<std::vector<uint8_t>>> Cpu::getTileSet()
+{
+	return gpu.tileSet;
+}
+
+void Cpu::setFrameReady(bool value)
+{
+	frameReady = false;
+	gpu.frameReady = false;
+}
+
+void Cpu::clearGpuBackgroundTiles()
+{
+	gpu.backgroundTiles.clear();
+}
+
 bool Cpu::getHasNotBroken()
 {
 	return hasNotBroken;
@@ -169,6 +195,7 @@ void Cpu::runInstruction()
 			return;
 		}
 
+		frameReady = gpu.frameReady;
 		//printStatus();
 		//writeStateToLog();
 		// FOR BLARRGS CPU TEST OUTPUTS

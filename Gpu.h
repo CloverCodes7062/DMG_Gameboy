@@ -47,6 +47,8 @@ public:
 	// Returns inVblank
 	bool InVblank();
 
+	bool frameReady = false;
+
 private:
 	bool gpuInVblank = false;
 	int cyclesRan;
@@ -56,12 +58,6 @@ private:
 	uint16_t xScroll;
 	uint16_t tileMapAddress;
 	uint8_t prevLcdcValue = 0x91;
-
-
-	// SDL Engine For Game View
-	Engine engine = Engine(256 * 3, 256 * 3); // CHANGE SCALE IN ENGINE AS WELL
-	//
-	Engine vramViewerEngine = Engine(256 * 3, 256 * 3);
 
 	// Total Frames Generated
 	int totalFramesGenerated = 0;
