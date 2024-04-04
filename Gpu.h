@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "Engine.h"
 #include <array>
+#include "Sprite.h"
 
 class Cpu;
 
@@ -39,8 +40,9 @@ public:
 	// Background Tiles
 	std::vector<std::vector<std::vector<uint8_t>>> backgroundTiles;
 
-	// OAM Data (Object Attribute Memory)
-	std::vector<std::vector<std::vector<uint8_t>>> oam;
+	void updateSprites(); // Updates Sprits with data from OAM
+
+	std::vector<Sprite> Sprites;
 
 	// Returns inVblank
 	bool InVblank();

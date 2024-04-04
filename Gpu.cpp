@@ -55,10 +55,9 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 		if (lyValue >= 0x99 && !cpuInVblank)
 		{
 			totalFramesGenerated++;
-
 			//std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
 
-			engine.setBuffer(backgroundTiles);
+			engine.setBuffer(backgroundTiles, Sprites);
 
 			bool running = true;
 			auto startTime = std::chrono::steady_clock::now();
@@ -164,6 +163,15 @@ std::vector<uint8_t> Gpu::createTileRow(uint8_t lsb, uint8_t msb)
 void Gpu::vramWrite(uint16_t addr, uint8_t data)
 {
 	vram[addr] = data;
+}
+
+void Gpu::updateSprites()
+{
+	Sprites.clear();
+	for (size_t addr = 0xFE00; addr <= 0xFE9F; addr += 4)
+	{
+		Sprites.push_back(Sprite{ vram[addr], vram[addr + 1], tileSet[vram[addr + 2]], vram[addr + 3] });
+	}
 }
 
 void Gpu::updateVramViewer()

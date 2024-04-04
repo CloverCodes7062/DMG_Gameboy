@@ -98,10 +98,18 @@ public:
     // Loads the Boot Rom
     void loadBootRom();
 
+    // Handles the DMA Transfer into OAM
+    void handleDMATransfer();
+
     enum InterruptRegs
     {
         IE = 0xFFFF,
         IF = 0xFF0F,
+    };
+
+    enum JoyPadReg
+    {
+        JOYPAD = 0xFF00,
     };
 
 private:

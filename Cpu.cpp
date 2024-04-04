@@ -98,6 +98,11 @@ void Cpu::write(uint16_t addr, uint8_t data)
 	}
 
 	bus.write(addr, data);
+
+	if (addr == 0xFF46)
+	{
+		handleDMATransfer();
+	}
 }
 
 uint8_t Cpu::read(uint16_t addr)
@@ -108,6 +113,20 @@ uint8_t Cpu::read(uint16_t addr)
 	}
 
 	return bus.read(addr);
+}
+
+void Cpu::handleDMATransfer()
+{
+	uint8_t sourceOffset = read(0xFF46);
+
+	uint16_t sourceAddr = (sourceOffset << 8) | 0x00;
+
+	for (size_t addr = 0xFE00; addr <= 0xFE9F; addr++)
+	{
+		gpu.vramWrite(addr, read(sourceAddr++));
+	}
+
+	gpu.updateSprites();
 }
 
 bool Cpu::getHasNotBroken()

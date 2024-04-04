@@ -146,6 +146,7 @@
     <ClInclude Include="Engine.h" />
     <ClInclude Include="gameboy.h" />
     <ClInclude Include="Gpu.h" />
+    <ClInclude Include="Sprite.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bus.cpp" />
