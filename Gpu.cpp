@@ -100,15 +100,29 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 
 void Gpu::updateTiles()
 {
-	std::vector<std::vector<std::vector<uint8_t>>> tiles;
-	std::vector<std::vector<uint8_t>> tile;
+	std::vector<std::vector<uint16_t>> tiles;
+	std::vector<uint16_t> tile;
 
 	for (size_t i = 0x8000; i <= 0x97FF; i += 2)
 	{
-		std::vector<uint8_t> tileRow = createTileRow(vram[i], vram[i + 1]);
+
+		uint16_t tileRow = 0x0000;
+		
+		// CREATES A TILE ROW
+		for (int j = 7; j >= 0; j--)
+		{
+			uint8_t lsbBit = (vram[i] >> j) & 0x01; // vram[i] is the least significant byte, extract bits from it
+			uint8_t msbBit = (vram[i + 1] >> j) & 0x01; // vram[i + 1] is the most significant byte, extract bits from it
+
+			uint8_t color = (msbBit << 1) | lsbBit;
+
+			tileRow |= (color << (j * 2));
+		}
 
 		tile.push_back(tileRow);
 
+		// ONCE 8 TILE ROWS HAVE BEEN PUSHED TO TILE
+		// PUSH THE FINISHED TILE TO TILES AND THEN CLEAR TILE
 		if (tile.size() == 8)
 		{
 			tiles.push_back(tile);
@@ -119,58 +133,10 @@ void Gpu::updateTiles()
 	tileSet = tiles;
 }
 
-std::vector<uint8_t> Gpu::createTileRow(uint8_t lsb, uint8_t msb)
-{
-	std::vector<uint8_t> tileRow;
-
-	for (int i = 7; i >= 0; i--)
-	{
-		uint8_t lsbBit = (lsb >> i) & 0x01;
-		uint8_t msbBit = (msb >> i) & 0x01;
-
-		uint8_t color = (msbBit << 1) | lsbBit;
-
-		tileRow.push_back(color);
-	}
-
-	return tileRow;
-}
-
 void Gpu::vramWrite(uint16_t addr, uint8_t data)
 {
 	vram[addr] = data;
 
-	//updateTile(addr);
-}
-
-void Gpu::updateTile(uint16_t addr)
-{
-	uint8_t upperByteLowerNibble = (addr >> 8) & 0x0F;
-	uint8_t lowerByteUpperNibble = (addr >> 4) & 0x0F;
-
-	uint8_t tileIndexUnsigned = (upperByteLowerNibble << 4) | lowerByteUpperNibble;
-
-	uint16_t tileVramAddress = addr & 0xFFF0;
-
-	std::vector<std::vector<uint8_t>> tile;
-	for (uint16_t i = tileVramAddress; i < tileVramAddress + 16; i += 2)
-	{
-		std::vector<uint8_t> tileRow = createTileRow(vram[i], vram[i + 1]);
-
-		tile.push_back(tileRow);
-	}
-
-	if (signedMode)
-	{
-		int offset = 256;
-
-		int tileIndex = (static_cast<int8_t>(tileIndexUnsigned)) + offset;
-		tileSet[tileIndex] = tile;
-	}
-	else
-	{
-		tileSet[tileIndexUnsigned] = tile;
-	}
 }
 
 void Gpu::updateSprites()

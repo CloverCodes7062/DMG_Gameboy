@@ -43,10 +43,6 @@ void gameboy::emulate()
 {
     // Emulate until cpu reports an error
 
-    std::vector<std::vector<std::vector<uint8_t>>> backgroundTiles;
-    std::vector<Sprite> Sprites;
-    std::vector<std::vector<std::vector<uint8_t>>> tileSet;
-
     bool running = true;
     uint64_t lastDivIncTime = 0;
     uint64_t incrementInterval = 1000000 / 16384;
@@ -135,11 +131,7 @@ void gameboy::emulate()
             {
                 cpu.setFrameReady(false);
 
-                backgroundTiles = cpu.getBackgroundTiles();
-                Sprites = cpu.getSprites();
-                tileSet = cpu.getTileSet();
-
-                engine.setBuffer(backgroundTiles, Sprites);
+                engine.setBuffer(cpu.getBackgroundTiles(), cpu.getSprites());
                 engine.render();
 
                 cpu.clearGpuBackgroundTiles();

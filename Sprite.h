@@ -5,6 +5,6 @@
 struct Sprite {
     uint8_t y;
     uint8_t x;
-    std::vector<std::vector<uint8_t>> tile;
+    std::vector<uint16_t> tile;
     uint8_t attributes;
 };

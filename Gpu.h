@@ -16,7 +16,7 @@ public:
 	void renderScanline(); // Renders a single scanline to the framebuffer
 	void renderFrame(); // Renders single frame to the display window
 	void updateTiles(); // Updates all Tiles in Vram
-	std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb); // Creates a TileRow
+	uint16_t createTileRow(uint8_t lsb, uint8_t msb); // Creates a TileRow
 	void setVblank(bool newVblank); // Sets Vblank
 	void vramWrite(uint16_t addr, uint8_t data); // Writes to vram;
 	void updateTile(uint16_t addr); // Updates a Single Tile
@@ -25,19 +25,10 @@ public:
 	std::vector<uint8_t> vram;
 
 	// Entire Tileset In Vram
-	std::vector<std::vector<std::vector<uint8_t>>> tileSet;
-
-	// Tileset Block 0 (0x8000 - 0x87FF)
-	std::vector<std::vector<std::vector<uint8_t>>> tileSetBlock0;
-
-	// Tileset Block 1 (0x8800 - 0x8FFF)
-	std::vector<std::vector<std::vector<uint8_t>>> tileSetBlock1;
-
-	// Tileset Block 2 (0x9000 - 0x97FF)
-	std::vector<std::vector<std::vector<uint8_t>>> tileSetBlock2;
+	std::vector<std::vector<uint16_t>> tileSet;
 
 	// Background Tiles
-	std::vector<std::vector<std::vector<uint8_t>>> backgroundTiles;
+	std::vector<std::vector<uint16_t>> backgroundTiles;
 
 	void updateSprites(); // Updates Sprits with data from OAM
 

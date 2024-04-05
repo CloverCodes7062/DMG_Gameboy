@@ -119,9 +119,9 @@ public:
 
     void incrementDivReg();
 
-    std::vector<std::vector<std::vector<uint8_t>>> getBackgroundTiles();
+    std::vector<std::vector<uint16_t>> getBackgroundTiles();
     std::vector<Sprite> getSprites();
-    std::vector<std::vector<std::vector<uint8_t>>> getTileSet();
+    std::vector<std::vector<uint16_t>> getTileSet();
 
     bool frameReady = false;
     void setFrameReady(bool value);

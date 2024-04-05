@@ -131,7 +131,7 @@ void Cpu::handleDMATransfer()
 	gpu.updateSprites();
 }
 
-std::vector<std::vector<std::vector<uint8_t>>> Cpu::getBackgroundTiles()
+std::vector<std::vector<uint16_t>> Cpu::getBackgroundTiles()
 {
 	return gpu.backgroundTiles;
 }
@@ -141,7 +141,7 @@ std::vector<Sprite> Cpu::getSprites()
 	return gpu.Sprites;
 }
 
-std::vector<std::vector<std::vector<uint8_t>>> Cpu::getTileSet()
+std::vector<std::vector<uint16_t>> Cpu::getTileSet()
 {
 	return gpu.tileSet;
 }
