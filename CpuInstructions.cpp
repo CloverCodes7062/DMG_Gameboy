@@ -13,7 +13,7 @@ CpuInstructions::~CpuInstructions()
 }
 
 
-void CpuInstructions::runInstruction(Cpu& cpu)
+void CpuInstructions::runInstruction(Cpu& cpu, uint8_t joyPadState, bool interruptPending)
 {
 	uint8_t opcode = cpu.read(cpu.pc++);
 	uint16_t* r16 = nullptr;
@@ -535,11 +535,9 @@ void CpuInstructions::runInstruction(Cpu& cpu)
 			return;
 			break;
 		}
-		case 0x10:
+		case 0x10: // STOP
 		{
-			std::cout << "UNIMPLEMENTED STOP INSTRUCTION" << std::endl;
-			cpu.setHasNotBroken(false);
-
+			cpu.stopped = true;
 			return;
 			break; 
 		}

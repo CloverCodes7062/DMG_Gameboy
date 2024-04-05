@@ -112,6 +112,13 @@ public:
         JOYPAD = 0xFF00,
     };
 
+    enum DIVReg
+    {
+        DIV = 0xFF04,
+    };
+
+    void incrementDivReg();
+
     std::vector<std::vector<std::vector<uint8_t>>> getBackgroundTiles();
     std::vector<Sprite> getSprites();
     std::vector<std::vector<std::vector<uint8_t>>> getTileSet();
@@ -119,6 +126,8 @@ public:
     bool frameReady = false;
     void setFrameReady(bool value);
     void clearGpuBackgroundTiles();
+
+    void writeToJoyPad(uint8_t data);
 
 private:
 	// Bus that has the ram on it

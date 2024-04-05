@@ -15,6 +15,8 @@ public:
 	void setRomLoaded(); // Sets Rom Loaded to True (Used to prevent illegal writes to ROM after loading)
 	bool romLoaded = false;
 	void writeToJoyPad(uint8_t data); // Writes to the Joypad
+	bool hasLoadedRom = false;
+	void incrementDivReg();
 private:
 	std::vector<uint8_t> ram;
 };

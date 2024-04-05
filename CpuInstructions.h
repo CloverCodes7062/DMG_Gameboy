@@ -12,7 +12,7 @@ public:
 
 public:
 
-    void runInstruction(Cpu& cpu);
+    void runInstruction(Cpu& cpu, uint8_t joyPadState, bool interruptPending);
     void runCBInstruction(Cpu& cpu);
 
     // INTERRUPTS

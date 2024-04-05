@@ -20,7 +20,6 @@ public:
 	void setVblank(bool newVblank); // Sets Vblank
 	void vramWrite(uint16_t addr, uint8_t data); // Writes to vram;
 	void updateTile(uint16_t addr); // Updates a Single Tile
-	void updateVramViewer();
 
 	// Vram
 	std::vector<uint8_t> vram;
@@ -41,6 +40,11 @@ public:
 	std::vector<std::vector<std::vector<uint8_t>>> backgroundTiles;
 
 	void updateSprites(); // Updates Sprits with data from OAM
+
+	// DEBUG VRAM VIEWER ENGINE
+	//Engine vramViewerEngine = Engine(256 * 3, 256 * 3);
+
+	void updateVramViewer();
 
 	std::vector<Sprite> Sprites;
 

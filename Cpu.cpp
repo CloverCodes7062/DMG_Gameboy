@@ -25,6 +25,7 @@ Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstruction
 
 	write(lcdc, 0x91);
 	write(stat, 0x85);
+	write(DIV, 0x00);
 	tileMapAddress = 0x9800;
 
 	previousJoyPadState = 0x0F;
@@ -86,6 +87,7 @@ void Cpu::loadRom(std::vector<uint8_t> romData = std::vector<uint8_t>())
 			write(addr, rom[addr]);
 		}
 		hasLoadedRom = true;
+		bus.hasLoadedRom = true;
 	}
 	setTitle();
 }
@@ -189,6 +191,11 @@ void Cpu::runInstruction()
 {
 	if (cycles == 0)
 	{	
+		// HANDLES INTERRUPTS
+		handleInterrupts();
+
+		//handlePCTrace();
+
 		if (pc == 0x100 && !hasLoadedRom)
 		{
 			loadRom();
@@ -196,28 +203,13 @@ void Cpu::runInstruction()
 		}
 
 		frameReady = gpu.frameReady;
-		//printStatus();
-		//writeStateToLog();
-		// FOR BLARRGS CPU TEST OUTPUTS
-		handleSerialPortOutput();
-
-		// HANDLE DEBUG STEP MODE
-		//handleDebugStepMode();
-
-		// HANDLES PROGRAM COUTER TRACE
-		//handlePCTrace();
-
-		// Checks Inputs For JoyPad
-		//checkInputs();
-		// HANDLES INTERRUPTS
-		handleInterrupts();
 
 		// RUN INSTRUCTION IF NOT HALTED
 		if (!halted)
 		{
 			if (!wasCB)
 			{
-				cpuInstructions.runInstruction(*this);
+				cpuInstructions.runInstruction(*this, read(0xFF00), read(IE) && read(IF));
 			}
 			if (wasCB)
 			{
@@ -248,29 +240,14 @@ void Cpu::runInstruction()
 	cycles -= 4;
 }
 
-void Cpu::checkInputs()
+void Cpu::writeToJoyPad(uint8_t data)
 {
-	char key;
+	bus.writeToJoyPad(data);
 
-	if (_kbhit())
-	{
-		key = _getch();
-
-		if (!key)
-		{
-			return;
-		}
-
-		if (key == 13)
-		{
-			std::cout << "ENTER KEY PRESSED" << std::endl;
-			bus.writeToJoyPad(0x17);
-			
-			uint8_t IFValue = read(IF);
-			IFValue |= (1 << 4);
-			write(IF, IFValue);
-		}
-	}
+	uint8_t IFValue = read(IF);
+	IFValue |= (1 << 4);
+	write(IF, IFValue);
+	stopped = false;
 }
 
 void Cpu::handleInterrupts()
@@ -306,6 +283,11 @@ void Cpu::handleInterrupts()
 	}
 }
 
+void Cpu::setRomType()
+{
+	romType = rom[0x0147];
+}
+
 void Cpu::handlePCTrace()
 {
 	std::stringstream ss;
@@ -333,6 +315,11 @@ void Cpu::handleSerialPortOutput()
 		FF01Changes.push_back(read(0xFF01));
 		previousFF01 = read(0xFF01);
 	}
+}
+
+void Cpu::incrementDivReg()
+{
+	bus.incrementDivReg();
 }
 
 void Cpu::handleDebugStepMode()
@@ -473,6 +460,10 @@ void Cpu::setTitle()
 	}
 
 	romTitle = title;
+
+	std::cout << "ROM TYPE: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(rom[0x0147]) << std::endl;
+	bus.setRomType(rom[0x0147]);
+	return;
 }
 
 std::string Cpu::getTitle()

@@ -27,6 +27,17 @@ void Bus::write(uint16_t addr, uint8_t data)
 	{
 		return;
 	}
+
+	if (addr == 0xFF04)
+	{
+		ram[addr] = 0x00;
+		return;
+	}
+
+	if (addr <= 0x8000 && hasLoadedRom)
+	{
+		return;
+	}
 	else
 	{
 		ram[addr] = data;
@@ -56,4 +67,12 @@ void Bus::setRomLoaded()
 void Bus::writeToJoyPad(uint8_t data)
 {
 	ram[0xFF00] = data;
+}
+
+void Bus::incrementDivReg()
+{
+	uint8_t divValue = ram[0xFF04];
+	divValue++;
+
+	ram[0xFF04] = divValue;
 }

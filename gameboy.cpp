@@ -48,7 +48,8 @@ void gameboy::emulate()
     std::vector<std::vector<std::vector<uint8_t>>> tileSet;
 
     bool running = true;
-
+    uint64_t lastDivIncTime = 0;
+    uint64_t incrementInterval = 1000000 / 16384;
     while (running)
     {
         while (cpu.getHasNotBroken())
@@ -61,8 +62,71 @@ void gameboy::emulate()
                 {
                     running = false;
                 }
+                else if (event.type == SDL_KEYDOWN)
+                {
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_s:
+                        {
+                            cpu.setHasNotBroken(false);
+                        }
+                        case SDLK_RETURN:
+                        {
+                            cpu.writeToJoyPad(0x17);
+                            break;
+                        }
+                        case SDLK_TAB:
+                        {
+                            cpu.writeToJoyPad(0x1B);
+                            break;
+                        }
+                        case SDLK_b:
+                        {
+                            cpu.writeToJoyPad(0x1D);
+                            break;
+                        }
+                        case SDLK_a:
+                        {
+                            cpu.writeToJoyPad(0x1E);
+                            break;
+                        }
+                        case SDLK_DOWN:
+                        {
+                            cpu.writeToJoyPad(0x27);
+                            break;
+                        }
+                        case SDLK_UP:
+                        {
+                            cpu.writeToJoyPad(0x2B);
+                            break;
+                        }
+                        case SDLK_LEFT:
+                        {
+                            cpu.writeToJoyPad(0x2D);
+                            break;
+                        }
+                        case SDLK_RIGHT:
+                        {
+                            cpu.writeToJoyPad(0x2E);
+                            break;
+                        }
+                    }
+                }
+                else if (event.type == SDL_KEYUP)
+                {
+                    cpu.writeToJoyPad(0x0F);
+                }
             }
 
+            auto currentTime = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()
+            ).count();
+
+            if ((currentTime - lastDivIncTime) >= incrementInterval)
+            {
+                cpu.incrementDivReg();
+                lastDivIncTime = currentTime;
+            }
             // RUN INSTRUCTION
             cpu.runInstruction();
 
@@ -86,36 +150,8 @@ void gameboy::emulate()
 
     cpu.printStatus();
     cpu.printTrace();
-    cpu.printSerialPorts();
+    //cpu.printSerialPorts();
 }
-
-/*
-void gameboy::updateVramViewer(std::vector<std::vector<std::vector<uint8_t>>> tileSet)
-{
-    vramViewerEngine.setBuffer(tileSet);
-
-    bool running = true;
-    auto startTime = std::chrono::steady_clock::now();
-
-    while (running) {
-
-        auto currentTime = std::chrono::steady_clock::now();
-        auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-        if (elapsedTime >= 1000 / 10000) {
-            running = false;
-        }
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-            }
-        }
-
-        vramViewerEngine.render();
-    }
-}
-*/
 
 void gameboy::write(uint16_t addr, uint8_t data)
 {

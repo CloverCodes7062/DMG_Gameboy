@@ -32,7 +32,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 		if (lyValue % 8 == 0 && backgroundTiles.size() < 576)
 		{
 			updateTiles();
-
+			//updateVramViewer();
 			for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
 			{
 				if (!signedMode)
@@ -139,6 +139,38 @@ std::vector<uint8_t> Gpu::createTileRow(uint8_t lsb, uint8_t msb)
 void Gpu::vramWrite(uint16_t addr, uint8_t data)
 {
 	vram[addr] = data;
+
+	//updateTile(addr);
+}
+
+void Gpu::updateTile(uint16_t addr)
+{
+	uint8_t upperByteLowerNibble = (addr >> 8) & 0x0F;
+	uint8_t lowerByteUpperNibble = (addr >> 4) & 0x0F;
+
+	uint8_t tileIndexUnsigned = (upperByteLowerNibble << 4) | lowerByteUpperNibble;
+
+	uint16_t tileVramAddress = addr & 0xFFF0;
+
+	std::vector<std::vector<uint8_t>> tile;
+	for (uint16_t i = tileVramAddress; i < tileVramAddress + 16; i += 2)
+	{
+		std::vector<uint8_t> tileRow = createTileRow(vram[i], vram[i + 1]);
+
+		tile.push_back(tileRow);
+	}
+
+	if (signedMode)
+	{
+		int offset = 256;
+
+		int tileIndex = (static_cast<int8_t>(tileIndexUnsigned)) + offset;
+		tileSet[tileIndex] = tile;
+	}
+	else
+	{
+		tileSet[tileIndexUnsigned] = tile;
+	}
 }
 
 void Gpu::updateSprites()
@@ -149,6 +181,34 @@ void Gpu::updateSprites()
 		Sprites.push_back(Sprite{ vram[addr], vram[addr + 1], tileSet[vram[addr + 2]], vram[addr + 3] });
 	}
 }
+
+/*
+void Gpu::updateVramViewer()
+{
+	vramViewerEngine.setBuffer(tileSet);
+
+	bool running = true;
+	auto startTime = std::chrono::steady_clock::now();
+
+	while (running) {
+
+		auto currentTime = std::chrono::steady_clock::now();
+		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
+		if (elapsedTime >= 1000 / 10000) {
+			running = false;
+		}
+
+		SDL_Event event;
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_QUIT) {
+				running = false;
+			}
+		}
+
+		vramViewerEngine.render();
+	}
+}
+*/
 
 bool Gpu::InVblank()
 {
