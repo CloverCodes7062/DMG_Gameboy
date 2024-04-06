@@ -43,32 +43,52 @@ Engine::~Engine() {
     SDL_Quit();
 }
 
-void Engine::setBuffer(std::vector<std::vector<uint16_t>> tiles, std::vector<Sprite> Sprites)
+void Engine::setBuffer(std::vector<std::vector<uint16_t>> tiles, std::vector<Sprite> Sprites, uint8_t SCY, uint8_t SCX)
 {
     int tileSize = 8;
     int tilesPerRow = 32;
     int tilesPrinted = 0;
     int scale = 3;
 
-    for (int tileIndex = 0; tileIndex < tiles.size(); ++tileIndex) {
-        int tileRow = tileIndex / tilesPerRow;
+    int visibleWidth = 160 * scale;
+    int visibleHeight = 144 * scale;
+
+    for (int tileIndex = 0; tileIndex < tiles.size(); ++tileIndex) 
+    {
+        int tileRow = (tileIndex / tilesPerRow) - SCY;
+
+        if (tileRow < 0)
+        {
+            tileRow = 0;
+        }
+
         int tileCol = tileIndex % tilesPerRow;
 
-        for (int y = 0; y < tileSize; ++y) {
+        for (int y = 0; y < tileSize; ++y) 
+        {
             uint16_t packedPixels = tiles[tileIndex][y];
 
             int scaledX = tileCol * tileSize * scale;
             int scaledY = tileRow * tileSize * scale + (y * scale);
 
-            for (int sx = 0; sx < tileSize; ++sx) {
+            for (int sx = 0; sx < tileSize; ++sx) 
+            {
                 uint8_t pixelValue = (packedPixels >> ((7 - sx) * 2)) & 0x03;
 
-                for (int sy = 0; sy < scale; ++sy) {
+                for (int sy = 0; sy < scale; ++sy) 
+                {
                     int pixelIndex = (scaledY + sy) * screenWidth + (scaledX + sx * scale);
 
-                    for (int px = 0; px < scale; ++px) {
-                        switch (pixelValue) 
+                    for (int px = 0; px < scale; ++px) 
+                    {
+                        if (scaledX < 0 || (scaledX == visibleWidth && scaledY < visibleHeight + scale) || (scaledY == 0 && scaledX < visibleWidth) || (scaledY == visibleHeight && scaledX < visibleWidth))
                         {
+                            pixelBuffer[pixelIndex + px] = 0xFFFF0000;
+                        }
+                        else
+                        {
+                            switch (pixelValue)
+                            {
                             case 0:
                                 pixelBuffer[pixelIndex + px] = 0xFFFFFFFF; // White
                                 break;
@@ -85,6 +105,7 @@ void Engine::setBuffer(std::vector<std::vector<uint16_t>> tiles, std::vector<Spr
                                 std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
                                 pixelBuffer[pixelIndex + px] = 0xFF000000; // Black
                                 break;
+                            }
                         }
                     }
                 }
@@ -98,6 +119,7 @@ void Engine::setBuffer(std::vector<std::vector<uint16_t>> tiles, std::vector<Spr
         uint8_t yFlip = sprite.attributes & 0x40;
         uint8_t xFlip = sprite.attributes & 0x20;
         uint8_t dmgPalette = sprite.attributes & 0x10;
+
 
         for (int y = 0; y < 8; ++y)
         {
@@ -122,19 +144,19 @@ void Engine::setBuffer(std::vector<std::vector<uint16_t>> tiles, std::vector<Spr
                             {
                                 switch (pixelValue)
                                 {
-                                case 1:
-                                    pixelBuffer[pixelIndex] = 0xFFC0C0C0; // Light gray
-                                    break;
-                                case 2:
-                                    pixelBuffer[pixelIndex] = 0xFF808080; // Dark gray
-                                    break;
-                                case 3:
-                                    pixelBuffer[pixelIndex] = 0xFF000000; // Black
-                                    break;
-                                default:
-                                    std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
-                                    pixelBuffer[pixelIndex] = 0xFF000000; // Black
-                                    break;
+                                    case 1:
+                                        pixelBuffer[pixelIndex] = 0xFFC0C0C0; // Light gray
+                                        break;
+                                    case 2:
+                                        pixelBuffer[pixelIndex] = 0xFF808080; // Dark gray
+                                        break;
+                                    case 3:
+                                        pixelBuffer[pixelIndex] = 0xFF000000; // Black
+                                        break;
+                                    default:
+                                        std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
+                                        pixelBuffer[pixelIndex] = 0xFF000000; // Black
+                                        break;
                                 }
                             }
                         }

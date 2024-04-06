@@ -131,7 +131,7 @@ void gameboy::emulate()
             {
                 cpu.setFrameReady(false);
 
-                engine.setBuffer(cpu.getBackgroundTiles(), cpu.getSprites());
+                engine.setBuffer(cpu.getBackgroundTiles(), cpu.getSprites(), cpu.getSCY(), cpu.getSCX());
                 engine.render();
 
                 cpu.clearGpuBackgroundTiles();

@@ -13,14 +13,14 @@ Gpu::Gpu() : vram(0x10000, 0)
 	mode = 0;
 	tileMapAddress = FIRST_MAP;
 
-	updateTiles();
+	updateTiles(0xE4);
 }
 
 Gpu::~Gpu()
 {
 }
 
-uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue)
+uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette)
 {
 	cyclesRan += additionalCycles;
 
@@ -29,10 +29,9 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 		lyValue++;
 		cyclesRan = 0;
 
-		if (lyValue % 8 == 0 && backgroundTiles.size() < 576)
+		if (lyValue % 8 == 0)
 		{
-			updateTiles();
-			//updateVramViewer();
+			updateTiles(palette);
 			for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
 			{
 				if (!signedMode)
@@ -51,7 +50,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 			tileMapAddress += 32;
 		}
 
-		if (lyValue >= 0x99 && !cpuInVblank)
+		if (lyValue >= 0x90 && !cpuInVblank)
 		{
 			totalFramesGenerated++;
 			//std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
@@ -98,7 +97,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 	return lyValue;
 }
 
-void Gpu::updateTiles()
+void Gpu::updateTiles(uint8_t palette)
 {
 	std::vector<std::vector<uint16_t>> tiles;
 	std::vector<uint16_t> tile;
@@ -114,7 +113,45 @@ void Gpu::updateTiles()
 			uint8_t lsbBit = (vram[i] >> j) & 0x01; // vram[i] is the least significant byte, extract bits from it
 			uint8_t msbBit = (vram[i + 1] >> j) & 0x01; // vram[i + 1] is the most significant byte, extract bits from it
 
-			uint8_t color = (msbBit << 1) | lsbBit;
+			uint8_t paletteIndex = (msbBit << 1) | lsbBit;
+
+			uint8_t color3 = (palette >> 6) & 0x03;
+			uint8_t color2 = (palette >> 4) & 0x03;
+			uint8_t color1 = (palette >> 2) & 0x03;
+			uint8_t color0 = palette & 0x03;
+
+			uint8_t color;
+
+			switch (paletteIndex)
+			{
+				case 0:
+				{
+					color = color0;
+					break;
+				}
+				case 1:
+				{
+					color = color1;
+					break;
+				}
+				case 2:
+				{
+					color = color2;
+					break;
+				}
+				case 3:
+				{
+					color = color3;
+					break;
+				}
+				default:
+				{
+					color = color3;
+					std::cout << "INVALID PALETTE INDEX USING COLOR3 AS PLACEHOLDER" << std::endl;
+
+					break;
+				}
+			}
 
 			tileRow |= (color << (j * 2));
 		}

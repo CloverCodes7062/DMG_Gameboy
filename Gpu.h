@@ -12,10 +12,10 @@ public:
 	Gpu();
 	~Gpu();
 
-	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank, uint8_t lcdcValue); // Updates our Gpu's state
+	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette); // Updates our Gpu's state
 	void renderScanline(); // Renders a single scanline to the framebuffer
 	void renderFrame(); // Renders single frame to the display window
-	void updateTiles(); // Updates all Tiles in Vram
+	void updateTiles(uint8_t palette); // Updates all Tiles in Vram
 	uint16_t createTileRow(uint8_t lsb, uint8_t msb); // Creates a TileRow
 	void setVblank(bool newVblank); // Sets Vblank
 	void vramWrite(uint16_t addr, uint8_t data); // Writes to vram;

@@ -146,6 +146,16 @@ std::vector<std::vector<uint16_t>> Cpu::getTileSet()
 	return gpu.tileSet;
 }
 
+uint8_t Cpu::getSCY()
+{
+	return read(SCY);
+}
+
+uint8_t Cpu::getSCX()
+{
+	return read(SCX);
+}
+
 void Cpu::setFrameReady(bool value)
 {
 	frameReady = false;
@@ -225,7 +235,7 @@ void Cpu::runInstruction()
 		}
 		//
 
-		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc));
+		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc), read(PALETTE));
 		write(ly, updatedLy);
 		cyclesRan = 0;
 		

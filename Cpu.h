@@ -117,11 +117,24 @@ public:
         DIV = 0xFF04,
     };
 
+    enum BackgroundViewportRegs
+    {
+        SCY = 0xFF42,
+        SCX = 0xFF43,
+    };
+
+    enum PaletteReg
+    {
+        PALETTE = 0xFF47,
+    };
+
     void incrementDivReg();
 
     std::vector<std::vector<uint16_t>> getBackgroundTiles();
     std::vector<Sprite> getSprites();
     std::vector<std::vector<uint16_t>> getTileSet();
+    uint8_t getSCY();
+    uint8_t getSCX();
 
     bool frameReady = false;
     void setFrameReady(bool value);
