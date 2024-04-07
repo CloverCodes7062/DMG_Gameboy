@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include <iostream>
 #include <bitset>
+#include "Scale.h"
 
 Engine::Engine(int width, int height) : screenWidth(width), screenHeight(height), window(nullptr), renderer(nullptr), texture(nullptr) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) 
@@ -8,7 +9,7 @@ Engine::Engine(int width, int height) : screenWidth(width), screenHeight(height)
         return;
     }
 
-    window = SDL_CreateWindow("SDL Engine", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("Gameboy BG Tiles", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN);
     if (window == nullptr) 
     {
         SDL_Quit();
@@ -48,10 +49,21 @@ void Engine::setBuffer(std::vector<std::vector<uint16_t>> tiles, std::vector<Spr
     int tileSize = 8;
     int tilesPerRow = 32;
     int tilesPrinted = 0;
-    int scale = 3;
+    int scale = SCALE;
 
     int visibleWidth = 160 * scale;
     int visibleHeight = 144 * scale;
+
+    int bottom = (SCY + 143) % 256;
+    int right = (SCX + 159) % 256;
+
+    int top = (bottom - 144 + 256) % 256;
+    int left = (right - 160 + 256) % 256;
+
+    //std::cout << "Bottom: " << bottom << std::endl;
+    //std::cout << "Right: " << right << std::endl;
+    //std::cout << "Top: " << top << std::endl;
+    //std::cout << "Left: " << left << std::endl;
 
     for (int tileIndex = 0; tileIndex < tiles.size(); ++tileIndex) 
     {
@@ -79,33 +91,26 @@ void Engine::setBuffer(std::vector<std::vector<uint16_t>> tiles, std::vector<Spr
                 {
                     int pixelIndex = (scaledY + sy) * screenWidth + (scaledX + sx * scale);
 
-                    for (int px = 0; px < scale; ++px) 
+                    for (int px = 0; px < scale; ++px)
                     {
-                        if (scaledX < 0 || (scaledX == visibleWidth && scaledY < visibleHeight + scale) || (scaledY == 0 && scaledX < visibleWidth) || (scaledY == visibleHeight && scaledX < visibleWidth))
+                        switch (pixelValue)
                         {
-                            pixelBuffer[pixelIndex + px] = 0xFFFF0000;
-                        }
-                        else
-                        {
-                            switch (pixelValue)
-                            {
-                            case 0:
-                                pixelBuffer[pixelIndex + px] = 0xFFFFFFFF; // White
-                                break;
-                            case 1:
-                                pixelBuffer[pixelIndex + px] = 0xFFC0C0C0; // Light gray
-                                break;
-                            case 2:
-                                pixelBuffer[pixelIndex + px] = 0xFF808080; // Dark gray
-                                break;
-                            case 3:
-                                pixelBuffer[pixelIndex + px] = 0xFF000000; // Black
-                                break;
-                            default:
-                                std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
-                                pixelBuffer[pixelIndex + px] = 0xFF000000; // Black
-                                break;
-                            }
+                        case 0:
+                            pixelBuffer[pixelIndex + px] = 0xFFFFFFFF; // White
+                            break;
+                        case 1:
+                            pixelBuffer[pixelIndex + px] = 0xFFC0C0C0; // Light gray
+                            break;
+                        case 2:
+                            pixelBuffer[pixelIndex + px] = 0xFF808080; // Dark gray
+                            break;
+                        case 3:
+                            pixelBuffer[pixelIndex + px] = 0xFF000000; // Black
+                            break;
+                        default:
+                            std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
+                            pixelBuffer[pixelIndex + px] = 0xFF000000; // Black
+                            break;
                         }
                     }
                 }

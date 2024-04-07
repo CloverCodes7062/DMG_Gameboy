@@ -141,21 +141,26 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Bus.h" />
+    <ClInclude Include="Cartridge.h" />
     <ClInclude Include="Cpu.h" />
     <ClInclude Include="CpuInstructions.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="gameboy.h" />
     <ClInclude Include="Gpu.h" />
+    <ClInclude Include="Mbc.h" />
+    <ClInclude Include="Scale.h" />
     <ClInclude Include="Sprite.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bus.cpp" />
+    <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="Cpu.cpp" />
     <ClCompile Include="CpuInstructions.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="gameboy.cpp" />
     <ClCompile Include="Gpu.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Mbc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\DMG_Gameboy_TestRoms\cpu_instrs.gb" />

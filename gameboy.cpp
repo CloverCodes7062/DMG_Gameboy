@@ -142,7 +142,7 @@ void gameboy::emulate()
 
     cpu.printStatus();
     cpu.printTrace();
-    //cpu.printSerialPorts();
+    cpu.printRombank();
 }
 
 void gameboy::write(uint16_t addr, uint8_t data)

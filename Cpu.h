@@ -35,8 +35,6 @@ public:
 
 	// Run an instruction
 	void runInstruction();
-    // Runs the opcode
-    void runOpcode();
 
 	// Load entire rom into rom vector for access
 	void loadRom(std::vector<uint8_t> romData);
@@ -47,32 +45,22 @@ public:
     // GPU
     Gpu gpu = Gpu();
 
-    // Sets Vram Tiles
-    void setVramTiles();
-
 	// Helper functions
 	bool getHasNotBroken();
 	uint16_t getPc();
     void printVram();
+    void printRombank();
     void printStatus();
-    void printSerialPorts();
 	void setHasNotBroken(bool value);
     void writeStateToLog();
 	std::string getTitle();
-    std::vector<uint8_t> createTileRow(uint8_t lsb, uint8_t msb);
 
-    // More helper Debug Variables
-    //
     // Trace Deque
     std::deque<std::string> pcDeque;
     bool hasC505ran = false;
     //
     // Turn Step Mode On/Off
     bool stepMode = false;
-    //
-    // Breakpoints
-    std::vector<uint16_t> breakpoints;
-    int bpIndex = 0;
     //
     // Checks if pc is in a CALL
     bool inCALL = false;
@@ -101,31 +89,16 @@ public:
     // Handles the DMA Transfer into OAM
     void handleDMATransfer();
 
-    enum InterruptRegs
-    {
-        IE = 0xFFFF,
-        IF = 0xFF0F,
-    };
 
-    enum JoyPadReg
+    enum MiscRegs
     {
         JOYPAD = 0xFF00,
-    };
-
-    enum DIVReg
-    {
         DIV = 0xFF04,
-    };
-
-    enum BackgroundViewportRegs
-    {
         SCY = 0xFF42,
         SCX = 0xFF43,
-    };
-
-    enum PaletteReg
-    {
         PALETTE = 0xFF47,
+        IE = 0xFFFF,
+        IF = 0xFF0F,
     };
 
     void incrementDivReg();
@@ -179,18 +152,12 @@ private:
 
     void handlePCTrace();
     void handleInterrupts();
-    void handleSerialPortOutput();
     void handleDebugStepMode();
     
     // FOR JOYPAD
     uint8_t previousJoyPadState;
-    void checkInputs();
 
 public:
-
-    // Tells the cpu to set IME
-    bool ranEI = false;
-    bool instructionRanAfterEI = false;
 
     // True if CPU is halted
     bool halted = false;
@@ -236,7 +203,7 @@ public:
     // Debug totalFramesGenerated
     int totalFramesGenerated = 0;
 public:
-    // PPU
+    // FOR PPU
 
     uint16_t lcdc; // Address of LCDC FF40
     uint16_t stat; // Address of LCD Status Register FF41

@@ -9,8 +9,6 @@
 Gpu::Gpu() : vram(0x10000, 0)
 {
 	cyclesRan = 0;
-	line = 0;
-	mode = 0;
 	tileMapAddress = FIRST_MAP;
 
 	updateTiles(0xE4);
@@ -53,9 +51,25 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 		if (lyValue >= 0x90 && !cpuInVblank)
 		{
 			totalFramesGenerated++;
-			//std::cout << "TOTAL FRAMES GENERATED: " << totalFramesGenerated << std::endl;
 
 			frameReady = true;
+
+			while (backgroundTiles.size() < 1024)
+			{
+
+				if (!signedMode)
+				{
+					backgroundTiles.push_back(tileSet[vram[tileMapAddress++]]);
+				}
+				else
+				{
+					int offset = 256;
+
+					int tileIndex = (static_cast<int8_t>(vram[tileMapAddress++])) + offset;
+
+					backgroundTiles.push_back(tileSet[tileIndex]);
+				}
+			}
 
 			if (prevLcdcValue != lcdcValue)
 			{

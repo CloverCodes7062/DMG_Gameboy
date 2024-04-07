@@ -2,6 +2,7 @@
 #include "Cpu.h"
 #include <string>
 #include "Engine.h"
+#include "Scale.h"
 
 class gameboy 
 {
@@ -16,7 +17,7 @@ public:
 	void emulate(); // Starts emulation
 
 	// SDL Engine For Game View
-	Engine engine = Engine(256 * 3, 256 * 3); // CHANGE SCALE IN ENGINE AS WELL
+	Engine engine = Engine(256 * SCALE, 256 * SCALE);
 
 private:
 	Cpu& cpu;

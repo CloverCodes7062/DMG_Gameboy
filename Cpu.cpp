@@ -79,10 +79,12 @@ void Cpu::loadRom(std::vector<uint8_t> romData = std::vector<uint8_t>())
 		{
 			write(addr, rom[addr]);
 		}
+
+		bus.setRom(romData);
 	}
 	else
 	{
-		for (uint16_t addr = 0x0000; addr < rom.size(); addr++)
+		for (uint16_t addr = 0x0000; addr < 0x8000; addr++)
 		{
 			write(addr, rom[addr]);
 		}
@@ -204,12 +206,16 @@ void Cpu::runInstruction()
 		// HANDLES INTERRUPTS
 		handleInterrupts();
 
-		//handlePCTrace();
-
 		if (pc == 0x100 && !hasLoadedRom)
 		{
 			loadRom();
 			return;
+		}
+
+		
+		if (hasLoadedRom)
+		{
+			//handlePCTrace();
 		}
 
 		frameReady = gpu.frameReady;
@@ -318,15 +324,6 @@ void Cpu::handlePCTrace()
 	}
 }
 
-void Cpu::handleSerialPortOutput()
-{
-	if (read(0xFF01) != previousFF01)
-	{
-		FF01Changes.push_back(read(0xFF01));
-		previousFF01 = read(0xFF01);
-	}
-}
-
 void Cpu::incrementDivReg()
 {
 	bus.incrementDivReg();
@@ -382,6 +379,11 @@ void Cpu::printVram()
 	std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(bus.getRamSize()) << std::endl;
 }
 
+void Cpu::printRombank()
+{
+	bus.printRombank();
+}
+
 void Cpu::printStatus()
 {
 	std::cout << "Registers:" << std::endl;
@@ -414,54 +416,6 @@ void Cpu::printTrace()
 	}
 }
 
-void Cpu::printSerialPorts()
-{
-	std::cout << "0xFF02: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(0xFF02)) << std::endl << std::endl;
-	
-	for (size_t addr = 0; addr < FF01Changes.size(); addr++)
-	{
-		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(FF01Changes[addr]) << " ";
-	}
-
-	std::cout << std::endl;
-	std::cout << std::endl;
-
-	for (size_t addr = 0x9800; addr <= 0x9BFF; addr++)
-	{
-		std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(addr)) << " ";
-	}
-}
-
-void Cpu::writeStateToLog() {
-	std::ofstream logfile("C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\cpu_log.txt", std::ios_base::app); // Append mode
-
-	if (logfile.is_open()) {
-		logfile << "A:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.a)
-			<< " F:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.f)
-			<< " B:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.b)
-			<< " C:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.c)
-			<< " D:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.d)
-			<< " E:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.e)
-			<< " H:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.h)
-			<< " L:" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(registers.l)
-			<< " SP:" << std::hex << std::setw(4) << std::setfill('0') << stkp
-			<< " PC:" << std::hex << std::setw(4) << std::setfill('0') << pc
-			<< " PCMEM:";
-
-		for (uint16_t addr = pc; addr <= pc + 3; addr++) 
-		{
-			logfile << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(addr)) << ",";
-		}
-
-		logfile << std::endl;
-
-		logfile.close();
-	}
-	else {
-		std::cerr << "Error: Unable to open logfile for writing." << std::endl;
-	}
-}
-
 void Cpu::setTitle()
 {
 	std::string title;
@@ -471,8 +425,6 @@ void Cpu::setTitle()
 
 	romTitle = title;
 
-	std::cout << "ROM TYPE: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(rom[0x0147]) << std::endl;
-	bus.setRomType(rom[0x0147]);
 	return;
 }
 
@@ -480,23 +432,3 @@ std::string Cpu::getTitle()
 {
 	return romTitle;
 }
-
-/* PLACEHOLDER TO TEST FUNCTIONS
-	std::cout << "Registers:" << std::endl;
-
-	std::cout << "AF: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.af);
-	std::cout << " [ Z: " << isFlagSet(Zero) << ", N: " << isFlagSet(Subtraction) << ", H: " << isFlagSet(HalfCarry) << ", C: " << isFlagSet(Carry) << " ]" << std::endl;
-	std::cout << "BC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.bc) << std::endl;
-	std::cout << "DE: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.de) << std::endl;
-	std::cout << "HL: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(registers.hl) << std::endl;
-	std::cout << "PC: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(pc) << std::endl;
-	std::cout << "SP: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(stkp) << std::endl << std::endl;
-
-	std::cout << "LCDC: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(lcdc)) << std::endl;
-	std::cout << "STAT: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(stat)) << std::endl;
-	std::cout << "LY: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(ly)) << std::endl << std::endl;
-
-	std::cout << "Opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << std::endl;
-
-	setHasNotBroken(false);
-*/
