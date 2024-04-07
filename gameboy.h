@@ -17,7 +17,7 @@ public:
 	void emulate(); // Starts emulation
 
 	// SDL Engine For Game View
-	Engine engine = Engine(256 * SCALE, 256 * SCALE);
+	Engine engine = Engine(160 * SCALE, 144 * SCALE);
 
 private:
 	Cpu& cpu;

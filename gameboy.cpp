@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <SDL.h>
 #include <chrono>
+#include <thread>
 
 gameboy::gameboy(Cpu& cpu) : cpu(cpu)
 {
@@ -46,6 +47,7 @@ void gameboy::emulate()
     bool running = true;
     uint64_t lastDivIncTime = 0;
     uint64_t incrementInterval = 1000000 / 16384;
+
     while (running)
     {
         while (cpu.getHasNotBroken())

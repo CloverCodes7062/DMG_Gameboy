@@ -24,6 +24,8 @@ public:
 	void printRombank();
 
 	bool ram_enabled = false;
+	uint8_t rtc_register_select;
+	uint8_t ram_bank = 0x00;
 private:
 	std::vector<uint8_t> rom;
 	std::vector<uint8_t> ram;

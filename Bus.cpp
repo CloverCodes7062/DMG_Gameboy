@@ -69,6 +69,39 @@ void Bus::write(uint16_t addr, uint8_t data)
 				ram[addr] = data;
 			}
 		}
+		else if (romType == 0x03) // MBC1 + RAM + BATTERY
+		{
+			if (addr >= 0x0000 && addr <= 0x1FFF)
+			{
+				if (data == 0xA)
+				{
+					ram_enabled = true;
+				}
+				else
+				{
+					ram_enabled = false;
+				}
+			}
+			else if (addr >= 0x2000 && addr <= 0x3FFF)
+			{
+				uint8_t bankNumber = (data & 0x1F);
+
+				if (rom.size() == (256 * 1024))
+				{
+					bankNumber &= 0x0F;
+				}
+				rom_bank = (bankNumber == 0) ? 1 : bankNumber;
+			}
+			else if (addr >= 0x4000 && addr <= 0x5FFF)
+			{
+
+			}
+			else if (addr >= 0x8000)
+			{
+				ram[addr] = data;
+			}
+		}
+		
 	}
 	else
 	{
@@ -82,16 +115,36 @@ uint8_t Bus::read(uint16_t addr)
 	{
 		return ram[addr];
 	}
+
 	if (romType == 0x00)
 	{
 		return ram[addr];
 	}
+
 	if (romType == 0x01) // MBC1
 	{
 		if (addr >= 0x4000 && addr <= 0x7FFF)
 		{
 			int romBankOffset = (rom_bank == 0) ? 0x4000 : (rom_bank * 0x4000);
 			return rom[static_cast<int>((addr & 0x3FFF) + romBankOffset)];
+		}
+		else
+		{
+			return ram[addr];
+		}
+	}
+
+	if (romType == 0x03) // MBC1 + RAM + BATTERY
+	{
+		if (addr >= 0x4000 && addr <= 0x7FFF)
+		{
+			int romBankOffset = (rom_bank == 0) ? 0x4000 : (rom_bank * 0x4000);
+			return rom[static_cast<int>((addr & 0x3FFF) + romBankOffset)];
+		}
+		else if (addr >= 0xA000 && addr <= 0xBFFF)
+		{
+			int ramBankOffset = (ram_bank * 0x2000);
+			return rom[static_cast<int>((addr & 0x3FFF) + ramBankOffset)];
 		}
 		else
 		{
@@ -131,7 +184,11 @@ void Bus::incrementDivReg()
 void Bus::setRom(std::vector<uint8_t> romData)
 {
 	rom = romData;
-	romType = rom[0x0147];	
+	romType = rom[0x0147];
+
+	std::cout << "ROM TYPE 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(romType) << std::endl;
+	std::cout << "ROM SIZE 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(rom[0x0148]) << std::endl;
+	std::cout << "RAM SIZE 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(rom[0x0149]) << std::endl;
 }
 
 void Bus::printRombank()
