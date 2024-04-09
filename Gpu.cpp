@@ -10,7 +10,7 @@ Gpu::Gpu() : vram(0x10000, 0)
 {
 	cyclesRan = 0;
 	tileMapAddress = FIRST_MAP;
-
+	mode = 2;
 	updateTiles(0xE4);
 }
 
@@ -22,89 +22,136 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 {
 	cyclesRan += additionalCycles;
 
-	if (cyclesRan >= 456)
+	switch (mode)
 	{
-		lyValue++;
-		cyclesRan = 0;
-
-		if (lyValue % 8 == 0)
+		case 2:
 		{
-			updateTiles(palette);
-			for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
+			if (cyclesRan >= 80)
 			{
-				if (!signedMode)
-				{
-					backgroundTiles.push_back(tileSet[vram[addr]]);
-				}
-				else
-				{
-					int offset = 256;
-
-					int tileIndex = (static_cast<int8_t>(vram[addr])) + offset;
-
-					backgroundTiles.push_back(tileSet[tileIndex]);
-				}
+				cyclesRan = 0;
+				mode = 3;
 			}
-			tileMapAddress += 32;
+
+			break;
 		}
-
-		if (lyValue >= 0x90 && !cpuInVblank)
+		case 3:
 		{
-			totalFramesGenerated++;
-
-			frameReady = true;
-
-			while (backgroundTiles.size() < 1024)
+			if (cyclesRan >= 172)
 			{
+				cyclesRan = 0;
+				mode = 0;
 
-				if (!signedMode)
+				if (lyValue % 8 == 0)
 				{
-					backgroundTiles.push_back(tileSet[vram[tileMapAddress++]]);
-				}
-				else
-				{
-					int offset = 256;
+					updateTiles(palette);
+					for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
+					{
+						if (!signedMode)
+						{
+							backgroundTiles.push_back(tileSet[vram[addr]]);
+						}
+						else
+						{
+							int offset = 256;
 
-					int tileIndex = (static_cast<int8_t>(vram[tileMapAddress++])) + offset;
+							int tileIndex = (static_cast<int8_t>(vram[addr])) + offset;
 
-					backgroundTiles.push_back(tileSet[tileIndex]);
+							backgroundTiles.push_back(tileSet[tileIndex]);
+						}
+					}
+					tileMapAddress += 32;
 				}
 			}
 
-			if (prevLcdcValue != lcdcValue)
+			break;
+		}
+		case 0:
+		{
+			cyclesRan = 0;
+			lyValue++;
+
+			if (lyValue == 143 && !cpuInVblank)
 			{
-				prevLcdcValue = lcdcValue;
+				mode = 1;
+				//renderFrame();
+				totalFramesGenerated++;
 
-				if (lcdcValue & 0x10)
+				frameReady = true;
+
+				while (backgroundTiles.size() < 1024)
 				{
-					std::cout << "SIGNED MODE OFF" << std::endl;
-					signedMode = false;
+
+					if (!signedMode)
+					{
+						backgroundTiles.push_back(tileSet[vram[tileMapAddress++]]);
+					}
+					else
+					{
+						int offset = 256;
+
+						int tileIndex = (static_cast<int8_t>(vram[tileMapAddress++])) + offset;
+
+						backgroundTiles.push_back(tileSet[tileIndex]);
+					}
+				}
+
+				if (prevLcdcValue != lcdcValue)
+				{
+					prevLcdcValue = lcdcValue;
+
+					if (lcdcValue & 0x10)
+					{
+						std::cout << "SIGNED MODE OFF" << std::endl;
+						signedMode = false;
+					}
+					else
+					{
+						std::cout << "SIGNED MODE ON" << std::endl;
+						signedMode = true;
+					}
+
+					if (lcdcValue & 0x08)
+					{
+						std::cout << "USING SECOND TILE MAP" << std::endl;
+
+						tileMapAddress = SECOND_MAP;
+						lastMapUsed = SECOND_MAP;
+					}
+					else
+					{
+						std::cout << "USING FIRST TILE MAP" << std::endl;
+						tileMapAddress = FIRST_MAP;
+						lastMapUsed = FIRST_MAP;
+					}
 				}
 				else
 				{
-					std::cout << "SIGNED MODE ON" << std::endl;
-					signedMode = true;
+					tileMapAddress = lastMapUsed;
 				}
-
-				if (lcdcValue & 0x08)
-				{
-					std::cout << "USING SECOND TILE MAP" << std::endl;
-
-					tileMapAddress = SECOND_MAP;
-					lastMapUsed = SECOND_MAP;
-				}
-				else
-				{
-					std::cout << "USING FIRST TILE MAP" << std::endl;
-					tileMapAddress = FIRST_MAP;
-					lastMapUsed = FIRST_MAP;
-				}
+				gpuInVblank = true;
 			}
 			else
 			{
-				tileMapAddress = lastMapUsed;
+				mode = 2;
 			}
-			gpuInVblank = true;
+
+			break;
+		}
+		case 1:
+		{
+			if (cyclesRan >= 456)
+			{
+				cyclesRan = 0;
+				lyValue++;
+
+				if (lyValue > 153)
+				{
+					mode = 2;
+					lyValue = 0;
+				}
+			}
+
+			break;
 		}
 	}
 

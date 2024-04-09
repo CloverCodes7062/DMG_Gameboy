@@ -38,6 +38,7 @@ public:
 	bool frameReady = false;
 
 	bool is8x16Mode = false;
+	int mode;
 
 private:
 	bool gpuInVblank = false;
