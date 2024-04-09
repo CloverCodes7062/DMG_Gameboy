@@ -67,6 +67,7 @@ void gameboy::emulate()
                         case SDLK_s:
                         {
                             cpu.setHasNotBroken(false);
+                            break;
                         }
                         case SDLK_RETURN:
                         {
@@ -105,14 +106,14 @@ void gameboy::emulate()
                         }
                         case SDLK_RIGHT:
                         {
-                            cpu.writeToJoyPad(0x2E);
+                            cpu.writeToJoyPad(0b11101111 & 0b11111110);
                             break;
                         }
                     }
                 }
                 else if (event.type == SDL_KEYUP)
                 {
-                    cpu.writeToJoyPad(0x0F);
+                    cpu.writeToJoyPad(0xFF);
                 }
             }
 
@@ -133,7 +134,7 @@ void gameboy::emulate()
             {
                 cpu.setFrameReady(false);
 
-                engine.setBuffer(cpu.getBackgroundTiles(), cpu.getSprites(), cpu.getSCY(), cpu.getSCX());
+                engine.setBuffer(cpu.getBackgroundTiles(), cpu.getSprites(), cpu.getSCY(), cpu.getSCX(), cpu.getIs8x16Mode());
                 engine.render();
 
                 cpu.clearGpuBackgroundTiles();

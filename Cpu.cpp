@@ -130,7 +130,7 @@ void Cpu::handleDMATransfer()
 		gpu.vramWrite(addr, read(sourceAddr++));
 	}
 
-	gpu.updateSprites();
+	gpu.updateSprites(read(lcdc));
 }
 
 std::vector<std::vector<uint16_t>> Cpu::getBackgroundTiles()
@@ -156,6 +156,11 @@ uint8_t Cpu::getSCY()
 uint8_t Cpu::getSCX()
 {
 	return read(SCX);
+}
+
+bool Cpu::getIs8x16Mode()
+{
+	return gpu.is8x16Mode;
 }
 
 void Cpu::setFrameReady(bool value)

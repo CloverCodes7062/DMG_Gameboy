@@ -108,6 +108,7 @@ public:
     std::vector<std::vector<uint16_t>> getTileSet();
     uint8_t getSCY();
     uint8_t getSCX();
+    bool getIs8x16Mode();
 
     bool frameReady = false;
     void setFrameReady(bool value);

@@ -28,7 +28,7 @@ public:
 	// Background Tiles
 	std::vector<std::vector<uint16_t>> backgroundTiles;
 
-	void updateSprites(); // Updates Sprits with data from OAM
+	void updateSprites(uint8_t lcdcValue); // Updates Sprits with data from OAM
 
 	std::vector<Sprite> Sprites;
 
@@ -36,6 +36,8 @@ public:
 	bool InVblank();
 
 	bool frameReady = false;
+
+	bool is8x16Mode = false;
 
 private:
 	bool gpuInVblank = false;

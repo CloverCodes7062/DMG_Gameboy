@@ -190,12 +190,32 @@ void Gpu::vramWrite(uint16_t addr, uint8_t data)
 
 }
 
-void Gpu::updateSprites()
+void Gpu::updateSprites(uint8_t lcdcValue)
 {
 	Sprites.clear();
+
+	is8x16Mode = ((lcdcValue & 0x04) == 0x04);
+
 	for (size_t addr = 0xFE00; addr <= 0xFE9F; addr += 4)
 	{
-		Sprites.push_back(Sprite{ vram[addr], vram[addr + 1], tileSet[vram[addr + 2]], vram[addr + 3] });
+		uint8_t y = vram[addr];
+		uint8_t x = vram[addr + 1];
+		uint8_t tileIndex = vram[addr + 2];
+		uint8_t attributes = vram[addr + 3];
+
+		if (is8x16Mode)
+		{
+			tileIndex &= 0xFE;
+
+			std::vector<uint16_t> topTile = tileSet[tileIndex];
+			std::vector<uint16_t> bottomTile = tileSet[tileIndex | 0x01];
+
+			Sprites.push_back(Sprite{ y, x, std::make_pair(topTile, bottomTile), attributes});
+		}
+		else
+		{
+			Sprites.push_back(Sprite{ y, x, tileSet[tileIndex], attributes });
+		}
 	}
 }
 

@@ -23,7 +23,7 @@ Engine::~Engine() {
     SDL_Quit();
 }
 
-void Engine::setBuffer(std::vector<std::vector<uint16_t>> tileMap, std::vector<Sprite> Sprites, uint8_t SCY, uint8_t SCX)
+void Engine::setBuffer(std::vector<std::vector<uint16_t>> tileMap, std::vector<Sprite> Sprites, uint8_t SCY, uint8_t SCX, bool is8x16Mode)
 {
     int visibleWidth = 160;
     int visibleHeight = 144;
@@ -65,32 +65,47 @@ void Engine::setBuffer(std::vector<std::vector<uint16_t>> tileMap, std::vector<S
         }
     }
 
-    for (const auto& sprite : Sprites)
-    {
+    for (const auto& sprite : Sprites) {
         uint8_t priority = sprite.attributes & 0x80;
         uint8_t yFlip = sprite.attributes & 0x40;
         uint8_t xFlip = sprite.attributes & 0x20;
         uint8_t dmgPalette = sprite.attributes & 0x10;
 
-        for (int y = 0; y < 8; y++)
+        int tileHeight = 8;
+        if (is8x16Mode) {
+            tileHeight = 16;
+        }
+
+        std::vector<uint16_t> tiles;
+
+        if (is8x16Mode)
         {
-            uint16_t packedPixels = sprite.tile[yFlip ? 7 - y : y];
+            std::pair<std::vector<uint16_t>, std::vector<uint16_t>> tilePair = std::get<std::pair<std::vector<uint16_t>, std::vector<uint16_t>>>(sprite.tiles);
+            tiles.insert(tiles.end(), tilePair.first.begin(), tilePair.first.end());
+            tiles.insert(tiles.end(), tilePair.second.begin(), tilePair.second.end());
 
-            for (int x = 0; x < 8; x++)
-            {
-                int scaledX = (sprite.x - 8) + (xFlip ? (7 - x) : x);
-                int scaledY = (sprite.y - 16) + (yFlip ? (7 - y) : y);
+            //std::cout << "TILES SIZE: " << std::dec << tiles.size() << std::endl;
+        }
+        else
+        {
+            tiles = std::get<std::vector<uint16_t>>(sprite.tiles);
+        }
 
-                if (scaledX >= 0 && scaledX < visibleWidth && scaledY >= 0 && scaledY < visibleHeight)
-                {
+        for (int y = 0; y < tileHeight; y++) {
+
+            uint16_t packedPixels = tiles[yFlip ? (tileHeight - 1 - y) : y];
+
+            for (int x = 0; x < 8; x++) {
+                int adjustedX = (sprite.x - 8) + (xFlip ? (7 - x) : x);
+                int adjustedY = (sprite.y - 16) + (yFlip ? (tileHeight - 1 - y) : y);
+
+                if (adjustedX >= 0 && adjustedX < visibleWidth && adjustedY >= 0 && adjustedY < visibleHeight) {
                     uint8_t pixelValue = (packedPixels >> ((xFlip ? x : 7 - x) * 2)) & 0x03;
 
-                    int pixelBufferIndex = scaledY * visibleWidth + scaledX;
+                    int pixelBufferIndex = adjustedY * visibleWidth + adjustedX;
 
-                    if (pixelValue != 0) // For sprites, 0 is transparent (do not render it)
-                    {
-                        switch (pixelValue)
-                        {
+                    if (pixelValue != 0) { // For sprites, 0 is transparent (do not render it)
+                        switch (pixelValue) {
                         case 0:
                             pixelBuffer[pixelBufferIndex] = 0xFFFFFFFF; // White
                             break;
