@@ -153,6 +153,7 @@
     <ClInclude Include="Sprite.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\APPDATA\LOCAL\TEMP\TMP3CAF.TMP.CPP" />
     <ClCompile Include="Bus.cpp" />
     <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="Cpu.cpp" />

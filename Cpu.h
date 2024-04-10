@@ -114,6 +114,11 @@ public:
     void setFrameReady(bool value);
     void clearGpuBackgroundTiles();
 
+    std::vector<uint16_t> getTileRows();
+    void clearTileRows();
+
+    std::vector<uint32_t> getFrameBuffer();
+    void clearFrameBuffer();
     void writeToJoyPad(uint8_t data);
 
 private:

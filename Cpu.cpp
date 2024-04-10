@@ -98,7 +98,7 @@ void Cpu::write(uint16_t addr, uint8_t data)
 {
 	if (addr >= 0x8000 && addr <= 0x9FFF)
 	{
-		gpu.vramWrite(addr, data);
+		gpu.vramWrite(addr, data, read(PALETTE));
 	}
 
 	bus.write(addr, data);
@@ -127,10 +127,11 @@ void Cpu::handleDMATransfer()
 
 	for (size_t addr = 0xFE00; addr <= 0xFE9F; addr++)
 	{
-		gpu.vramWrite(addr, read(sourceAddr++));
+		gpu.vramWrite(addr, read(sourceAddr++), read(PALETTE));
 	}
 
-	gpu.updateSprites(read(lcdc));
+	gpu.is8x16Mode = (read(lcdc) & 0b100);
+	gpu.objectsEnabled = (read(lcdc) & 0b10);
 }
 
 std::vector<std::vector<uint16_t>> Cpu::getBackgroundTiles()
@@ -246,7 +247,7 @@ void Cpu::runInstruction()
 		}
 		//
 
-		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc), read(PALETTE));
+		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc), read(PALETTE), read(SCY), read(SCX));
 		write(ly, updatedLy);
 		cyclesRan = 0;
 		
@@ -334,6 +335,21 @@ void Cpu::handlePCTrace()
 void Cpu::incrementDivReg()
 {
 	bus.incrementDivReg();
+}
+
+std::vector<uint16_t> Cpu::getTileRows()
+{
+	return gpu.tileRows;
+}
+
+void Cpu::clearTileRows()
+{
+	gpu.tileRows.clear();
+}
+
+std::vector<uint32_t> Cpu::getFrameBuffer()
+{
+	return gpu.frameBuffer;
 }
 
 void Cpu::handleDebugStepMode()

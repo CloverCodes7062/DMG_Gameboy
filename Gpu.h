@@ -12,12 +12,11 @@ public:
 	Gpu();
 	~Gpu();
 
-	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette); // Updates our Gpu's state
+	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX); // Updates our Gpu's state
 
-	void updateTiles(uint8_t palette); // Updates all Tiles in Vram
 	void setVblank(bool newVblank); // Sets Vblank
 
-	void vramWrite(uint16_t addr, uint8_t data); // Writes to vram;
+	void vramWrite(uint16_t addr, uint8_t data, uint8_t palette); // Writes to vram;
 
 	// Vram
 	std::vector<uint8_t> vram;
@@ -39,11 +38,19 @@ public:
 
 	bool is8x16Mode = false;
 	int mode;
+	bool objectsEnabled = false;
+	std::vector<uint32_t> frameBuffer;
+
+	void renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette);
+	void renderFrame(uint8_t lcdcValue);
+	uint32_t backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t tileNumber);
+	
+	std::vector<uint16_t> tileRows;
 
 private:
 	bool gpuInVblank = false;
 	int cyclesRan;
-	uint16_t tileMapAddress;
+	uint16_t tileMapAddress = FIRST_MAP;
 	uint8_t prevLcdcValue = 0x91;
 
 	// Total Frames Generated

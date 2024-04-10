@@ -9,16 +9,15 @@
 Gpu::Gpu() : vram(0x10000, 0)
 {
 	cyclesRan = 0;
-	tileMapAddress = FIRST_MAP;
 	mode = 2;
-	updateTiles(0xE4);
+	frameBuffer.resize(160 * 144);
 }
 
 Gpu::~Gpu()
 {
 }
 
-uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette)
+uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX)
 {
 	cyclesRan += additionalCycles;
 
@@ -41,26 +40,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 				cyclesRan = 0;
 				mode = 0;
 
-				if (lyValue % 8 == 0)
-				{
-					updateTiles(palette);
-					for (size_t addr = tileMapAddress; addr < tileMapAddress + 32; ++addr)
-					{
-						if (!signedMode)
-						{
-							backgroundTiles.push_back(tileSet[vram[addr]]);
-						}
-						else
-						{
-							int offset = 256;
-
-							int tileIndex = (static_cast<int8_t>(vram[addr])) + offset;
-
-							backgroundTiles.push_back(tileSet[tileIndex]);
-						}
-					}
-					tileMapAddress += 32;
-				}
+				renderScanline(lyValue, lcdcValue, SCY, SCX, palette);
 			}
 
 			break;
@@ -70,65 +50,10 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 			cyclesRan = 0;
 			lyValue++;
 
-			if (lyValue == 143 && !cpuInVblank)
+			if (lyValue == 144 && !cpuInVblank)
 			{
 				mode = 1;
-				//renderFrame();
-				totalFramesGenerated++;
-
-				frameReady = true;
-
-				while (backgroundTiles.size() < 1024)
-				{
-
-					if (!signedMode)
-					{
-						backgroundTiles.push_back(tileSet[vram[tileMapAddress++]]);
-					}
-					else
-					{
-						int offset = 256;
-
-						int tileIndex = (static_cast<int8_t>(vram[tileMapAddress++])) + offset;
-
-						backgroundTiles.push_back(tileSet[tileIndex]);
-					}
-				}
-
-				if (prevLcdcValue != lcdcValue)
-				{
-					prevLcdcValue = lcdcValue;
-
-					if (lcdcValue & 0x10)
-					{
-						std::cout << "SIGNED MODE OFF" << std::endl;
-						signedMode = false;
-					}
-					else
-					{
-						std::cout << "SIGNED MODE ON" << std::endl;
-						signedMode = true;
-					}
-
-					if (lcdcValue & 0x08)
-					{
-						std::cout << "USING SECOND TILE MAP" << std::endl;
-
-						tileMapAddress = SECOND_MAP;
-						lastMapUsed = SECOND_MAP;
-					}
-					else
-					{
-						std::cout << "USING FIRST TILE MAP" << std::endl;
-						tileMapAddress = FIRST_MAP;
-						lastMapUsed = FIRST_MAP;
-					}
-				}
-				else
-				{
-					tileMapAddress = lastMapUsed;
-				}
-				gpuInVblank = true;
+				renderFrame(lcdcValue);
 			}
 			else
 			{
@@ -158,21 +83,27 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 	return lyValue;
 }
 
-void Gpu::updateTiles(uint8_t palette)
+void Gpu::vramWrite(uint16_t addr, uint8_t data, uint8_t palette)
 {
-	std::vector<std::vector<uint16_t>> tiles;
-	std::vector<uint16_t> tile;
+	vram[addr] = data;
+}
 
-	for (size_t i = 0x8000; i <= 0x97FF; i += 2)
+void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette)
+{
+	for (int x = 0; x < 160; x += 8)
 	{
+		auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x) & 0xFF) >> 3));
+		
+		uint8_t tileNumber = vram[tMapAddress];
+
+		uint32_t tileAddress = backgroundTileAddress(lyValue, SCY, tileNumber);
 
 		uint16_t tileRow = 0x0000;
-		
 		// CREATES A TILE ROW
 		for (int j = 7; j >= 0; j--)
 		{
-			uint8_t lsbBit = (vram[i] >> j) & 0x01; // vram[i] is the least significant byte, extract bits from it
-			uint8_t msbBit = (vram[i + 1] >> j) & 0x01; // vram[i + 1] is the most significant byte, extract bits from it
+			uint8_t lsbBit = (vram[tileAddress] >> j) & 0x01;
+			uint8_t msbBit = (vram[tileAddress + 1] >> j) & 0x01;
 
 			uint8_t paletteIndex = (msbBit << 1) | lsbBit;
 
@@ -215,84 +146,83 @@ void Gpu::updateTiles(uint8_t palette)
 			}
 
 			tileRow |= (color << (j * 2));
-		}
 
-		tile.push_back(tileRow);
 
-		// ONCE 8 TILE ROWS HAVE BEEN PUSHED TO TILE
-		// PUSH THE FINISHED TILE TO TILES AND THEN CLEAR TILE
-		if (tile.size() == 8)
-		{
-			tiles.push_back(tile);
-			tile.clear();
-		}
-	}
-
-	tileSet = tiles;
-}
-
-void Gpu::vramWrite(uint16_t addr, uint8_t data)
-{
-	vram[addr] = data;
-
-}
-
-void Gpu::updateSprites(uint8_t lcdcValue)
-{
-	Sprites.clear();
-
-	is8x16Mode = ((lcdcValue & 0x04) == 0x04);
-
-	for (size_t addr = 0xFE00; addr <= 0xFE9F; addr += 4)
-	{
-		uint8_t y = vram[addr];
-		uint8_t x = vram[addr + 1];
-		uint8_t tileIndex = vram[addr + 2];
-		uint8_t attributes = vram[addr + 3];
-
-		if (is8x16Mode)
-		{
-			tileIndex &= 0xFE;
-
-			std::vector<uint16_t> topTile = tileSet[tileIndex];
-			std::vector<uint16_t> bottomTile = tileSet[tileIndex | 0x01];
-
-			Sprites.push_back(Sprite{ y, x, std::make_pair(topTile, bottomTile), attributes});
-		}
-		else
-		{
-			Sprites.push_back(Sprite{ y, x, tileSet[tileIndex], attributes });
-		}
-	}
-}
-
-/*
-void Gpu::updateVramViewer()
-{
-	vramViewerEngine.setBuffer(tileSet);
-
-	bool running = true;
-	auto startTime = std::chrono::steady_clock::now();
-
-	while (running) {
-
-		auto currentTime = std::chrono::steady_clock::now();
-		auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count();
-		if (elapsedTime >= 1000 / 10000) {
-			running = false;
-		}
-
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
-				running = false;
+			switch (color)
+			{
+				case 0:
+					frameBuffer[lyValue * 160 + (x + j)] = 0xFFFFFFFF; // White
+					break;
+				case 1:
+					frameBuffer[lyValue * 160 + (x + j)] = 0xFFC0C0C0; // Light gray
+					break;
+				case 2:
+					frameBuffer[lyValue * 160 + (x + j)] = 0xFF808080; // Dark gray
+					break;
+				case 3:
+					frameBuffer[lyValue * 160 + (x + j)] = 0xFF000000; // Black
+					break;
+				default:
+					std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
+					frameBuffer[lyValue * 160 + (x + j)] = 0xFF000000; // Black
+					break;
 			}
 		}
 
-		vramViewerEngine.render();
+		tileRows.push_back(tileRow);
 	}
 }
-*/
+
+uint32_t Gpu::backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t tileNumber)
+{
+	uint32_t b12 = !signedMode ? 0 : ((tileNumber & 0x80) ^ 0x80) << 5;
+	uint32_t hbits = 0;
+	uint32_t ybits = (lyValue + SCY) & 7;
+
+	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1)) + hbits;
+}
+
+void Gpu::renderFrame(uint8_t lcdcValue)
+{
+	totalFramesGenerated++;
+
+	frameReady = true;
+
+	if (prevLcdcValue != lcdcValue)
+	{
+		prevLcdcValue = lcdcValue;
+
+		if (lcdcValue & 0x10)
+		{
+			std::cout << "SIGNED MODE OFF" << std::endl;
+			signedMode = false;
+		}
+		else
+		{
+			std::cout << "SIGNED MODE ON" << std::endl;
+			signedMode = true;
+		}
+
+		if (lcdcValue & 0x08)
+		{
+			std::cout << "USING SECOND TILE MAP" << std::endl;
+
+			tileMapAddress = SECOND_MAP;
+			lastMapUsed = SECOND_MAP;
+		}
+		else
+		{
+			std::cout << "USING FIRST TILE MAP" << std::endl;
+			tileMapAddress = FIRST_MAP;
+			lastMapUsed = FIRST_MAP;
+		}
+	}
+	else
+	{
+		tileMapAddress = lastMapUsed;
+	}
+	gpuInVblank = true;
+}
 
 bool Gpu::InVblank()
 {

@@ -134,10 +134,10 @@ void gameboy::emulate()
             {
                 cpu.setFrameReady(false);
 
-                engine.setBuffer(cpu.getBackgroundTiles(), cpu.getSprites(), cpu.getSCY(), cpu.getSCX(), cpu.getIs8x16Mode());
+                engine.setBuffer(cpu.getTileRows());
                 engine.render();
 
-                cpu.clearGpuBackgroundTiles();
+                cpu.clearTileRows();
             }
         }
         running = false;

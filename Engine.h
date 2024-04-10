@@ -11,6 +11,8 @@ public:
 
 	void setBuffer(std::vector<std::vector<uint16_t>> tileMap, std::vector<Sprite> Sprites, uint8_t SCY, uint8_t SCX, bool is8x16Mode); // RENDERS BG TILES AND SPRITES ON TOP
 	void setBuffer(std::vector<std::vector<uint16_t>> tiles); // RENDERS ONLY BG TILES FOR VRAM VIEWER
+	void setBuffer(std::vector<uint32_t> frameBuffer);
+	void setBuffer(std::vector<uint16_t> tileRows);
 	void render();
 
 	int frameCount = 0;

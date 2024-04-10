@@ -77,6 +77,9 @@
     <ClCompile Include="Cartridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\APPDATA\LOCAL\TEMP\TMP3CAF.TMP.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\DMG_Gameboy_TestRoms\cpu_instrs.gb">
