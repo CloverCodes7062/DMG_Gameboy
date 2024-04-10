@@ -24,40 +24,6 @@ Engine::~Engine() {
     SDL_Quit();
 }
 
-void Engine::setBuffer(std::vector<uint16_t> tileRows)
-{
-    int pixelBufferIndex = 0;
-    for (uint16_t tileRow : tileRows)
-    {
-        //std::cout << "TILE ROW: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(tileRow) << std::endl;
-        for (int i = 0; i < 8; i++)
-        {
-            uint8_t color = (tileRow >> ((7 - i) * 2)) & 3;
-
-            switch (color)
-            {
-            case 0:
-                pixelBuffer[pixelBufferIndex++] = 0xFFFFFFFF; // White
-                break;
-            case 1:
-                pixelBuffer[pixelBufferIndex++] = 0xFFC0C0C0; // Light gray
-                break;
-            case 2:
-                pixelBuffer[pixelBufferIndex++] = 0xFF808080; // Dark gray
-                break;
-            case 3:
-                pixelBuffer[pixelBufferIndex++] = 0xFF000000; // Black
-                break;
-            default:
-                std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT: " << std::dec << static_cast<int>(color) << std::endl;
-                //std::cout << "TILE ROW WITH BAD VALUES: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(tileRow) << std::endl;
-                pixelBuffer[pixelBufferIndex++] = 0xFF000000; // Black
-                break;
-            }
-        }
-    }
-}
-
 void Engine::setBuffer(std::vector<uint32_t> frameBuffer)
 {
     pixelBuffer = frameBuffer;

@@ -92,18 +92,18 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 {
 	for (int x = 0; x < 160; x += 8)
 	{
-		auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x) & 0xFF) >> 3));
+		auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x + SCX) & 0xFF) >> 3));
 		
 		uint8_t tileNumber = vram[tMapAddress];
 
 		uint32_t tileAddress = backgroundTileAddress(lyValue, SCY, tileNumber);
 
-		uint16_t tileRow = 0x0000;
-		// CREATES A TILE ROW
-		for (int j = 7; j >= 0; j--)
+		int frameBufferIndex = lyValue * 160 + x;
+
+		for (int j = 0; j < 8; j++)
 		{
-			uint8_t lsbBit = (vram[tileAddress] >> j) & 0x01;
-			uint8_t msbBit = (vram[tileAddress + 1] >> j) & 0x01;
+			uint8_t lsbBit = (vram[tileAddress] >> (7 - j)) & 0x01;
+			uint8_t msbBit = (vram[tileAddress + 1] >> (7 - j)) & 0x01;
 
 			uint8_t paletteIndex = (msbBit << 1) | lsbBit;
 
@@ -145,31 +145,26 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 				}
 			}
 
-			tileRow |= (color << (j * 2));
-
-
 			switch (color)
 			{
 				case 0:
-					frameBuffer[lyValue * 160 + (x + j)] = 0xFFFFFFFF; // White
+					frameBuffer[frameBufferIndex++] = 0xFFFFFFFF; // White
 					break;
 				case 1:
-					frameBuffer[lyValue * 160 + (x + j)] = 0xFFC0C0C0; // Light gray
+					frameBuffer[frameBufferIndex++] = 0xFFC0C0C0; // Light gray
 					break;
 				case 2:
-					frameBuffer[lyValue * 160 + (x + j)] = 0xFF808080; // Dark gray
+					frameBuffer[frameBufferIndex++] = 0xFF808080; // Dark gray
 					break;
 				case 3:
-					frameBuffer[lyValue * 160 + (x + j)] = 0xFF000000; // Black
+					frameBuffer[frameBufferIndex++] = 0xFF000000; // Black
 					break;
 				default:
 					std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
-					frameBuffer[lyValue * 160 + (x + j)] = 0xFF000000; // Black
+					frameBuffer[frameBufferIndex++] = 0xFF000000; // Black
 					break;
 			}
 		}
-
-		tileRows.push_back(tileRow);
 	}
 }
 
@@ -222,6 +217,33 @@ void Gpu::renderFrame(uint8_t lcdcValue)
 		tileMapAddress = lastMapUsed;
 	}
 	gpuInVblank = true;
+}
+
+void Gpu::updateSprites(uint8_t lcdcValue)
+{
+	Sprites.clear();
+
+	for (size_t addr = 0xFE00; addr <= 0xFE9F; addr += 4)
+	{
+		uint8_t y = vram[addr];
+		uint8_t x = vram[addr + 1];
+		uint8_t tileIndex = vram[addr + 2];
+		uint8_t attributes = vram[addr + 3];
+
+		if (is8x16Mode)
+		{
+			tileIndex &= 0xFE;
+
+			std::vector<uint16_t> topTile = tileSet[tileIndex];
+			std::vector<uint16_t> bottomTile = tileSet[tileIndex | 0x01];
+
+			Sprites.push_back(Sprite{ y, x, std::make_pair(topTile, bottomTile), attributes });
+		}
+		else
+		{
+			Sprites.push_back(Sprite{ y, x, tileSet[tileIndex], attributes });
+		}
+	}
 }
 
 bool Gpu::InVblank()

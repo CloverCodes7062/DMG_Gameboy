@@ -129,7 +129,7 @@ void Cpu::handleDMATransfer()
 	{
 		gpu.vramWrite(addr, read(sourceAddr++), read(PALETTE));
 	}
-
+	gpu.updateSprites(read(lcdc));
 	gpu.is8x16Mode = (read(lcdc) & 0b100);
 	gpu.objectsEnabled = (read(lcdc) & 0b10);
 }
@@ -218,7 +218,6 @@ void Cpu::runInstruction()
 			return;
 		}
 
-		
 		if (hasLoadedRom)
 		{
 			//handlePCTrace();
@@ -335,16 +334,6 @@ void Cpu::handlePCTrace()
 void Cpu::incrementDivReg()
 {
 	bus.incrementDivReg();
-}
-
-std::vector<uint16_t> Cpu::getTileRows()
-{
-	return gpu.tileRows;
-}
-
-void Cpu::clearTileRows()
-{
-	gpu.tileRows.clear();
 }
 
 std::vector<uint32_t> Cpu::getFrameBuffer()

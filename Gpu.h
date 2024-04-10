@@ -3,6 +3,7 @@
 #include "Engine.h"
 #include <array>
 #include "Sprite.h"
+#include <queue>
 
 class Cpu;
 
@@ -44,8 +45,7 @@ public:
 	void renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette);
 	void renderFrame(uint8_t lcdcValue);
 	uint32_t backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t tileNumber);
-	
-	std::vector<uint16_t> tileRows;
+	std::queue<int> OAMQueue;
 
 private:
 	bool gpuInVblank = false;
