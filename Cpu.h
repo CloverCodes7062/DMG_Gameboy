@@ -8,14 +8,18 @@
 #include "Engine.h"
 #include <string>
 #include "Gpu.h"
+#include "MMU.h"
 
 class CpuInstructions;
 
 class Cpu
 {
 public:
-	Cpu(Bus& bus, CpuInstructions& CpuInstructions);
+	Cpu(CpuInstructions& CpuInstructions, MMU& mmu, Mbc& mbc, std::vector<uint8_t>& rom);
 	~Cpu();
+
+    MMU& mmu;
+    Mbc& mbc;
 
 	// Write and read to ram stored on bus
 	void write(uint16_t addr, uint8_t data);
@@ -36,8 +40,7 @@ public:
 	// Run an instruction
 	void runInstruction();
 
-	// Load entire rom into rom vector for access
-	void loadRom(std::vector<uint8_t> romData);
+	void loadRom();
 
 	// Set Title
 	void setTitle();
@@ -86,6 +89,8 @@ public:
     // Loads the Boot Rom
     void loadBootRom();
 
+    void loadRom(std::vector<uint8_t>& rom);
+
     // Handles the DMA Transfer into OAM
     void handleDMATransfer();
 
@@ -122,8 +127,6 @@ public:
     void writeToJoyPad(uint8_t data);
 
 private:
-	// Bus that has the ram on it
-	Bus& bus;
 
     CpuInstructions& cpuInstructions;
 

@@ -9,7 +9,8 @@
 #include <fstream>
 #include <sstream>
 
-Cpu::Cpu(Bus& bus, CpuInstructions& cpuInstructions ) : bus(bus), cpuInstructions(cpuInstructions), pc(0x0000), stkp(0xFFFE)
+Cpu::Cpu(CpuInstructions& cpuInstructions, MMU& mmu, Mbc& mbc, std::vector<uint8_t>& rom ) 
+	: cpuInstructions(cpuInstructions), mmu(mmu), mbc(mbc), rom(rom), pc(0x0000), stkp(0xFFFE)
 {
 	registers.af = 0x0000;
 	registers.bc = 0x0000;
@@ -64,34 +65,15 @@ void Cpu::loadBootRom()
 	}
 }
 
-void Cpu::loadRom(std::vector<uint8_t> romData = std::vector<uint8_t>())
+void Cpu::loadRom()
 {
-	if (pc < 0x100)
+	for (uint16_t addr = 0x0000; addr < 0x8000; addr++)
 	{
-		rom = romData;
-
-		for (size_t addr = 0x0104; addr <= 0x0133; addr++)
-		{
-			write(addr, rom[addr]);
-		}
-
-		for (size_t addr = 0x0134; addr <= 0x014D; addr++)
-		{
-			write(addr, rom[addr]);
-		}
-
-		bus.setRom(romData);
+		write(addr, rom[addr]);
 	}
-	else
-	{
-		for (uint16_t addr = 0x0000; addr < 0x8000; addr++)
-		{
-			write(addr, rom[addr]);
-		}
-		hasLoadedRom = true;
-		bus.hasLoadedRom = true;
-	}
-	setTitle();
+
+	hasLoadedRom = true;
+	mbc.hasRomLoaded = true;
 }
 
 void Cpu::write(uint16_t addr, uint8_t data)
@@ -101,7 +83,7 @@ void Cpu::write(uint16_t addr, uint8_t data)
 		gpu.vramWrite(addr, data, read(PALETTE));
 	}
 
-	bus.write(addr, data);
+	mmu.write(addr, data);
 
 	if (addr == 0xFF46)
 	{
@@ -116,7 +98,7 @@ uint8_t Cpu::read(uint16_t addr)
 		return gpu.vram[addr];
 	}
 
-	return bus.read(addr);
+	return mmu.read(addr);
 }
 
 void Cpu::handleDMATransfer()
@@ -275,7 +257,7 @@ void Cpu::runInstruction()
 
 void Cpu::writeToJoyPad(uint8_t data)
 {
-	bus.writeToJoyPad(data);
+	mmu.writeToJoyPad(data);
 
 	uint8_t IFValue = read(IF);
 	IFValue |= (1 << 4);
@@ -359,67 +341,12 @@ void Cpu::handlePCTrace()
 
 void Cpu::incrementDivReg()
 {
-	bus.incrementDivReg();
+	mmu.incrementDivReg();
 }
 
 std::vector<uint32_t> Cpu::getFrameBuffer()
 {
 	return gpu.frameBuffer;
-}
-
-void Cpu::handleDebugStepMode()
-{
-	if (stepMode && !inCALL)
-	{
-		std::cout << "Press spacebar to execute the next instruction or 'r' to run to breakpoint..." << std::endl;
-		char key;
-		printStatus();
-		while (true) 
-		{
-			if (_kbhit()) 
-			{
-				key = _getch();
-				if (key == ' ') 
-				{
-					break;
-				}
-				else if (key == 'r') 
-				{
-					stepMode = false;
-					break;
-				}
-				else if (key == 's')
-				{
-					setHasNotBroken(false);
-					return;
-				}
-			}
-		}
-	}
-	if (_kbhit())
-	{
-		char keyPressed = _getch();
-		if (keyPressed == 's')
-		{
-			setHasNotBroken(false);
-			return;
-		}
-	}
-}
-
-void Cpu::printVram()
-{
-
-	for (uint16_t addr = 0x0000; addr <= 0x7FFF; addr++)
-	{
-		std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(read(addr)) << std::endl;
-	}
-	std::cout << "0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(bus.getRamSize()) << std::endl;
-}
-
-void Cpu::printRombank()
-{
-	bus.printRombank();
 }
 
 void Cpu::printStatus()
@@ -452,21 +379,4 @@ void Cpu::printTrace()
 	{
 		std::cout << pcDeque[addr] << std::endl;
 	}
-}
-
-void Cpu::setTitle()
-{
-	std::string title;
-	for (uint16_t addr = 0x0134; addr <= 0x0143; ++addr) {
-		title += static_cast<char>(read(addr));
-	}
-
-	romTitle = title;
-
-	return;
-}
-
-std::string Cpu::getTitle()
-{
-	return romTitle;
 }

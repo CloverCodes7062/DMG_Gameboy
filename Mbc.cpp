@@ -1,68 +1,138 @@
 #include "Mbc.h"
 #include <iostream>
 
-Mbc::Mbc(std::vector<uint8_t>* rom) : rom(rom) {
-
-}
-
-Mbc::Mbc(std::vector<uint8_t>* rom, std::vector<uint8_t>* ram, int rom_banks_count, int ram_banks_count)
-    : rom(rom), ram(ram), rom_banks_count(rom_banks_count), ram_banks_count(ram_banks_count) 
+Mbc::Mbc(std::vector<uint8_t>& passedRam, std::vector<uint8_t>& passedRom, int passedRomType, int passedRom_banks, int passedRam_banks)
+    : ram(passedRam), rom(passedRom), romType(passedRomType), rom_banks(passedRom_banks), ram_banks(passedRam_banks)
 {
 
 }
 
-uint8_t MBC1::read_byte(uint16_t address) 
+Mbc::~Mbc()
 {
-    if (address < 0x4000) 
-    {
-        int bank = mode * (ram_bank << 5) % rom_banks_count;
-        return (*rom)[bank * 0x4000 + address];
-    }
-    else if (address < 0x8000) 
-    {
-        int bank = ((ram_bank << 5) | rom_bank) % rom_banks_count;
-        return (*rom)[bank * 0x4000 + address - 0x4000];
-    }
-    else if (address >= 0xA000 && address < 0xC000) 
-    {
-        if (ram_enabled) 
-        {
-            int bank = mode * ram_bank % ram_banks_count;
-            return (*ram)[bank * 0x2000 + address - 0xA000];
-        }
-    }
-    return 0xFF;
 }
 
-void MBC1::write_byte(uint16_t address, uint8_t value) 
+uint8_t Mbc::read_byte(uint16_t addr)
 {
-    if (address < 0x2000) 
+    if (!hasRomLoaded)
     {
-        ram_enabled = (value & 0x0F) == 0x0A;
+        return ram[addr];
     }
-    else if (address < 0x4000) 
+
+    switch (romType)
     {
-        value &= 0x1F;
-        if (value == 0)
+        case 0:
+            return mbc0_read_byte(addr);
+        case 1:
+            return mbc1_read_byte(addr);
+        case 3:
+            return mbc1_read_byte(addr);
+        default:
+            std::cout << "UNKNOWN ROM TYPE: " << std::dec << romType << std::endl;
+            break;
+    }
+}
+
+void Mbc::write_byte(uint16_t addr, uint8_t data)
+{
+    if (!hasRomLoaded)
+    {
+        ram[addr] = data;
+        return;
+    }
+
+    switch (romType)
+    {
+        case 0:
+            mbc0_write_byte(addr, data);
+            break;
+        case 1:
+            mbc1_write_byte(addr, data);
+            break;
+        case 3:
+            mbc1_write_byte(addr, data);
+            break;
+        default:
+            std::cout << "INVALID ROM TYPE" << std::endl;
+            break;
+    }
+}
+
+void Mbc::mbc0_write_byte(uint16_t addr, uint8_t data)
+{
+    if (addr <= 0x8000)
+    {
+        return;
+    }
+    else
+    {
+        ram[addr] = data;
+    }
+}
+
+void Mbc::mbc1_write_byte(uint16_t addr, uint8_t data)
+{
+    if (addr >= 0x0000 && addr <= 0x1FFF)
+    {
+        if (data == 0xA)
         {
-            value = 1;
+            ram_enabled = true;
         }
-        rom_bank = value;
-    }
-    else if (address < 0x6000) 
-    {
-        ram_bank = value & 0x3;
-    }
-    else if (address < 0x8000) 
-    {
-        mode = value & 0x1;
-    }
-    else if (address >= 0xA000 && address < 0xC000) 
-    {
-        if (ram_enabled) 
+        else
         {
-            int bank = (ram_bank * mode) % ram_banks_count;
-            (*ram)[bank * 0x2000 + address - 0xA000] = value;
+            ram_enabled = false;
         }
     }
+    else if (addr >= 0x2000 && addr <= 0x3FFF)
+    {
+        uint8_t bankNumber = (data & 0x1F);
+
+        if (rom.size() == (256 * 1024))
+        {
+            bankNumber &= 0x0F;
+        }
+        rom_bank = (bankNumber == 0) ? 1 : bankNumber;
+    }
+    else if (addr >= 0x4000 && addr <= 0x5FFF)
+    {
+
+    }
+    else if (addr >= 0x8000)
+    {
+        ram[addr] = data;
+    }
+}
+
+uint8_t Mbc::mbc0_read_byte(uint16_t addr)
+{
+    return ram[addr];
+}
+
+uint8_t Mbc::mbc1_read_byte(uint16_t addr)
+{
+    if (addr >= 0x4000 && addr <= 0x7FFF)
+    {
+        int romBankOffset = (rom_bank == 0) ? 0x4000 : (rom_bank * 0x4000);
+        return rom[static_cast<int>((addr & 0x3FFF) + romBankOffset)];
+    }
+    else if (addr >= 0xA000 && addr <= 0xBFFF)
+    {
+        if (ram_enabled)
+        {
+            int ramBankOffset = (ram_bank * 0x2000);
+            return rom[static_cast<int>((addr & 0x3FFF) + ramBankOffset)];
+        }
+        else
+        {
+            return 0xFF;
+        }
+    }
+    else
+    {
+        return ram[addr];
+    }
+}
+
+void Mbc::setRomLoaded()
+{
+    hasRomLoaded = true;
 }

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -149,6 +149,7 @@
     <ClInclude Include="gameboy.h" />
     <ClInclude Include="Gpu.h" />
     <ClInclude Include="Mbc.h" />
+    <ClInclude Include="MMU.h" />
     <ClInclude Include="Scale.h" />
     <ClInclude Include="Sprite.h" />
   </ItemGroup>
@@ -163,6 +164,7 @@
     <ClCompile Include="Gpu.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mbc.cpp" />
+    <ClCompile Include="MMU.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\DMG_Gameboy_TestRoms\cpu_instrs.gb" />
