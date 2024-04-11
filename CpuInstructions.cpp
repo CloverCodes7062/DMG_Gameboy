@@ -5293,6 +5293,23 @@ void CpuInstructions::RST40(Cpu& cpu)
 	return;
 }
 
+void CpuInstructions::RST48(Cpu& cpu)
+{
+	cpu.halted = false;
+	cpu.inVblank = true;
+	cpu.ime = 0;
+
+	cpu.write(--cpu.stkp, (cpu.pc >> 8) & 0xFF);
+	cpu.write(--cpu.stkp, cpu.pc & 0xFF);
+
+	cpu.pc = 0x0048;
+
+	cpu.cycles += 12;
+	cpu.cyclesRan += 12;
+
+	return;
+}
+
 void CpuInstructions::RST60(Cpu& cpu)
 {
 	std::cout << "JOYPAD INPUT DETECTED" << std::endl;

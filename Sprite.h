@@ -6,6 +6,7 @@
 struct Sprite {
     uint8_t y;
     uint8_t x;
-    std::variant<std::vector<uint16_t>, std::pair<std::vector<uint16_t>, std::vector<uint16_t>>> tiles;
+    std::vector<uint16_t> topTile;
+    std::vector<uint16_t> bottomTile;
     uint8_t attributes;
 };

@@ -249,6 +249,18 @@ void Cpu::runInstruction()
 		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc), read(PALETTE), read(SCY), read(SCX));
 		write(ly, updatedLy);
 		cyclesRan = 0;
+
+		if (read(0xFF45) == read(0xFF44))
+		{
+			uint8_t statValue = read(0xFF41);
+			statValue |= 0b100;
+
+			write(0xFF41, statValue);
+
+			uint8_t IFValue = read(IF);
+			IFValue |= (1 << 1);
+			write(IF, IFValue);
+		}
 		
 		if (gpu.InVblank() && !inVblank)
 		{
@@ -289,6 +301,20 @@ void Cpu::handleInterrupts()
 			cpuInstructions.RST40(*this);
 		}
 
+		if (ifired & 0x02) // LCD
+		{
+			uint8_t IFvalue = read(IF);
+			IFvalue &= ~(0x02);
+			write(IF, IFvalue);
+
+			halted = false;
+
+			uint8_t STATvalue = read(0xFF41);
+			STATvalue &= ~(0x02);
+			write(0xFF41, STATvalue);
+
+			cpuInstructions.RST48(*this);
+		}
 		
 		if (ifired & 0x10) // JOYPAD
 		{

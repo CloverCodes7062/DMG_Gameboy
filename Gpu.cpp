@@ -90,6 +90,7 @@ void Gpu::vramWrite(uint16_t addr, uint8_t data, uint8_t palette)
 
 void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette)
 {
+	//std::cout << "SCANLINE SCX: " << std::dec << SCX << std::endl;
 	for (int x = 0; x < 160; x += 8)
 	{
 		auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x + SCX) & 0xFF) >> 3));
@@ -183,6 +184,73 @@ void Gpu::renderFrame(uint8_t lcdcValue)
 
 	frameReady = true;
 
+	int visibleWidth = 160;
+	int visibleHeight = 144;
+
+	for (const auto& sprite : Sprites) {
+		uint8_t priority = sprite.attributes & 0x80;
+		uint8_t yFlip = sprite.attributes & 0x40;
+		uint8_t xFlip = sprite.attributes & 0x20;
+		uint8_t dmgPalette = sprite.attributes & 0x10;
+
+		int tileHeight = 8;
+		if (is8x16Mode) {
+			tileHeight = 16;
+		}
+
+		std::vector<uint16_t> tiles;
+
+		if (is8x16Mode)
+		{
+			tiles.insert(tiles.end(), sprite.topTile.begin(), sprite.topTile.end());
+			tiles.insert(tiles.end(), sprite.bottomTile.begin(), sprite.bottomTile.end());
+
+			//std::cout << "TILES SIZE: " << std::dec << tiles.size() << std::endl;
+		}
+		else
+		{
+			tiles = sprite.topTile;
+		}
+
+		for (int y = 0; y < tileHeight; y++) {
+
+			uint16_t packedPixels = tiles[yFlip ? (tileHeight - 1 - y) : y];
+			for (int x = 0; x < 8; x++) {
+				int adjustedX = (sprite.x - 8) + (xFlip ? (7 - x) : x);
+				int adjustedY = (sprite.y - 16) + (yFlip ? (tileHeight - 1 - y) : y);
+
+				if (adjustedX >= 0 && adjustedX < visibleWidth && adjustedY >= 0 && adjustedY < visibleHeight) {
+					uint8_t pixelValue = (packedPixels >> ((xFlip ? x : 7 - x) * 2)) & 0x03;
+
+					int frameBufferIndex = adjustedY * visibleWidth + adjustedX;
+
+					if (pixelValue != 0) // Don't render 0 for spirtes, its transparent
+					{
+						switch (pixelValue)
+						{
+						case 0:
+							frameBuffer[frameBufferIndex] = 0xFFFFFFFF; // White
+							break;
+						case 1:
+							frameBuffer[frameBufferIndex] = 0xFFC0C0C0; // Light gray
+							break;
+						case 2:
+							frameBuffer[frameBufferIndex] = 0xFF808080; // Dark gray
+							break;
+						case 3:
+							frameBuffer[frameBufferIndex] = 0xFF000000; // Black
+							break;
+						default:
+							std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
+							frameBuffer[frameBufferIndex] = 0xFF000000; // Black
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if (prevLcdcValue != lcdcValue)
 	{
 		prevLcdcValue = lcdcValue;
@@ -234,14 +302,66 @@ void Gpu::updateSprites(uint8_t lcdcValue)
 		{
 			tileIndex &= 0xFE;
 
-			std::vector<uint16_t> topTile = tileSet[tileIndex];
-			std::vector<uint16_t> bottomTile = tileSet[tileIndex | 0x01];
+			std::vector<uint16_t> topTile;
+			std::vector<uint16_t> bottomTile;
 
-			Sprites.push_back(Sprite{ y, x, std::make_pair(topTile, bottomTile), attributes });
+			for (int i = 0x8000 + (tileIndex * 16); i < 0x8000 + (tileIndex * 16) + 16; i += 2)
+			{
+				uint16_t tileRow = 0x0000;
+				for (int j = 0; j < 8; j++)
+				{
+					uint8_t lsbBit = (vram[i] >> (7 - j)) & 0x01;
+					uint8_t msbBit = (vram[i + 1] >> (7 - j)) & 0x01;
+
+					uint8_t paletteIndex = (msbBit << 1) | lsbBit;
+					//std::cout << "PALETTE INDEX: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(paletteIndex) << std::endl;
+					tileRow |= (paletteIndex << (14 - j * 2));
+				}
+
+				//std::cout << "TILE ROW: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(tileRow) << std::endl;
+				topTile.push_back(tileRow);
+			}
+
+			for (int i = 0x8000 + ((tileIndex | 0x01) * 16); i < 0x8000 + ((tileIndex | 0x01) * 16) + 16; i += 2)
+			{
+				uint16_t tileRow = 0x0000;
+				for (int j = 0; j < 8; j++)
+				{
+					uint8_t lsbBit = (vram[i] >> (7 - j)) & 0x01;
+					uint8_t msbBit = (vram[i + 1] >> (7 - j)) & 0x01;
+
+					uint8_t paletteIndex = (msbBit << 1) | lsbBit;
+					//std::cout << "PALETTE INDEX: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(paletteIndex) << std::endl;
+					tileRow |= (paletteIndex << (14 - j * 2));
+					//std::cout << "TILE ROW: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(tileRow) << std::endl;
+				}
+
+				bottomTile.push_back(tileRow);
+			}
+
+			Sprites.push_back(Sprite{ y, x, topTile, bottomTile, attributes });
 		}
 		else
 		{
-			Sprites.push_back(Sprite{ y, x, tileSet[tileIndex], attributes });
+			std::vector<uint16_t> topTile;
+
+			for (int i = 0x8000 + (tileIndex * 16); i < 0x8000 + (tileIndex * 16) + 16; i += 2)
+			{
+				uint16_t tileRow = 0x0000;
+				for (int j = 0; j < 8; j++)
+				{
+					uint8_t lsbBit = (vram[i] >> (7 - j)) & 0x01;
+					uint8_t msbBit = (vram[i + 1] >> (7 - j)) & 0x01;
+
+					uint8_t paletteIndex = (msbBit << 1) | lsbBit;
+					//std::cout << "PALETTE INDEX: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(paletteIndex) << std::endl;
+					tileRow |= (paletteIndex << (14 - j * 2));
+				}
+				//std::cout << "TILE ROW: 0x" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(tileRow) << std::endl;
+				topTile.push_back(tileRow);
+			}
+
+			Sprites.push_back(Sprite{ y, x, topTile, topTile, attributes });
 		}
 	}
 }

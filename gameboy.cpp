@@ -48,97 +48,94 @@ void gameboy::emulate()
     uint64_t lastDivIncTime = 0;
     uint64_t incrementInterval = 1000000 / 16384;
 
-    while (running)
+    while (running && cpu.getHasNotBroken())
     {
-        while (cpu.getHasNotBroken())
+
+        // HANDLE INPUTS
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
         {
-            // HANDLE INPUTS
-            SDL_Event event;
-            while (SDL_PollEvent(&event))
+            if (event.type == SDL_QUIT)
             {
-                if (event.type == SDL_QUIT)
+                running = false;
+            }
+            else if (event.type == SDL_KEYDOWN)
+            {
+                switch (event.key.keysym.sym)
                 {
-                    running = false;
+                case SDLK_s:
+                {
+                    cpu.setHasNotBroken(false);
+                    break;
                 }
-                else if (event.type == SDL_KEYDOWN)
+                case SDLK_RETURN:
                 {
-                    switch (event.key.keysym.sym)
-                    {
-                        case SDLK_s:
-                        {
-                            cpu.setHasNotBroken(false);
-                            break;
-                        }
-                        case SDLK_RETURN:
-                        {
-                            cpu.writeToJoyPad(0x17);
-                            break;
-                        }
-                        case SDLK_TAB:
-                        {
-                            cpu.writeToJoyPad(0x1B);
-                            break;
-                        }
-                        case SDLK_b:
-                        {
-                            cpu.writeToJoyPad(0x1D);
-                            break;
-                        }
-                        case SDLK_a:
-                        {
-                            cpu.writeToJoyPad(0x1E);
-                            break;
-                        }
-                        case SDLK_DOWN:
-                        {
-                            cpu.writeToJoyPad(0x27);
-                            break;
-                        }
-                        case SDLK_UP:
-                        {
-                            cpu.writeToJoyPad(0x2B);
-                            break;
-                        }
-                        case SDLK_LEFT:
-                        {
-                            cpu.writeToJoyPad(0x2D);
-                            break;
-                        }
-                        case SDLK_RIGHT:
-                        {
-                            cpu.writeToJoyPad(0b11101111 & 0b11111110);
-                            break;
-                        }
-                    }
+                    cpu.writeToJoyPad(0x17);
+                    break;
                 }
-                else if (event.type == SDL_KEYUP)
+                case SDLK_TAB:
                 {
-                    cpu.writeToJoyPad(0xFF);
+                    cpu.writeToJoyPad(0x1B);
+                    break;
+                }
+                case SDLK_b:
+                {
+                    cpu.writeToJoyPad(0x1D);
+                    break;
+                }
+                case SDLK_a:
+                {
+                    cpu.writeToJoyPad(0x1E);
+                    break;
+                }
+                case SDLK_DOWN:
+                {
+                    cpu.writeToJoyPad(0x27);
+                    break;
+                }
+                case SDLK_UP:
+                {
+                    cpu.writeToJoyPad(0x2B);
+                    break;
+                }
+                case SDLK_LEFT:
+                {
+                    cpu.writeToJoyPad(0x2D);
+                    break;
+                }
+                case SDLK_RIGHT:
+                {
+                    cpu.writeToJoyPad(0b11101111 & 0b11111110);
+                    break;
+                }
                 }
             }
-
-            auto currentTime = std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::steady_clock::now().time_since_epoch()
-            ).count();
-
-            if ((currentTime - lastDivIncTime) >= incrementInterval)
+            else if (event.type == SDL_KEYUP)
             {
-                cpu.incrementDivReg();
-                lastDivIncTime = currentTime;
-            }
-            // RUN INSTRUCTION
-            cpu.runInstruction();
-
-            // RENDER WHEN NEEDED
-            if (cpu.frameReady)
-            {
-                cpu.setFrameReady(false);
-
-                engine.setBuffer(cpu.getFrameBuffer());
-                engine.render();
+                cpu.writeToJoyPad(0xFF);
             }
         }
-        running = false;
+
+        auto currentTime = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()
+        ).count();
+
+        if ((currentTime - lastDivIncTime) >= incrementInterval)
+        {
+            cpu.incrementDivReg();
+            lastDivIncTime = currentTime;
+        }
+        // RUN INSTRUCTION
+        cpu.runInstruction();
+
+        // RENDER WHEN NEEDED
+        if (cpu.frameReady)
+        {
+            cpu.setFrameReady(false);
+
+            engine.setBuffer(cpu.getFrameBuffer());
+            engine.render();
+        }
     }
 
     cpu.printStatus();

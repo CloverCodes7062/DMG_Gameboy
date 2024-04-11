@@ -18,6 +18,7 @@ public:
     // INTERRUPTS
     void RST40(Cpu& cpu);
     void RST60(Cpu& cpu);
+    void RST48(Cpu& cpu);
 
     // INSTRUCTION MODE ENUM
     enum InstructionMode
