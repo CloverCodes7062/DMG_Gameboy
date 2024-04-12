@@ -17,11 +17,6 @@ gameboy::~gameboy()
 
 }
 
-void gameboy::loadRom(const std::string& filepath)
-{
-    emulate();
-}
-
 void gameboy::emulate()
 {
     // Emulate until cpu reports an error
@@ -87,7 +82,7 @@ void gameboy::emulate()
                 }
                 case SDLK_RIGHT:
                 {
-                    cpu.writeToJoyPad(0b11101111 & 0b11111110);
+                    cpu.writeToJoyPad(0x3E);
                     break;
                 }
                 }

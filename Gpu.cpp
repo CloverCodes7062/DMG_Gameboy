@@ -149,16 +149,16 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 			switch (color)
 			{
 				case 0:
-					frameBuffer[frameBufferIndex++] = 0xFFFFFFFF; // White
+					frameBuffer[frameBufferIndex++] = 0xFFE8FCCC; // White
 					break;
 				case 1:
-					frameBuffer[frameBufferIndex++] = 0xFFC0C0C0; // Light gray
+					frameBuffer[frameBufferIndex++] = 0xFFACD490; // Light gray
 					break;
 				case 2:
-					frameBuffer[frameBufferIndex++] = 0xFF808080; // Dark gray
+					frameBuffer[frameBufferIndex++] = 0xFF548C70; // Dark gray
 					break;
 				case 3:
-					frameBuffer[frameBufferIndex++] = 0xFF000000; // Black
+					frameBuffer[frameBufferIndex++] = 0xFF142C38; // Black
 					break;
 				default:
 					std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
@@ -214,13 +214,13 @@ void Gpu::renderFrame(uint8_t lcdcValue)
 
 		for (int y = 0; y < tileHeight; y++) {
 
-			uint16_t packedPixels = tiles[yFlip ? (tileHeight - 1 - y) : y];
+			uint16_t packedPixels = tiles[yFlip ? tileHeight - y - 1 : y];
 			for (int x = 0; x < 8; x++) {
-				int adjustedX = (sprite.x - 8) + (xFlip ? (7 - x) : x);
-				int adjustedY = (sprite.y - 16) + (yFlip ? (tileHeight - 1 - y) : y);
+				int adjustedX = (sprite.x - 8) + (x);
+				int adjustedY = (sprite.y - 16) + (y);
 
 				if (adjustedX >= 0 && adjustedX < visibleWidth && adjustedY >= 0 && adjustedY < visibleHeight) {
-					uint8_t pixelValue = (packedPixels >> ((xFlip ? x : 7 - x) * 2)) & 0x03;
+					uint8_t pixelValue = (packedPixels >> (xFlip ? x * 2 : (7 - x) * 2)) & 0x03;
 
 					int frameBufferIndex = adjustedY * visibleWidth + adjustedX;
 
@@ -229,16 +229,16 @@ void Gpu::renderFrame(uint8_t lcdcValue)
 						switch (pixelValue)
 						{
 						case 0:
-							frameBuffer[frameBufferIndex] = 0xFFFFFFFF; // White
+							frameBuffer[frameBufferIndex] = 0xFFE8FCCC; // White
 							break;
 						case 1:
-							frameBuffer[frameBufferIndex] = 0xFFC0C0C0; // Light gray
+							frameBuffer[frameBufferIndex] = 0xFFE8FCCC; // Light gray
 							break;
 						case 2:
-							frameBuffer[frameBufferIndex] = 0xFF808080; // Dark gray
+							frameBuffer[frameBufferIndex] = 0xFF548C70; // Dark gray
 							break;
 						case 3:
-							frameBuffer[frameBufferIndex] = 0xFF000000; // Black
+							frameBuffer[frameBufferIndex] = 0xFF142C38; // Black
 							break;
 						default:
 							std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;

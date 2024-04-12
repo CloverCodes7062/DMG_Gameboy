@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 	Cpu cpu(cpuInstructions, mmu, mbc, rom);
 	gameboy gameboy(cpu);
 
-	gameboy.loadRom(rom_path);
+    gameboy.emulate();
 
 	return 0;
 }

@@ -25,9 +25,11 @@ public:
 
     void mbc0_write_byte(uint16_t addr, uint8_t data);
     void mbc1_write_byte(uint16_t addr, uint8_t data);
+    void mbc3_write_byte(uint16_t addr, uint8_t data);
 
     uint8_t mbc0_read_byte(uint16_t addr);
     uint8_t mbc1_read_byte(uint16_t addr);
+    uint8_t mbc3_read_byte(uint16_t addr);
 
     void setRomLoaded();
 };
