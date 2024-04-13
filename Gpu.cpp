@@ -17,7 +17,7 @@ Gpu::~Gpu()
 {
 }
 
-uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX)
+uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX, uint8_t WY, uint8_t WX)
 {
 	cyclesRan += additionalCycles;
 
@@ -25,6 +25,11 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 	{
 		case 2:
 		{
+			if (lyValue == WY)
+			{
+				windowLine = true;
+			}
+
 			if (cyclesRan >= 80)
 			{
 				cyclesRan = 0;
@@ -40,7 +45,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 				cyclesRan = 0;
 				mode = 0;
 
-				renderScanline(lyValue, lcdcValue, SCY, SCX, palette);
+				renderScanline(lyValue, lcdcValue, SCY, SCX, palette, WY, WX);
 			}
 
 			break;
@@ -54,6 +59,8 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 			{
 				mode = 1;
 				renderFrame(lcdcValue);
+				windowLine = false;
+				windowLineOffset = 0;
 			}
 			else
 			{
@@ -88,16 +95,51 @@ void Gpu::vramWrite(uint16_t addr, uint8_t data, uint8_t palette)
 	vram[addr] = data;
 }
 
-void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette)
+void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette, uint8_t WY, uint8_t WX)
 {
-	//std::cout << "SCANLINE SCX: " << std::dec << SCX << std::endl;
+
+	bool WXCondition = false;
 	for (int x = 0; x < 160; x += 8)
 	{
-		auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x + SCX) & 0xFF) >> 3));
-		
-		uint8_t tileNumber = vram[tMapAddress];
+		uint32_t tileAddress;
+		if (x + 7 == WX)
+		{
+			WXCondition = true;
+		}
 
-		uint32_t tileAddress = backgroundTileAddress(lyValue, SCY, tileNumber);
+		if (windowLine && (lcdcValue & 0b00100000) && WXCondition)
+		{
+			uint16_t tMapArea;
+
+			if (lcdcValue & 0b01000000)
+			{
+				tMapArea = 0x9C00;
+			}
+			else
+			{
+				tMapArea = 0x9800;
+			}
+
+			tMapArea |= (((windowLineOffset & 0xFF) >> 3) << 5);
+			tMapArea |= (x >> 3);
+
+			auto tMapAddress = tMapArea;
+
+			
+			uint8_t tileNumber = vram[tMapAddress];
+
+			tileAddress = windowTileAddress(windowLineOffset, tileNumber);
+		}
+		else
+		{
+
+			auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x + SCX) & 0xFF) >> 3));
+
+			uint8_t tileNumber = vram[tMapAddress];
+
+			tileAddress = backgroundTileAddress(lyValue, SCY, tileNumber);
+
+		}
 
 		int frameBufferIndex = lyValue * 160 + x;
 
@@ -167,6 +209,10 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 			}
 		}
 	}
+	if (windowLine && (lcdcValue & 0b00100000))
+	{
+		windowLineOffset += 1;
+	}
 }
 
 uint32_t Gpu::backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t tileNumber)
@@ -174,6 +220,15 @@ uint32_t Gpu::backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t tileNu
 	uint32_t b12 = !signedMode ? 0 : ((tileNumber & 0x80) ^ 0x80) << 5;
 	uint32_t hbits = 0;
 	uint32_t ybits = (lyValue + SCY) & 7;
+
+	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1)) + hbits;
+}
+
+uint32_t Gpu::windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber)
+{
+	uint32_t b12 = !signedMode ? 0 : ((tileNumber & 0x80) ^ 0x80) << 5;
+	uint32_t hbits = 0;
+	uint32_t ybits = (windowLineOffset) & 7;
 
 	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1)) + hbits;
 }

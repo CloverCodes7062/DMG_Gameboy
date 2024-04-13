@@ -104,6 +104,8 @@ public:
         PALETTE = 0xFF47,
         IE = 0xFFFF,
         IF = 0xFF0F,
+        WY = 0xFF4A,
+        WX = 0xFF4B,
     };
 
     void incrementDivReg();

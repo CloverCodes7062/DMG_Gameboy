@@ -228,7 +228,7 @@ void Cpu::runInstruction()
 		}
 		//
 
-		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc), read(PALETTE), read(SCY), read(SCX));
+		uint8_t updatedLy = gpu.update(cyclesRan, read(ly), inVblank, read(lcdc), read(PALETTE), read(SCY), read(SCX), read(WY), read(WX));
 		write(ly, updatedLy);
 		cyclesRan = 0;
 
