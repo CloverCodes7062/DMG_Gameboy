@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <chrono>
 
 class Mbc
 {
@@ -14,11 +15,12 @@ public:
     int romType;
     int rom_banks = 0;
     int ram_banks = 0;
-    int rom_bank = 0;
+    int rom_bank = 1;
     int ram_bank = 0;
 
     bool hasRomLoaded = false;
     bool ram_enabled = false;
+    bool mode = false;
 
     uint8_t read_byte(uint16_t addr);
     void write_byte(uint16_t addr, uint8_t value);

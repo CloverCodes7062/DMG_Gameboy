@@ -41,55 +41,67 @@ void gameboy::emulate()
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_s:
-                {
                     cpu.setHasNotBroken(false);
                     break;
-                }
                 case SDLK_RETURN:
-                {
-                    cpu.writeToJoyPad(0x17);
+                    cpu.key_press(JOYPAD_SELECT);
                     break;
-                }
                 case SDLK_TAB:
-                {
-                    cpu.writeToJoyPad(0x1B);
+                    cpu.key_press(JOYPAD_START);
                     break;
-                }
                 case SDLK_b:
-                {
-                    cpu.writeToJoyPad(0x1D);
+                    cpu.key_press(JOYPAD_B);
                     break;
-                }
                 case SDLK_a:
-                {
-                    cpu.writeToJoyPad(0x1E);
+                    cpu.key_press(JOYPAD_A);
                     break;
-                }
                 case SDLK_DOWN:
-                {
-                    cpu.writeToJoyPad(0x27);
+                    cpu.key_press(JOYPAD_DOWN);
                     break;
-                }
                 case SDLK_UP:
-                {
-                    cpu.writeToJoyPad(0x2B);
+                    cpu.key_press(JOYPAD_UP);
                     break;
-                }
                 case SDLK_LEFT:
-                {
-                    cpu.writeToJoyPad(0x2D);
+                    cpu.key_press(JOYPAD_LEFT);
                     break;
-                }
                 case SDLK_RIGHT:
-                {
-                    cpu.writeToJoyPad(0x3E);
+                    cpu.key_press(JOYPAD_RIGHT);
                     break;
                 }
-                }
+                
+                cpu.update_joypad_memory();
             }
             else if (event.type == SDL_KEYUP)
             {
-                cpu.writeToJoyPad(0xFF);
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_RETURN:
+                    cpu.key_release(JOYPAD_SELECT);
+                    break;
+                case SDLK_TAB:
+                    cpu.key_release(JOYPAD_START);
+                    break;
+                case SDLK_b:
+                    cpu.key_release(JOYPAD_B);
+                    break;
+                case SDLK_a:
+                    cpu.key_release(JOYPAD_A);
+                    break;
+                case SDLK_DOWN:
+                    cpu.key_release(JOYPAD_DOWN);
+                    break;
+                case SDLK_UP:
+                    cpu.key_release(JOYPAD_UP);
+                    break;
+                case SDLK_LEFT:
+                    cpu.key_release(JOYPAD_LEFT);
+                    break;
+                case SDLK_RIGHT:
+                    cpu.key_release(JOYPAD_RIGHT);
+                    break;
+                }
+
+                cpu.update_joypad_memory();
             }
         }
 

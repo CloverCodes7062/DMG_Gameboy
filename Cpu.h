@@ -9,6 +9,8 @@
 #include <string>
 #include "Gpu.h"
 #include "MMU.h"
+#include "JoyPadEnums.h"
+#include <chrono>
 
 class CpuInstructions;
 
@@ -108,6 +110,15 @@ public:
         WX = 0xFF4B,
     };
 
+    uint8_t joypad_state;
+    int joypad_cycles = 0;
+    void update_joypad_memory();
+
+    void key_press(JoyPadEnums key);
+    void key_release(JoyPadEnums key);
+    void check(int last_instr_cycles);
+
+
     void incrementDivReg();
 
     std::vector<std::vector<uint16_t>> getBackgroundTiles();
@@ -127,7 +138,6 @@ public:
     std::vector<uint32_t> getFrameBuffer();
     void clearFrameBuffer();
     void writeToJoyPad(uint8_t data);
-
 private:
 
     CpuInstructions& cpuInstructions;

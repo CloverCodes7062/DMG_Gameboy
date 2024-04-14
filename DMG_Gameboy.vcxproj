@@ -162,6 +162,7 @@
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="gameboy.cpp" />
     <ClCompile Include="Gpu.cpp" />
+    <ClCompile Include="JoyPadEnums.h" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mbc.cpp" />
     <ClCompile Include="MMU.cpp" />

@@ -339,6 +339,45 @@ void Cpu::handlePCTrace()
 	}
 }
 
+void Cpu::update_joypad_memory()
+{
+	if (joypad_state)
+	{
+		mmu.joypad = joypad_state;
+		joypad_state = 0;
+
+		uint8_t IFValue = read(IF);
+		IFValue |= (1 << 4);
+		write(IF, IFValue);
+		stopped = false;
+	}
+}
+
+void Cpu::key_press(JoyPadEnums key)
+{
+	joypad_state = mmu.joypad & ~(0xFF & key);
+}
+
+void Cpu::key_release(JoyPadEnums key)
+{
+	joypad_state = mmu.joypad | (0xFF & key);
+}
+
+void Cpu::check(int last_instr_cycles)
+{
+	joypad_cycles += cyclesRan;
+
+	if (stopped)
+	{
+		if (joypad_cycles < 65536)
+		{
+			return;
+		}
+
+		joypad_cycles -= 65536;
+	}
+}
+
 void Cpu::incrementDivReg()
 {
 	mmu.incrementDivReg();

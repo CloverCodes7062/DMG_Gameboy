@@ -124,7 +124,6 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 			tMapArea |= (x >> 3);
 
 			auto tMapAddress = tMapArea;
-
 			
 			uint8_t tileNumber = vram[tMapAddress];
 

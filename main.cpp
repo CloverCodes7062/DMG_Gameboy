@@ -7,11 +7,12 @@
 
 int main(int argc, char* argv[]) {
 
-	std::string rom_path = "C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\Kirby.gb";
+	std::string rom_path = "C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\Pokemon Red.gb";
 	//std::string rom_path = "C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\passed\\11-op a,(hl).gb";
 
 	std::vector<uint8_t> ram(0x10000, 0);
     std::vector<uint8_t> rom;
+
 
     FILE* file;
     if (fopen_s(&file, rom_path.c_str(), "rb") != 0) {
@@ -27,7 +28,6 @@ int main(int argc, char* argv[]) {
 
     rom = rom_data;
 
-    ram[0xFF00] = 0x0F;
     ram[0xFF0F] = 0xE0;
     ram[0xFFFF] = 0x00;
 
@@ -44,8 +44,6 @@ int main(int argc, char* argv[]) {
     int romSize = (32 * (1 << rom[0x0148]));
     int romBanks = romSize / 16;
     int ramBanks;
-
-    std::cout << "ROM TYPE: " << std::dec << romType << std::endl;
 
     switch (rom[0x149])
     {
@@ -71,6 +69,10 @@ int main(int argc, char* argv[]) {
             std::cout << "INVALID RAM SIZE" << std::endl;
             break;
     }
+
+    std::cout << "ROM TYPE: " << std::dec << romType << std::endl;
+    std::cout << "ROM SIZE: " << std::dec << romSize << std::endl;
+    std::cout << "RAM TYPE: " << std::dec << static_cast<int>(rom[0x0149]) << std::endl;
 
     Mbc mbc(ram, rom, romType, romBanks, ramBanks);
 	MMU mmu(mbc, ram);

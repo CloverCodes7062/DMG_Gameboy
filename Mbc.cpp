@@ -1,5 +1,8 @@
 #include "Mbc.h"
 #include <iostream>
+#include <chrono>
+#include <iomanip>
+#include <fstream>
 
 Mbc::Mbc(std::vector<uint8_t>& passedRam, std::vector<uint8_t>& passedRom, int passedRomType, int passedRom_banks, int passedRam_banks)
     : ram(passedRam), rom(passedRom), romType(passedRomType), rom_banks(passedRom_banks), ram_banks(passedRam_banks)
@@ -82,17 +85,22 @@ void Mbc::mbc0_write_byte(uint16_t addr, uint8_t data)
 
 uint8_t Mbc::mbc1_read_byte(uint16_t addr)
 {
+    if (addr < 0x4000)
+    {
+        int bank = mode * (ram_bank << 5) % rom_banks;
+        return rom[bank * 0x4000 + addr];
+    }
     if (addr >= 0x4000 && addr <= 0x7FFF)
     {
-        int romBankOffset = (rom_bank == 0) ? 0x4000 : (rom_bank * 0x4000);
-        return rom[static_cast<int>((addr & 0x3FFF) + romBankOffset)];
+        int bank = ((ram_bank << 5) | rom_bank) % rom_banks;
+        return rom[bank * 0x4000 + addr - 0x4000];
     }
-    else if (addr >= 0xA000 && addr <= 0xBFFF)
+    else if (addr >= 0xA000 && addr < 0xC000)
     {
         if (ram_enabled)
         {
-            int ramBankOffset = (ram_bank * 0x2000);
-            return rom[static_cast<int>((addr & 0x3FFF) + ramBankOffset)];
+            int bank = mode * ram_bank % ram_banks;
+            return ram[bank * 0x2000 + addr - 0xA000];
         }
         else
         {
@@ -109,28 +117,33 @@ void Mbc::mbc1_write_byte(uint16_t addr, uint8_t data)
 {
     if (addr >= 0x0000 && addr <= 0x1FFF)
     {
-        if (data == 0xA)
-        {
-            ram_enabled = true;
-        }
-        else
-        {
-            ram_enabled = false;
-        }
+        ram_enabled = (data & 0x0F) == 0x0A;
     }
     else if (addr >= 0x2000 && addr <= 0x3FFF)
     {
-        uint8_t bankNumber = (data & 0x1F);
+        data &= 0x1F;
 
-        if (rom.size() == (256 * 1024))
+        if (data == 0)
         {
-            bankNumber &= 0x0F;
+            data = 1;
         }
-        rom_bank = (bankNumber == 0) ? 1 : bankNumber;
+        rom_bank = data;
     }
     else if (addr >= 0x4000 && addr <= 0x5FFF)
     {
-
+        ram_bank = data & 0x3;
+    }
+    else if (addr >= 0x6000 && addr <= 0x7FFF)
+    {
+        mode = data & 0x01;
+    }
+    else if (addr >= 0xA000 && addr < 0xC000)
+    {
+        if (ram_enabled)
+        {
+            int bank = (ram_bank * mode) % ram_banks;
+            ram[bank * 0x2000 + addr - 0xA000] = data;
+        }
     }
     else if (addr >= 0x8000)
     {
@@ -144,65 +157,58 @@ uint8_t Mbc::mbc3_read_byte(uint16_t addr)
     {
         return rom[addr];
     }
-    else if (addr >= 0x4000 && addr <= 0x7FFF)
+    else if (addr < 0x8000)
     {
-        int romBankOffset = (rom_bank == 0) ? 0x4000 : (rom_bank * 0x4000);
-        return rom[static_cast<int>((addr & 0x3FFF) + romBankOffset)];
+        return rom[rom_bank * 0x4000 + addr - 0x4000];
     }
-    else if (addr >= 0xA000 && addr <= 0xBFFF)
+    else if (addr >= 0xA000 && addr < 0xC000)
     {
         if (ram_enabled)
         {
             if (ram_bank <= 0x03)
             {
-                int ramBankOffset = ram_bank * 0x2000;
-                return rom[ramBankOffset + (addr & 0x1FFF)];
+                return ram[ram_bank * 0x2000 + addr - 0xA000];
             }
-            else
-            {
-                return 0xFF;
-            }
-        }
-        else
-        {
-            return 0xFF;
         }
     }
     else
     {
         return ram[addr];
     }
+
+    return 0;
 }
 
 void Mbc::mbc3_write_byte(uint16_t addr, uint8_t data)
 {
-    if (addr >= 0x0000 && addr <= 0x1FFF) {
-        // Enable/disable RAM and RTC registers
-        ram_enabled = ((data & 0x0F) == 0x0A);
-    }
-    else if (addr >= 0x2000 && addr <= 0x3FFF) 
+    if (addr < 0x2000)
     {
-        // Write to ROM bank number register
-        rom_bank = (data & 0x7F);
+        ram_enabled = (data & 0x0F) == 0x0A;
     }
-    else if (addr >= 0x4000 && addr <= 0x5FFF) 
+    else if (addr < 0x4000)
     {
-        // Write to RAM bank number or RTC register select
-        ram_bank = data & 0x0F;
-        // Implement writing to RTC registers
-    }
-    else if (addr >= 0x6000 && addr <= 0x7FFF) 
-    {
-        // Latch clock data
-    }
-    else if (addr >= 0xA000 && addr <= 0xBFFF) 
-    {
-        if (ram_enabled && ram_bank <= 0x03)
+        rom_bank = data & 0x7F;
+        if (rom_bank == 0x00)
         {
-            int ramBankOffset = ram_bank * 0x2000;
-            rom[ramBankOffset + (addr & 0x1FFF)] = data;
+            rom_bank = 0x01;
         }
     }
+    else if (addr < 0x6000)
+    {
+        ram_bank = data & 0x0F;
+    }
+    else if (addr >= 0xA000 && addr < 0xC000)
+    {
+        if (ram_enabled)
+        {
+            ram[ram_bank * 0x2000 + addr - 0xA000] = data;
+        }
+    }
+    else
+    {
+        ram[addr] = data;
+    }
+
 }
 
 void Mbc::setRomLoaded()
