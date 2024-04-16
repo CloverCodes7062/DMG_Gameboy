@@ -44,10 +44,11 @@ public:
 
 	void renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette, uint8_t WY, uint8_t WX);
 	void renderFrame(uint8_t lcdcValue);
-	uint32_t backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t tileNumber);
+	uint32_t backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t SCX, uint8_t tileNumber);
 	uint32_t windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber);
+	void OAMScan(uint8_t lyValue, uint8_t lcdcValue);
 
-	std::queue<int> OAMQueue;
+	std::vector<uint16_t> OAMScanObjs;
 
 private:
 	bool gpuInVblank = false;
@@ -70,5 +71,6 @@ private:
 	bool windowSignedMode = false;
 	bool windowLine = false;
 	int windowLineOffset = 0;
+	int objTileHeight = 8;
 };
 

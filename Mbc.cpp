@@ -3,11 +3,33 @@
 #include <chrono>
 #include <iomanip>
 #include <fstream>
+#include <chrono>
 
 Mbc::Mbc(std::vector<uint8_t>& passedRam, std::vector<uint8_t>& passedRom, int passedRomType, int passedRom_banks, int passedRam_banks)
     : ram(passedRam), rom(passedRom), romType(passedRomType), rom_banks(passedRom_banks), ram_banks(passedRam_banks)
 {
+    cartRam.resize(ram_banks * 0x2000);
 
+    
+    std::string savFilePath = "C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\Pokemon Red.sav";
+    std::ifstream saveFile(savFilePath, std::ios::binary);
+
+    if (saveFile.is_open())
+    {
+        saveFile.seekg(0, std::ios::end);
+        std::streampos fileSize = saveFile.tellg();
+        saveFile.seekg(0, std::ios::beg);
+
+        if (fileSize > 0)
+        {
+            std::cout << "LOADING FROM SAV FILE INTO CART RAM" << std::endl;
+
+            saveFile.read(reinterpret_cast<char*>(cartRam.data()), fileSize);
+        }
+
+        saveFile.close();
+    }
+    
 }
 
 Mbc::~Mbc()
@@ -23,17 +45,11 @@ uint8_t Mbc::read_byte(uint16_t addr)
 
     switch (romType)
     {
-        case 0x00:
-            return mbc0_read_byte(addr);
-        case 0x01:
-            return mbc1_read_byte(addr);
-        case 0x03:
-            return mbc1_read_byte(addr);
-        case 0x13:
-            return mbc3_read_byte(addr);
-        default:
-            std::cout << "UNKNOWN ROM TYPE: " << std::dec << romType << std::endl;
-            break;
+        case 0x00: return mbc0_read_byte(addr);
+        case 0x01: return mbc1_read_byte(addr);
+        case 0x03: return mbc1_read_byte(addr);
+        case 0x13: return mbc3_read_byte(addr);
+        default: std::cout << "UNKNOWN ROM TYPE: " << std::dec << romType << std::endl; break;
     }
 }
 
@@ -47,21 +63,11 @@ void Mbc::write_byte(uint16_t addr, uint8_t data)
 
     switch (romType)
     {
-        case 0x00:
-            mbc0_write_byte(addr, data);
-            break;
-        case 0x01:
-            mbc1_write_byte(addr, data);
-            break;
-        case 0x03:
-            mbc1_write_byte(addr, data);
-            break;
-        case 0x13:
-            mbc3_write_byte(addr, data);
-            break;
-        default:
-            std::cout << "INVALID ROM TYPE" << std::endl;
-            break;
+        case 0x00: mbc0_write_byte(addr, data); return;
+        case 0x01: mbc1_write_byte(addr, data); return;
+        case 0x03: mbc1_write_byte(addr, data); return;
+        case 0x13: mbc3_write_byte(addr, data); return;
+        default: std::cout << "INVALID ROM TYPE" << std::endl; break;
     }
 }
 
@@ -100,7 +106,7 @@ uint8_t Mbc::mbc1_read_byte(uint16_t addr)
         if (ram_enabled)
         {
             int bank = mode * ram_bank % ram_banks;
-            return ram[bank * 0x2000 + addr - 0xA000];
+            return cartRam[bank * 0x2000 + addr - 0xA000];
         }
         else
         {
@@ -142,7 +148,7 @@ void Mbc::mbc1_write_byte(uint16_t addr, uint8_t data)
         if (ram_enabled)
         {
             int bank = (ram_bank * mode) % ram_banks;
-            ram[bank * 0x2000 + addr - 0xA000] = data;
+            cartRam[bank * 0x2000 + addr - 0xA000] = data;
         }
     }
     else if (addr >= 0x8000)
@@ -167,7 +173,7 @@ uint8_t Mbc::mbc3_read_byte(uint16_t addr)
         {
             if (ram_bank <= 0x03)
             {
-                return ram[ram_bank * 0x2000 + addr - 0xA000];
+                return cartRam[ram_bank * 0x2000 + addr - 0xA000];
             }
         }
     }
@@ -183,7 +189,7 @@ void Mbc::mbc3_write_byte(uint16_t addr, uint8_t data)
 {
     if (addr < 0x2000)
     {
-        ram_enabled = (data & 0x0F) == 0x0A;
+        ram_enabled = ((data & 0x0F) == 0x0A);
     }
     else if (addr < 0x4000)
     {
@@ -201,7 +207,10 @@ void Mbc::mbc3_write_byte(uint16_t addr, uint8_t data)
     {
         if (ram_enabled)
         {
-            ram[ram_bank * 0x2000 + addr - 0xA000] = data;
+            if (ram_bank <= 0x03)
+            {
+                cartRam[ram_bank * 0x2000 + addr - 0xA000] = data;
+            }
         }
     }
     else
@@ -209,6 +218,40 @@ void Mbc::mbc3_write_byte(uint16_t addr, uint8_t data)
         ram[addr] = data;
     }
 
+    dumpCartRam();
+}
+
+void Mbc::dumpCartRam()
+{
+    std::string savFilePath = "C:\\Users\\Stacy\\Desktop\\cppProjects\\DMG_Gameboy_TestRoms\\Pokemon Red.sav";
+
+    auto currentTime = std::chrono::steady_clock::now();
+    auto timeDifference = std::chrono::duration_cast<std::chrono::minutes>(currentTime - lastDumpTime);
+
+    if (timeDifference.count() < 1)
+    {
+        return;
+    }
+
+    std::cout << "DUMPING CART RAM TO SAV FILE" << std::endl;
+
+    std::ofstream saveFile(savFilePath, std::ios::binary);
+
+    if (!saveFile.is_open()) {
+        std::cerr << "Failed to open save file for writing." << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < cartRam.size(); i++)
+    {
+        saveFile.write(reinterpret_cast<const char*>(&cartRam[i]), sizeof(uint8_t));
+    }
+
+    saveFile.close();
+
+    lastDumpTime = currentTime;
+
+    std::cout << "DONE DUMPING CART RAM TO SAV FILE" << std::endl;
 }
 
 void Mbc::setRomLoaded()

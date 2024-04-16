@@ -40,9 +40,6 @@ void gameboy::emulate()
             {
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_s:
-                    cpu.setHasNotBroken(false);
-                    break;
                 case SDLK_RETURN:
                     cpu.key_press(JOYPAD_SELECT);
                     break;
@@ -124,6 +121,8 @@ void gameboy::emulate()
 
             engine.setBuffer(cpu.getFrameBuffer());
             engine.render();
+
+            SDL_Delay(8);
         }
     }
 

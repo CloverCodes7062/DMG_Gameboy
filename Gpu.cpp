@@ -32,6 +32,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 
 			if (cyclesRan >= 80)
 			{
+				//OAMScan(lyValue, lcdcValue);
 				cyclesRan = 0;
 				mode = 3;
 			}
@@ -98,8 +99,14 @@ void Gpu::vramWrite(uint16_t addr, uint8_t data, uint8_t palette)
 void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette, uint8_t WY, uint8_t WX)
 {
 
+	if (lyValue > 0x90)
+	{
+		return;
+	}
+
 	bool WXCondition = false;
-	for (int x = 0; x < 160; x += 8)
+	int x = 0;
+	while (x < 160)
 	{
 		uint32_t tileAddress;
 		if (x + 7 == WX)
@@ -131,64 +138,40 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 		}
 		else
 		{
-
 			auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x + SCX) & 0xFF) >> 3));
 
 			uint8_t tileNumber = vram[tMapAddress];
 
-			tileAddress = backgroundTileAddress(lyValue, SCY, tileNumber);
+			tileAddress = backgroundTileAddress(lyValue, SCY, SCX, tileNumber);
 
 		}
 
 		int frameBufferIndex = lyValue * 160 + x;
 
-		for (int j = 0; j < 8; j++)
+		int startingJ = 0;
+		if (x == 0)
 		{
+			startingJ = (SCX % 8);
+		}
+
+		for (int j = startingJ; j < 8; j++)
+		{
+			if (x > 160)
+			{
+				continue;
+			}
+
 			uint8_t lsbBit = (vram[tileAddress] >> (7 - j)) & 0x01;
 			uint8_t msbBit = (vram[tileAddress + 1] >> (7 - j)) & 0x01;
 
 			uint8_t paletteIndex = (msbBit << 1) | lsbBit;
 
-			uint8_t color3 = (palette >> 6) & 0x03;
-			uint8_t color2 = (palette >> 4) & 0x03;
-			uint8_t color1 = (palette >> 2) & 0x03;
-			uint8_t color0 = palette & 0x03;
+			uint8_t color = (palette >> (paletteIndex * 2)) & 0x03;
 
-			uint8_t color;
-
-			switch (paletteIndex)
+			if (frameBufferIndex < (160 * 144))
 			{
-				case 0:
+				switch (color)
 				{
-					color = color0;
-					break;
-				}
-				case 1:
-				{
-					color = color1;
-					break;
-				}
-				case 2:
-				{
-					color = color2;
-					break;
-				}
-				case 3:
-				{
-					color = color3;
-					break;
-				}
-				default:
-				{
-					color = color3;
-					std::cout << "INVALID PALETTE INDEX USING COLOR3 AS PLACEHOLDER" << std::endl;
-
-					break;
-				}
-			}
-
-			switch (color)
-			{
 				case 0:
 					frameBuffer[frameBufferIndex++] = 0xFFE8FCCC; // White
 					break;
@@ -205,22 +188,33 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 					std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
 					frameBuffer[frameBufferIndex++] = 0xFF000000; // Black
 					break;
+				}
 			}
 		}
+
+		if ((SCX % 8) != 0 && x == 0)
+		{
+			x += 8 - (SCX % 8);
+		}
+		else
+		{
+			x += 8;
+		}
 	}
+
 	if (windowLine && (lcdcValue & 0b00100000))
 	{
 		windowLineOffset += 1;
 	}
 }
 
-uint32_t Gpu::backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t tileNumber)
+uint32_t Gpu::backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t SCX, uint8_t tileNumber)
 {
 	uint32_t b12 = !signedMode ? 0 : ((tileNumber & 0x80) ^ 0x80) << 5;
 	uint32_t hbits = 0;
 	uint32_t ybits = (lyValue + SCY) & 7;
 
-	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1)) + hbits;
+	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1));
 }
 
 uint32_t Gpu::windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber)
@@ -339,6 +333,26 @@ void Gpu::renderFrame(uint8_t lcdcValue)
 		tileMapAddress = lastMapUsed;
 	}
 	gpuInVblank = true;
+}
+
+void Gpu::OAMScan(uint8_t lyValue, uint8_t lcdcValue)
+{
+	objTileHeight = 8;
+
+	if (lcdcValue & 0b00000100)
+	{
+		objTileHeight = 16;
+	}
+
+	OAMScanObjs.clear();
+
+	for (uint16_t addr = 0xFE00; addr <= 0xFE9F; addr += 4)
+	{
+		if (vram[addr] <= lyValue && lyValue < (vram[addr] + objTileHeight) && OAMScanObjs.size() < 10)
+		{
+			OAMScanObjs.push_back(addr);
+		}
+	}
 }
 
 void Gpu::updateSprites(uint8_t lcdcValue)

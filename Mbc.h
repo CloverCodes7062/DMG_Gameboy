@@ -11,6 +11,7 @@ public:
 
     std::vector<uint8_t>& rom;
     std::vector<uint8_t>& ram;
+    std::vector<uint8_t> cartRam;
 
     int romType;
     int rom_banks = 0;
@@ -34,5 +35,7 @@ public:
     uint8_t mbc3_read_byte(uint16_t addr);
 
     void setRomLoaded();
+    void dumpCartRam();
+    std::chrono::steady_clock::time_point lastDumpTime;
 };
 
