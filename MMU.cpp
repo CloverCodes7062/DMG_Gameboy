@@ -36,6 +36,11 @@ uint8_t MMU::read(uint16_t addr)
 
 void MMU::write(uint16_t addr, uint8_t data)
 {
+	if (addr >= 0x8000 && addr <= 0x9FFF)
+	{
+		gpu->vramWrite(addr, data);
+	}
+
 	if (addr == 0xFF04)
 	{
 		ram[0xFF04] = 0x00;
@@ -64,9 +69,19 @@ void MMU::incrementDivReg()
 	ram[0xFF04] = divValue;
 }
 
-void MMU::writeToJoyPad(uint8_t data)
+void MMU::handleDMATransfer()
 {
-	ram[0xFF00] = data;
+	uint8_t sourceOffset = read(0xFF46);
+
+	uint16_t sourceAddr = (sourceOffset << 8) | 0x00;
+
+	for (size_t addr = 0xFE00; addr <= 0xFE9F; addr++)
+	{
+		gpu->vramWrite(addr, read(sourceAddr++));
+	}
+	gpu->updateSprites(read(LCDC));
+	gpu->is8x16Mode = (read(LCDC) & 0b100);
+	gpu->objectsEnabled = (read(LCDC) & 0b10);
 }
 
 void MMU::setRomLoaded()

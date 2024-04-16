@@ -51,6 +51,9 @@
     <ClInclude Include="MMU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MiscRegs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="gameboy.cpp">

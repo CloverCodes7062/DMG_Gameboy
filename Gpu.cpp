@@ -17,7 +17,7 @@ Gpu::~Gpu()
 {
 }
 
-uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX, uint8_t WY, uint8_t WX, uint8_t OBPO, uint8_t OBP1)
+uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank)
 {
 	cyclesRan += additionalCycles;
 
@@ -25,7 +25,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 	{
 		case 2:
 		{
-			if (lyValue == WY)
+			if (lyValue == mmu->read(MiscRegs::WY))
 			{
 				windowLine = true;
 			}
@@ -46,7 +46,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 				cyclesRan = 0;
 				mode = 0;
 
-				renderScanline(lyValue, lcdcValue, SCY, SCX, palette, WY, WX);
+				renderScanline(lyValue);
 			}
 
 			break;
@@ -59,7 +59,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 			if (lyValue == 144 && !cpuInVblank)
 			{
 				mode = 1;
-				renderFrame(lcdcValue, OBPO, OBP1);
+				renderFrame();
 				windowLine = false;
 				windowLineOffset = 0;
 			}
@@ -91,13 +91,20 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 	return lyValue;
 }
 
-void Gpu::vramWrite(uint16_t addr, uint8_t data, uint8_t palette)
+void Gpu::vramWrite(uint16_t addr, uint8_t data)
 {
 	vram[addr] = data;
 }
 
-void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette, uint8_t WY, uint8_t WX)
+void Gpu::renderScanline(uint8_t lyValue)
 {
+
+	uint8_t lcdcValue = mmu->read(MiscRegs::LCDC);
+	uint8_t SCY = mmu->read(MiscRegs::SCY);
+	uint8_t SCX = mmu->read(MiscRegs::SCX);
+	uint8_t palette = mmu->read(MiscRegs::PALETTE);
+	uint8_t WY = mmu->read(MiscRegs::WY);
+	uint8_t WX = mmu->read(MiscRegs::WX);
 
 	if (lyValue > 0x90)
 	{
@@ -228,8 +235,12 @@ uint32_t Gpu::windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber)
 	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1)) + hbits;
 }
 
-void Gpu::renderFrame(uint8_t lcdcValue, uint8_t OBPO, uint8_t OBP1)
+void Gpu::renderFrame()
 {
+	uint8_t lcdcValue = mmu->read(MiscRegs::LCDC);
+	uint8_t OBPO = mmu->read(MiscRegs::OBPO);
+	uint8_t OBP1 = mmu->read(MiscRegs::OBP1);
+
 	totalFramesGenerated++;
 
 	frameReady = true;

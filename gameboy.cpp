@@ -40,71 +40,35 @@ void gameboy::emulate()
             {
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_RETURN:
-                    cpu.key_press(JOYPAD_SELECT);
-                    break;
-                case SDLK_TAB:
-                    cpu.key_press(JOYPAD_START);
-                    break;
-                case SDLK_b:
-                    cpu.key_press(JOYPAD_B);
-                    break;
-                case SDLK_a:
-                    cpu.key_press(JOYPAD_A);
-                    break;
-                case SDLK_DOWN:
-                    cpu.key_press(JOYPAD_DOWN);
-                    break;
-                case SDLK_UP:
-                    cpu.key_press(JOYPAD_UP);
-                    break;
-                case SDLK_LEFT:
-                    cpu.key_press(JOYPAD_LEFT);
-                    break;
-                case SDLK_RIGHT:
-                    cpu.key_press(JOYPAD_RIGHT);
-                    break;
+                case SDLK_RETURN: cpu.key_press(JOYPAD_SELECT); break;
+                case SDLK_TAB: cpu.key_press(JOYPAD_START); break;
+                case SDLK_b: cpu.key_press(JOYPAD_B); break;
+                case SDLK_a: cpu.key_press(JOYPAD_A); break;
+                case SDLK_DOWN: cpu.key_press(JOYPAD_DOWN); break;
+                case SDLK_UP: cpu.key_press(JOYPAD_UP); break;
+                case SDLK_LEFT: cpu.key_press(JOYPAD_LEFT); break;
+                case SDLK_RIGHT: cpu.key_press(JOYPAD_RIGHT); break;
                 }
-                
                 cpu.update_joypad_memory();
             }
             else if (event.type == SDL_KEYUP)
             {
                 switch (event.key.keysym.sym)
                 {
-                case SDLK_RETURN:
-                    cpu.key_release(JOYPAD_SELECT);
-                    break;
-                case SDLK_TAB:
-                    cpu.key_release(JOYPAD_START);
-                    break;
-                case SDLK_b:
-                    cpu.key_release(JOYPAD_B);
-                    break;
-                case SDLK_a:
-                    cpu.key_release(JOYPAD_A);
-                    break;
-                case SDLK_DOWN:
-                    cpu.key_release(JOYPAD_DOWN);
-                    break;
-                case SDLK_UP:
-                    cpu.key_release(JOYPAD_UP);
-                    break;
-                case SDLK_LEFT:
-                    cpu.key_release(JOYPAD_LEFT);
-                    break;
-                case SDLK_RIGHT:
-                    cpu.key_release(JOYPAD_RIGHT);
-                    break;
+                case SDLK_RETURN: cpu.key_release(JOYPAD_SELECT); break;
+                case SDLK_TAB: cpu.key_release(JOYPAD_START); break;
+                case SDLK_b: cpu.key_release(JOYPAD_B); break;
+                case SDLK_a: cpu.key_release(JOYPAD_A); break;
+                case SDLK_DOWN: cpu.key_release(JOYPAD_DOWN); break;
+                case SDLK_UP: cpu.key_release(JOYPAD_UP); break;
+                case SDLK_LEFT: cpu.key_release(JOYPAD_LEFT); break;
+                case SDLK_RIGHT: cpu.key_release(JOYPAD_RIGHT); break;
                 }
-
                 cpu.update_joypad_memory();
             }
         }
 
-        auto currentTime = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::steady_clock::now().time_since_epoch()
-        ).count();
+        auto currentTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
 
         if ((currentTime - lastDivIncTime) >= incrementInterval)
         {
@@ -121,13 +85,8 @@ void gameboy::emulate()
 
             engine.setBuffer(cpu.getFrameBuffer());
             engine.render();
-
-            //SDL_Delay(8);
         }
     }
-
-    cpu.printStatus();
-    cpu.printTrace();
 }
 
 void gameboy::write(uint16_t addr, uint8_t data)

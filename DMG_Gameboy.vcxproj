@@ -149,6 +149,7 @@
     <ClInclude Include="gameboy.h" />
     <ClInclude Include="Gpu.h" />
     <ClInclude Include="Mbc.h" />
+    <ClInclude Include="MiscRegs.h" />
     <ClInclude Include="MMU.h" />
     <ClInclude Include="Scale.h" />
     <ClInclude Include="Sprite.h" />

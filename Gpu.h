@@ -4,21 +4,23 @@
 #include <array>
 #include "Sprite.h"
 #include <queue>
+#include "MMU.h"
 
 class Cpu;
+class MMU;
 
 class Gpu
 {
 public:
 	Gpu();
 	~Gpu();
-
-	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX, uint8_t WY, uint8_t WX, uint8_t OBPO, uint8_t OBP1); // Updates our Gpu's state
+	
+	MMU* mmu;
+	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank); // Updates our Gpu's state
 
 	void setVblank(bool newVblank); // Sets Vblank
 
-	void vramWrite(uint16_t addr, uint8_t data, uint8_t palette); // Writes to vram;
-
+	void vramWrite(uint16_t addr, uint8_t data); // Writes to vram;
 	// Vram
 	std::vector<uint8_t> vram;
 
@@ -42,8 +44,8 @@ public:
 	bool objectsEnabled = false;
 	std::vector<uint32_t> frameBuffer;
 
-	void renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette, uint8_t WY, uint8_t WX);
-	void renderFrame(uint8_t lcdcValue, uint8_t OBPO, uint8_t OBP1);
+	void renderScanline(uint8_t lyValue);
+	void renderFrame();
 	uint32_t backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t SCX, uint8_t tileNumber);
 	uint32_t windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber);
 	void OAMScan(uint8_t lyValue, uint8_t lcdcValue);
