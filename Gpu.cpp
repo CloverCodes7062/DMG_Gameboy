@@ -17,7 +17,7 @@ Gpu::~Gpu()
 {
 }
 
-uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX, uint8_t WY, uint8_t WX)
+uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX, uint8_t WY, uint8_t WX, uint8_t OBPO, uint8_t OBP1)
 {
 	cyclesRan += additionalCycles;
 
@@ -59,7 +59,7 @@ uint8_t Gpu::update(uint16_t additionalCycles, uint8_t lyValue, bool cpuInVblank
 			if (lyValue == 144 && !cpuInVblank)
 			{
 				mode = 1;
-				renderFrame(lcdcValue);
+				renderFrame(lcdcValue, OBPO, OBP1);
 				windowLine = false;
 				windowLineOffset = 0;
 			}
@@ -106,6 +106,7 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 
 	bool WXCondition = false;
 	int x = 0;
+
 	while (x < 160)
 	{
 		uint32_t tileAddress;
@@ -116,6 +117,7 @@ void Gpu::renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_
 
 		if (windowLine && (lcdcValue & 0b00100000) && WXCondition)
 		{
+			
 			uint16_t tMapArea;
 
 			if (lcdcValue & 0b01000000)
@@ -226,7 +228,7 @@ uint32_t Gpu::windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber)
 	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1)) + hbits;
 }
 
-void Gpu::renderFrame(uint8_t lcdcValue)
+void Gpu::renderFrame(uint8_t lcdcValue, uint8_t OBPO, uint8_t OBP1)
 {
 	totalFramesGenerated++;
 
@@ -244,6 +246,16 @@ void Gpu::renderFrame(uint8_t lcdcValue)
 		int tileHeight = 8;
 		if (is8x16Mode) {
 			tileHeight = 16;
+		}
+
+		uint8_t palette;
+		if (dmgPalette)
+		{
+			palette = OBP1;
+		}
+		else
+		{
+			palette = OBPO;
 		}
 
 		std::vector<uint16_t> tiles;
@@ -272,27 +284,30 @@ void Gpu::renderFrame(uint8_t lcdcValue)
 
 					int frameBufferIndex = adjustedY * visibleWidth + adjustedX;
 
-					if (pixelValue != 0) // Don't render 0 for spirtes, its transparent
+					uint8_t color = ((palette >> (pixelValue * 2)) & 0x03);
+					if (pixelValue == 0)
 					{
-						switch (pixelValue)
-						{
-						case 0:
-							frameBuffer[frameBufferIndex] = 0xFFE8FCCC; // White
-							break;
-						case 1:
-							frameBuffer[frameBufferIndex] = 0xFFE8FCCC; // Light gray
-							break;
-						case 2:
-							frameBuffer[frameBufferIndex] = 0xFF548C70; // Dark gray
-							break;
-						case 3:
-							frameBuffer[frameBufferIndex] = 0xFF142C38; // Black
-							break;
-						default:
-							std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
-							frameBuffer[frameBufferIndex] = 0xFF000000; // Black
-							break;
-						}
+						continue;
+					}
+
+					switch (color)
+					{
+					case 0:
+						frameBuffer[frameBufferIndex] = 0xFFE8FCCC; // White;
+						break;
+					case 1:
+						frameBuffer[frameBufferIndex] = 0xFFACD490; // Light gray
+						break;
+					case 2:
+						frameBuffer[frameBufferIndex] = 0xFF548C70; // Dark gray
+						break;
+					case 3:
+						frameBuffer[frameBufferIndex] = 0xFF142C38; // Black
+						break;
+					default:
+						std::cout << "UNKNOWN VALUE, USING BLACK AS DEFAULT" << std::endl;
+						frameBuffer[frameBufferIndex] = 0xFF000000; // Black
+						break;
 					}
 				}
 			}

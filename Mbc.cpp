@@ -155,6 +155,8 @@ void Mbc::mbc1_write_byte(uint16_t addr, uint8_t data)
     {
         ram[addr] = data;
     }
+
+    dumpCartRam();
 }
 
 uint8_t Mbc::mbc3_read_byte(uint16_t addr)

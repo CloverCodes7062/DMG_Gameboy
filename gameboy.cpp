@@ -30,7 +30,7 @@ void gameboy::emulate()
 
         // HANDLE INPUTS
         SDL_Event event;
-        while (SDL_PollEvent(&event))
+        if(SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
             {
@@ -122,7 +122,7 @@ void gameboy::emulate()
             engine.setBuffer(cpu.getFrameBuffer());
             engine.render();
 
-            SDL_Delay(8);
+            //SDL_Delay(8);
         }
     }
 

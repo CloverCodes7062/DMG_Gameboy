@@ -13,7 +13,7 @@ public:
 	Gpu();
 	~Gpu();
 
-	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX, uint8_t WY, uint8_t WX); // Updates our Gpu's state
+	uint8_t update(uint16_t additionalCycles, uint8_t lyReg, bool cpuInVblank, uint8_t lcdcValue, uint8_t palette, uint8_t SCY, uint8_t SCX, uint8_t WY, uint8_t WX, uint8_t OBPO, uint8_t OBP1); // Updates our Gpu's state
 
 	void setVblank(bool newVblank); // Sets Vblank
 
@@ -43,7 +43,7 @@ public:
 	std::vector<uint32_t> frameBuffer;
 
 	void renderScanline(uint8_t lyValue, uint8_t lcdcValue, uint8_t SCY, uint8_t SCX, uint8_t palette, uint8_t WY, uint8_t WX);
-	void renderFrame(uint8_t lcdcValue);
+	void renderFrame(uint8_t lcdcValue, uint8_t OBPO, uint8_t OBP1);
 	uint32_t backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t SCX, uint8_t tileNumber);
 	uint32_t windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber);
 	void OAMScan(uint8_t lyValue, uint8_t lcdcValue);

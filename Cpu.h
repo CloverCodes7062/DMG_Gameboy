@@ -108,6 +108,8 @@ public:
         IF = 0xFF0F,
         WY = 0xFF4A,
         WX = 0xFF4B,
+        OBPO = 0xFF48,
+        OBP1 = 0xFF49,
     };
 
     uint8_t joypad_state;
