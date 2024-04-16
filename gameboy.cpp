@@ -25,12 +25,14 @@ void gameboy::emulate()
     uint64_t lastDivIncTime = 0;
     uint64_t incrementInterval = 1000000 / 16384;
 
+    uint8_t vramData[6144];
+
     while (running && cpu.getHasNotBroken())
     {
 
-        // HANDLE INPUTS
         SDL_Event event;
-        if(SDL_PollEvent(&event))
+        // HANDLE INPUTS
+        while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_QUIT)
             {
@@ -85,6 +87,16 @@ void gameboy::emulate()
 
             engine.setBuffer(cpu.getFrameBuffer());
             engine.render();
+
+            int vramDataIndex = 0;
+            for (uint16_t i = 0x8000; i <= 0x97FF; i++)
+            {
+                vramData[vramDataIndex++] = gpu->vram[i];
+            }
+
+            vramViewerEngine.setBuffer(vramData);
+            vramViewerEngine.render();
+            //SDL_Delay(8);
         }
     }
 }

@@ -16,10 +16,6 @@ uint8_t MMU::read(uint16_t addr)
 {
 	if (addr == 0xFF00)
 	{
-		if (joypad != 0xFF)
-		{
-			//std::cout << "READING FROM JOYPAD: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(joypad) << std::endl;
-		}
 		switch (ram[0xFF00] & 0x30)
 		{
 			case 0x10:

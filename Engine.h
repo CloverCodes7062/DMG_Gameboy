@@ -9,10 +9,9 @@ public:
 	Engine(int width, int height);
 	~Engine();
 
-	void setBuffer(std::vector<std::vector<uint16_t>> tileMap, std::vector<Sprite> Sprites, uint8_t SCY, uint8_t SCX, bool is8x16Mode); // RENDERS BG TILES AND SPRITES ON TOP
-	void setBuffer(std::vector<std::vector<uint16_t>> tiles); // RENDERS ONLY BG TILES FOR VRAM VIEWER
 	void setBuffer(std::vector<uint32_t> frameBuffer);
-	void setBuffer(std::vector<uint16_t> tileRows);
+	void setBuffer(uint8_t vramDataArray[6144]);
+	void setBuffer(uint8_t vramDataArray[6144], uint8_t SCY, uint8_t SCX, uint16_t tileMapAddress, bool signedMode);
 	void render();
 
 	int frameCount = 0;

@@ -62,6 +62,8 @@ int main(int argc, char* argv[]) {
 	Cpu cpu(cpuInstructions, mmu, mbc, rom, gpu);
 	gameboy gameboy(cpu);
 
+    gameboy.gpu = &gpu;
+
     gameboy.emulate();
 
 	return 0;

@@ -117,27 +117,14 @@ void Gpu::renderScanline(uint8_t lyValue)
 	while (x < 160)
 	{
 		uint32_t tileAddress;
-		if (x + 7 == WX)
+		if (WX - 7 <= x)
 		{
 			WXCondition = true;
 		}
 
 		if (windowLine && (lcdcValue & 0b00100000) && WXCondition)
 		{
-			
-			uint16_t tMapArea;
-
-			if (lcdcValue & 0b01000000)
-			{
-				tMapArea = 0x9C00;
-			}
-			else
-			{
-				tMapArea = 0x9800;
-			}
-
-			tMapArea |= (((windowLineOffset & 0xFF) >> 3) << 5);
-			tMapArea |= (x >> 3);
+			uint16_t tMapArea = ((lcdcValue & 0b01000000 ? SECOND_MAP : FIRST_MAP) | (((windowLineOffset & 0xFF) >> 3) << 5) | (x >> 3));
 
 			auto tMapAddress = tMapArea;
 			
@@ -147,18 +134,17 @@ void Gpu::renderScanline(uint8_t lyValue)
 		}
 		else
 		{
-			auto tMapAddress = (0x9800 | ((tileMapAddress == FIRST_MAP ? 0 : 1) << 10) | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x + SCX) & 0xFF) >> 3));
+			auto tMapAddress = (tileMapAddress | ((((lyValue + SCY) & 0xFF) >> 3) << 5) | (((x + SCX) & 0xFF) >> 3));
 
 			uint8_t tileNumber = vram[tMapAddress];
 
 			tileAddress = backgroundTileAddress(lyValue, SCY, SCX, tileNumber);
-
 		}
 
 		int frameBufferIndex = lyValue * 160 + x;
 
 		int startingJ = 0;
-		if (x == 0)
+		if (x == 0 && !windowLine)
 		{
 			startingJ = (SCX % 8);
 		}
@@ -201,7 +187,7 @@ void Gpu::renderScanline(uint8_t lyValue)
 			}
 		}
 
-		if ((SCX % 8) != 0 && x == 0)
+		if ((SCX % 8) != 0 && x == 0 && !windowLine)
 		{
 			x += 8 - (SCX % 8);
 		}

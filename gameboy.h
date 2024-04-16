@@ -18,7 +18,9 @@ public:
 
 	// SDL Engine For Game View
 	Engine engine = Engine(160 * SCALE, 144 * SCALE);
+	Engine vramViewerEngine = Engine(256 * SCALE, 256 * SCALE);
 
+	Gpu* gpu;
 private:
 	Cpu& cpu;
 };

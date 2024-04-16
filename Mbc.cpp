@@ -30,6 +30,7 @@ Mbc::Mbc(std::vector<uint8_t>& passedRam, std::vector<uint8_t>& passedRom, int p
         saveFile.close();
     }
     
+    
 }
 
 Mbc::~Mbc()
