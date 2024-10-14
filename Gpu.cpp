@@ -206,7 +206,6 @@ void Gpu::renderScanline(uint8_t lyValue)
 uint32_t Gpu::backgroundTileAddress(uint8_t lyValue, uint8_t SCY, uint8_t SCX, uint8_t tileNumber)
 {
 	uint32_t b12 = !signedMode ? 0 : ((tileNumber & 0x80) ^ 0x80) << 5;
-	uint32_t hbits = 0;
 	uint32_t ybits = (lyValue + SCY) & 7;
 
 	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1));
@@ -216,9 +215,9 @@ uint32_t Gpu::windowTileAddress(uint8_t windowLineOffset, uint8_t tileNumber)
 {
 	uint32_t b12 = !signedMode ? 0 : ((tileNumber & 0x80) ^ 0x80) << 5;
 	uint32_t hbits = 0;
-	uint32_t ybits = (windowLineOffset) & 7;
+	uint32_t ybits = (windowLineOffset & 7);
 
-	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1)) + hbits;
+	return (0x8000 | b12 | (tileNumber << 4) | (ybits << 1));
 }
 
 void Gpu::renderFrame()

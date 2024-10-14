@@ -3,6 +3,7 @@
 #include <string>
 #include "Engine.h"
 #include "Scale.h"
+#include "vramViewerEngine.h"
 
 class gameboy 
 {
@@ -18,9 +19,9 @@ public:
 
 	// SDL Engine For Game View
 	Engine engine = Engine(160 * SCALE, 144 * SCALE);
-	Engine vramViewerEngine = Engine(256 * SCALE, 256 * SCALE);
-
+	vramViewerEngine vramViewer = vramViewerEngine(256 * SCALE, 256 * SCALE);
 	Gpu* gpu;
+	std::vector<uint8_t>* ram;
 private:
 	Cpu& cpu;
 };

@@ -109,11 +109,6 @@ void Cpu::runInstruction()
 			return;
 		}
 
-		if (hasLoadedRom)
-		{
-			//handlePCTrace();
-		}
-
 		frameReady = gpu.frameReady;
 
 		// RUN INSTRUCTION IF NOT HALTED
@@ -162,6 +157,34 @@ void Cpu::runInstruction()
 		
 	}
 	cycles -= 4;
+}
+
+void Cpu::handlePCTrace()
+{
+	std::stringstream ss;
+	if (wasCB)
+	{
+		ss << "pc: 0x" << std::hex << std::setw(4) << std::setfill('0') << pc << ", opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << ", instruction: " << "NOT IMPL YET";
+	}
+	else
+	{
+		ss << "pc: 0x" << std::hex << std::setw(4) << std::setfill('0') << pc << ", opcode: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(read(pc)) << ", instruction: " << "NOT IMPL YET";
+	}
+	std::string result = ss.str();
+	pcDeque.push_back(result);
+
+	while (pcDeque.size() > 2000)
+	{
+		pcDeque.pop_front();
+	}
+}
+
+void Cpu::printTrace()
+{
+	for (size_t addr = 0; addr < pcDeque.size(); addr++)
+	{
+		std::cout << pcDeque[addr] << std::endl;
+	}
 }
 
 void Cpu::handleInterrupts()

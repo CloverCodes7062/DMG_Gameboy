@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
 	gameboy gameboy(cpu);
 
     gameboy.gpu = &gpu;
+    gameboy.ram = &ram;
 
     gameboy.emulate();
 

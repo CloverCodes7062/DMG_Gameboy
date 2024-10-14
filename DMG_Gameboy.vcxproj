@@ -75,7 +75,7 @@
     <LibraryPath>C:\Users\Stacy\Desktop\c++Libs\SDL2-2.30.1\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Stacy\Desktop\c++Libs\SDL2-2.30.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Stacy\Desktop\c++Libs\ImGUI\backends;C:\Users\Stacy\Desktop\c++Libs\ImGUI;C:\Users\Stacy\Desktop\c++Libs\SDL2-2.30.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Users\Stacy\Desktop\c++Libs\SDL2-2.30.1\lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -154,9 +154,16 @@
     <ClInclude Include="MMU.h" />
     <ClInclude Include="Scale.h" />
     <ClInclude Include="Sprite.h" />
+    <ClInclude Include="vramViewerEngine.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\APPDATA\LOCAL\TEMP\TMP3CAF.TMP.CPP" />
+    <ClCompile Include="..\..\c++Libs\ImGUI\backends\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="..\..\c++Libs\ImGUI\backends\imgui_impl_sdlrenderer2.cpp" />
+    <ClCompile Include="..\..\c++Libs\ImGUI\imgui.cpp" />
+    <ClCompile Include="..\..\c++Libs\ImGUI\imgui_demo.cpp" />
+    <ClCompile Include="..\..\c++Libs\ImGUI\imgui_draw.cpp" />
+    <ClCompile Include="..\..\c++Libs\ImGUI\imgui_tables.cpp" />
+    <ClCompile Include="..\..\c++Libs\ImGUI\imgui_widgets.cpp" />
     <ClCompile Include="Bus.cpp" />
     <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="Cpu.cpp" />
@@ -168,6 +175,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mbc.cpp" />
     <ClCompile Include="MMU.cpp" />
+    <ClCompile Include="vramViewerEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\DMG_Gameboy_TestRoms\cpu_instrs.gb" />

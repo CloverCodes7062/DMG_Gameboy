@@ -5,6 +5,9 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_sdlrenderer2.h"
 
 Engine::Engine(int width, int height) : screenWidth(width), screenHeight(height), window(nullptr), renderer(nullptr), texture(nullptr) {
 
@@ -16,9 +19,23 @@ Engine::Engine(int width, int height) : screenWidth(width), screenHeight(height)
 
     pixelBuffer.resize(screenWidth * screenHeight);
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer2_Init(renderer);
 }
 
 Engine::~Engine() {
+
+    ImGui_ImplSDLRenderer2_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
 
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
@@ -100,12 +117,64 @@ void Engine::setBuffer(uint8_t vramDataArray[6144])
     }
 }
 
-void Engine::setBuffer(uint8_t vramDataArray[6144], uint8_t SCY, uint8_t SCX, uint16_t tileMapAddress, bool signedMode)
-{
+void Engine::render(std::vector<uint8_t>& ram) {
+    SDL_UpdateTexture(texture, nullptr, &pixelBuffer[0], screenWidth * sizeof(uint32_t));
 
+    ImGui_ImplSDLRenderer2_NewFrame();
+    ImGui_ImplSDL2_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(180, 140));
+    ImGui::Begin("Gameboy Debug Options");
+
+    if (ImGui::Button("VRAM Viewer"))
+    {
+        vramViewerVisible = !vramViewerVisible;
+    }
+
+    if (ImGui::Button("RAM Viewer"))
+    {
+        ramViewerVisible = !ramViewerVisible;
+    }
+
+    if (ramViewerVisible)
+    {
+        ImGui::SetNextWindowSize(ImVec2(400, 300));
+        ImGui::Begin("RAM Viewer");
+        ImGui::Text("%s", formatRAM(ram));
+        ImGui::End();
+    }
+
+    ImGui::End();
+    ImGui::Render();
+
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+
+    ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData());
+
+    SDL_RenderPresent(renderer);
+
+    frameCount++;
+
+    Uint32 currentTime = SDL_GetTicks64();
+    Uint32 elapsedTime = currentTime - lastFrameTime;
+
+    if (elapsedTime >= 1000)
+    {
+        auto fps = static_cast<float>(frameCount) / (elapsedTime / 1000);
+        frameCount = 0;
+        lastFrameTime = currentTime;
+
+        std::string windowTitle = "Gameboy | FPS: " + std::to_string(static_cast<int>(fps));
+        SDL_SetWindowTitle(window, windowTitle.c_str());
+    }
+    SDL_SetWindowSize(window, 480, 432);
+    SDL_SetWindowResizable(window, SDL_TRUE);
 }
 
-void Engine::render() {
+void Engine::renderDebug() {
     SDL_UpdateTexture(texture, nullptr, &pixelBuffer[0], screenWidth * sizeof(uint32_t));
 
     SDL_RenderClear(renderer);
@@ -129,4 +198,28 @@ void Engine::render() {
     }
     SDL_SetWindowSize(window, 480, 432);
     SDL_SetWindowResizable(window, SDL_TRUE);
+}
+
+const char* Engine::formatRAM(std::vector<uint8_t>& ram)
+{
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+
+    int address = 0;
+    for (uint8_t byte : ram) 
+    {
+        if (address % 8 == 0) 
+        {
+            if (address != 0)
+            {
+                ss << "\n\n";
+            }
+            ss << "0x" << std::setw(4) << address << " - ";
+        }
+        ss << "0x" << std::setw(2) << static_cast<int>(byte) << " ";
+        address++;
+    }
+
+    formattedRAM = ss.str();
+    return formattedRAM.c_str();
 }

@@ -14,8 +14,8 @@ public:
     std::vector<uint8_t> cartRam;
 
     int romType;
-    int rom_banks = 0;
-    int ram_banks = 0;
+    int rom_banks = 1;
+    int ram_banks = 1;
     int rom_bank = 1;
     int ram_bank = 0;
 

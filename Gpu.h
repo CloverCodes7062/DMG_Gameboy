@@ -52,6 +52,8 @@ public:
 
 	std::vector<uint16_t> OAMScanObjs;
 
+	std::vector<uint8_t> windowTrace;
+
 private:
 	bool gpuInVblank = false;
 	int cyclesRan;

@@ -6,6 +6,7 @@
 #include <SDL.h>
 #include <chrono>
 #include <thread>
+#include "imgui_impl_sdl2.h"
 
 gameboy::gameboy(Cpu& cpu) : cpu(cpu)
 {
@@ -34,6 +35,8 @@ void gameboy::emulate()
         // HANDLE INPUTS
         while (SDL_PollEvent(&event))
         {
+            ImGui_ImplSDL2_ProcessEvent(&event);
+
             if (event.type == SDL_QUIT)
             {
                 running = false;
@@ -70,23 +73,26 @@ void gameboy::emulate()
             }
         }
 
-        auto currentTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-
-        if ((currentTime - lastDivIncTime) >= incrementInterval)
+        if (!engine.ramViewerVisible && !engine.vramViewerVisible)
         {
-            cpu.incrementDivReg();
-            lastDivIncTime = currentTime;
+            auto currentTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+
+            if ((currentTime - lastDivIncTime) >= incrementInterval)
+            {
+                cpu.incrementDivReg();
+                lastDivIncTime = currentTime;
+            }
+            // RUN INSTRUCTION
+            cpu.runInstruction();
         }
-        // RUN INSTRUCTION
-        cpu.runInstruction();
 
         // RENDER WHEN NEEDED
-        if (cpu.frameReady)
+        if (cpu.frameReady || engine.ramViewerVisible || engine.vramViewerVisible)
         {
             cpu.setFrameReady(false);
 
             engine.setBuffer(cpu.getFrameBuffer());
-            engine.render();
+            engine.render(*ram);
 
             int vramDataIndex = 0;
             for (uint16_t i = 0x8000; i <= 0x97FF; i++)
@@ -94,11 +100,21 @@ void gameboy::emulate()
                 vramData[vramDataIndex++] = gpu->vram[i];
             }
 
-            vramViewerEngine.setBuffer(vramData);
-            vramViewerEngine.render();
+            if (engine.vramViewerVisible)
+            {
+                vramViewer.createWindow();
+                vramViewer.setBuffer(vramData);
+                vramViewer.renderDebug();
+            }
+            else
+            {
+                vramViewer.destroyWindow();
+            }
+
             //SDL_Delay(8);
         }
     }
+    cpu.printTrace();
 }
 
 void gameboy::write(uint16_t addr, uint8_t data)
